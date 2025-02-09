@@ -1,0 +1,111 @@
+{
+    "reveal": {
+        "type": "reveal",
+        "board": [
+            [
+                "L3",
+                "H4",
+                "L2",
+                "H2",
+                "H4"
+            ],
+            [
+                "L5",
+                "L4",
+                "L5",
+                "H4",
+                "H1"
+            ],
+            [
+                "H1",
+                "L4",
+                "H3",
+                "L5",
+                "H1"
+            ],
+            [
+                "L2",
+                "H3",
+                "H4",
+                "H2",
+                "L3"
+            ],
+            [
+                "H2",
+                "L4",
+                "L3",
+                "L5",
+                "L5"
+            ]
+        ],
+        "paddingPositions": [
+            64,
+            261,
+            120,
+            507,
+            460
+        ],
+        "gameType": "baseGame",
+        "anticipation": [
+            0,
+            0,
+            0,
+            0,
+            0
+        ]
+    },
+    "setWin": {
+        "type": "setWin",
+        "amount": 0,
+        "winLevel": 1
+    },
+    "setTotalWin": {
+        "type": "setTotalWin",
+        "amount": 0
+    },
+    "finalWin": {
+        "type": "finalWin",
+        "amount": 0
+    },
+    "freeSpinTrigger": {
+        "type": "freeSpinTrigger",
+        "totalFs": 12
+    },
+    "updateFreeSpin": {
+        "type": "updateFreeSpin",
+        "amount": 0,
+        "total": 12
+    },
+    "winInfo": {
+        "type": "winInfo",
+        "totalWin": 30,
+        "wins": [
+            {
+                "symbol": "L2",
+                "kind": 3,
+                "win": 30,
+                "positions": [
+                    {
+                        "reel": 0,
+                        "row": 1
+                    },
+                    {
+                        "reel": 1,
+                        "row": 1
+                    },
+                    {
+                        "reel": 2,
+                        "row": 1
+                    }
+                ],
+                "meta": {
+                    "lineIndex": 1,
+                    "multiplier": 1,
+                    "winWithoutMult": 30,
+                    "globalMultiplier": 1,
+                    "lineMultiplier": 1.0
+                }
+            }
+        ]
+    }
+}

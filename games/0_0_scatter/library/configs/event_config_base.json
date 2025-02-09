@@ -1,0 +1,214 @@
+{
+    "reveal": {
+        "type": "reveal",
+        "board": [
+            [
+                "L1",
+                "H1",
+                "L1",
+                "L2",
+                "L2",
+                "L3",
+                "L2",
+                "L3",
+                "H3"
+            ],
+            [
+                "L2",
+                "L2",
+                "L3",
+                "L2",
+                "L2",
+                "L3",
+                "L2",
+                "L2",
+                "H2"
+            ],
+            [
+                "L3",
+                "H3",
+                "L1",
+                "L1",
+                "H4",
+                "L2",
+                "H4",
+                "H4",
+                "H2"
+            ],
+            [
+                "H4",
+                "L1",
+                "H2",
+                "H2",
+                "H4",
+                "H2",
+                "H2",
+                "L3",
+                "L3"
+            ],
+            [
+                "L1",
+                "L1",
+                "H3",
+                "H1",
+                "H1",
+                "L2",
+                "L2",
+                "L3",
+                "L3"
+            ],
+            [
+                "L1",
+                "L2",
+                "L2",
+                "H1",
+                "H4",
+                "H4",
+                "H2",
+                "H3",
+                "H2"
+            ],
+            [
+                "L3",
+                "L3",
+                "L3",
+                "H3",
+                "H1",
+                "L3",
+                "H3",
+                "H3",
+                "H2"
+            ]
+        ],
+        "paddingPositions": [
+            216,
+            205,
+            195,
+            16,
+            65,
+            30,
+            126
+        ],
+        "gameType": "baseGame",
+        "anticipation": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+        ]
+    },
+    "setWin": {
+        "type": "setWin",
+        "amount": 0,
+        "winLevel": 1
+    },
+    "finalWin": {
+        "type": "finalWin",
+        "amount": 0
+    },
+    "winInfo": {
+        "type": "winInfo",
+        "totalWin": 80,
+        "wins": [
+            {
+                "symbol": "L3",
+                "clusterSize": 6,
+                "win": 80,
+                "positions": [
+                    {
+                        "reel": 0,
+                        "row": 2
+                    },
+                    {
+                        "reel": 1,
+                        "row": 2
+                    },
+                    {
+                        "reel": 1,
+                        "row": 3
+                    },
+                    {
+                        "reel": 2,
+                        "row": 3
+                    },
+                    {
+                        "reel": 3,
+                        "row": 3
+                    },
+                    {
+                        "reel": 0,
+                        "row": 3
+                    }
+                ],
+                "meta": {
+                    "multiplier": 1,
+                    "winWithoutMult": 80
+                }
+            }
+        ]
+    },
+    "tumbleBoard": {
+        "type": "tumbleBoard",
+        "newSymbols": [
+            [
+                "L1",
+                "H2"
+            ],
+            [
+                "H3",
+                "H2"
+            ],
+            [
+                "L3"
+            ],
+            [
+                "H4"
+            ],
+            [],
+            [],
+            []
+        ],
+        "explodingSymbols": [
+            {
+                "reel": 0,
+                "row": 2
+            },
+            {
+                "reel": 1,
+                "row": 2
+            },
+            {
+                "reel": 0,
+                "row": 3
+            },
+            {
+                "reel": 1,
+                "row": 3
+            },
+            {
+                "reel": 2,
+                "row": 3
+            },
+            {
+                "reel": 3,
+                "row": 3
+            }
+        ]
+    },
+    "setTotalWin": {
+        "type": "setTotalWin",
+        "amount": 80
+    },
+    "freeSpinTrigger": {
+        "type": "freeSpinTrigger",
+        "totalFs": 12
+    },
+    "updateFreeSpin": {
+        "type": "updateFreeSpin",
+        "amount": 0,
+        "total": 12
+    }
+}
