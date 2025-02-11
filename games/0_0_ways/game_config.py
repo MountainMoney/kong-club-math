@@ -1,6 +1,5 @@
 from src.config.config import Config
-from src.config.distributions import Distribution, DistributionConditions
-from src.write_data.force import *
+from src.config.distributions import Distribution
 from src.config.betmode import BetMode
 
 
@@ -19,17 +18,43 @@ class GameConfig(Config):
 
         # Game Dimensions
         self.num_reels = 5
-        self.num_rows = [
-            0
-        ] * self.num_reels  # Optionally include variable number of rows per reel
+        self.num_rows = [3] * self.num_reels  # Optionally include variable number of rows per reel
         # Board and Symbol Properties
-        self.paytable = {}
+        self.paytable = {
+            (5, "H1"): 10,
+            (4, "H1"): 5,
+            (3, "H1"): 3,
+            (5, "H2"): 8,
+            (4, "H2"): 4,
+            (3, "H2"): 2,
+            (5, "H3"): 5,
+            (4, "H3"): 2,
+            (3, "H3"): 1,
+            (5, "H4"): 3,
+            (4, "H4"): 1,
+            (3, "H4"): 0.5,
+            (5, "H5"): 2,
+            (4, "H5"): 0.8,
+            (3, "H5"): 0.4,
+            (5, "L1"): 2,
+            (4, "L1"): 0.8,
+            (3, "L1"): 0.4,
+            (5, "L2"): 1.5,
+            (4, "L2"): 0.5,
+            (3, "L2"): 0.2,
+            (5, "L3"): 1.5,
+            (4, "L3"): 0.5,
+            (3, "L3"): 0.2,
+            (5, "L4"): 1,
+            (4, "L4"): 0.3,
+            (3, "L4"): 0.1,
+        }
 
         self.include_padding = True
         self.special_symbols = {"wild": ["W"], "scatter": ["S"], "multiplier": []}
 
         self.freespin_triggers = {
-            self.basegame_type: {3: 8, 4: 12, 5: 15},
+            self.basegame_type: {3: 10, 4: 15, 5: 20},
             self.freegame_type: {2: 4, 3: 6, 4: 8, 5: 10},
         }
         self.anticipation_triggers = {self.basegame_type: 2, self.freegame_type: 1}
@@ -60,6 +85,8 @@ class GameConfig(Config):
                             },
                             "force_wincap": True,
                             "force_freespins": True,
+                            "scatter_triggers": {3: 100, 4: 20, 5: 5},
+                            "mult_values": {1: 200, 2: 100, 3: 80, 4: 50, 5: 20},
                         },
                     ),
                     Distribution(
@@ -72,6 +99,8 @@ class GameConfig(Config):
                             },
                             "force_wincap": False,
                             "force_freespins": True,
+                            "scatter_triggers": {3: 100, 4: 20, 5: 5},
+                            "mult_values": {1: 200, 2: 100, 3: 80, 4: 50, 5: 20},
                         },
                     ),
                     Distribution(
@@ -82,6 +111,7 @@ class GameConfig(Config):
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
                             "force_wincap": False,
                             "force_freespins": False,
+                            "mult_values": {1: 1},
                         },
                     ),
                     Distribution(
@@ -91,8 +121,34 @@ class GameConfig(Config):
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
                             "force_wincap": False,
                             "force_freespins": False,
+                            "mult_values": {1: 1},
                         },
                     ),
                 ],
-            )
+            ),
+            BetMode(
+                name="bonus",
+                cost=100.0,
+                rtp=self.rtp,
+                max_win=self.wincap,
+                auto_close_disables=False,
+                is_feature=False,
+                is_buybonus=True,
+                distributions=[
+                    Distribution(
+                        criteria="freegame",
+                        quota=1,
+                        conditions={
+                            "reel_weights": {
+                                self.basegame_type: {"BR0": 1},
+                                self.freegame_type: {"FR0": 1},
+                            },
+                            "force_wincap": False,
+                            "force_freespins": True,
+                            "scatter_triggers": {3: 100, 4: 20, 5: 5},
+                            "mult_values": {1: 200, 2: 100, 3: 80, 4: 50, 5: 20},
+                        },
+                    ),
+                ],
+            ),
         ]

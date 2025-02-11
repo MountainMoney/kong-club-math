@@ -2,6 +2,7 @@ from game_override import GameStateOverride
 
 
 class GameState(GameStateOverride):
+    """Handles game logic and events for a single simulation number/game-round."""
 
     def run_spin(self, sim):
         self.reset_seed(sim)

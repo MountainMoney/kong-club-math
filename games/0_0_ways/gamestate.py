@@ -1,3 +1,5 @@
+"""Game logic and event emission for standard 'ways' game with a fixed board size."""
+
 from game_override import GameStateOverride
 
 
@@ -10,12 +12,33 @@ class GameState(GameStateOverride):
             self.reset_book()
             self.draw_board(emit_event=True)
 
-            self.win_data = self.get_ways_data(recor)
+            # Evaluate base-game board
+            self.win_data = self.get_ways_data(record_wins=True)
             self.win_manager.update_spinwin(self.win_data["totalWin"])
+            self.emit_wayswin_events()
 
-            self.evaluate_final_win()
+            self.win_manager.update_gametype_wins(self.gametype)
+            # Check Scatter condition and trigger freespins
+            if self.check_fs_condition() and self.check_freespin_entry():
+                self.run_freespin_from_base()
+
+            self.evaluate_finalwin()
+            self.check_repeat()
 
         self.imprint_wins()
 
     def run_freespin(self):
         self.reset_fs_spin()
+        while self.fs < self.tot_fs:
+            self.update_freespin()
+            self.draw_board(emit_event=True)
+
+            self.win_data = self.get_ways_data(record_wins=True)
+            self.win_manager.update_spinwin(self.win_data["totalWin"])
+            self.emit_wayswin_events()
+
+            if self.check_fs_condition():
+                self.update_fs_retrigger_amt()
+
+            self.win_manager.update_gametype_wins(self.gametype)
+        self.end_freespin()

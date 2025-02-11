@@ -1,5 +1,6 @@
-from gamestate import GameConfig, GameState
-from src.write_data.write_data import createBooks
+from gamestate import GameState
+from game_config import GameConfig
+from src.write_data.write_data import create_books
 
 if __name__ == "__main__":
 

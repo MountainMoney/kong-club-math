@@ -20,13 +20,13 @@ class GameStateOverride(GameExecutables):
         }
 
     def assign_mult_property(self, symbol):
+        """Assign multiplier value to Wild symbol in freegame."""
+        multiplier_value = 1
         if self.gametype == self.config.freegame_type:
             multiplier_value = get_random_outcome(
                 self.get_current_distribution_conditions()["mult_values"][self.gametype]
             )
-            symbol.assign_attribute({"multiplier": multiplier_value})
-        elif self.gametype == self.config.basegame_type:
-            symbol.assign_attribute({"multiplier": 1})
+        symbol.assign_attribute({"multiplier": multiplier_value})
 
     def check_repeat(self):
         super().check_repeat()

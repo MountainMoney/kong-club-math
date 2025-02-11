@@ -8,6 +8,7 @@ Minimum of 4 Scatter symbols are required for freeSpin triggers
 
 Freegame:
 All board positions start with a 1x multiplier - for every winning cluster, the multiplier value at that position is doubled (up to 512x)
+There is a global multiplier, which increases by +1 for every freespin and does not reset on each spin
 A minimum of 3 scatters are required for re-triggers
 
 
