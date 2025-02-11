@@ -1,8 +1,7 @@
 """Defines reusable events"""
 
-from src.events.event_constants import *  # type: ignore
-from collections import defaultdict
-from copy import copy, deepcopy
+from copy import deepcopy
+from src.events.event_constants import *
 
 
 def json_ready_sym(symbol: object, special_attributes: list = None):
@@ -59,8 +58,6 @@ def fs_trigger_event(
     if include_padding_index:
         for pos in scatter_positions:
             pos["row"] += 1
-            if pos["row"] > 5:
-                print("here")
 
     if basegame_trigger:
         event = {
@@ -99,7 +96,7 @@ def set_win_event(gamestate, winlevel_key: str = "standard"):
 
 
 def set_total_event(gamestate):
-    """Updates win amount for a betting round (including cumulative wins across multiplie freespin wins)."""
+    """Updates win amount for a betting round (including cumulative wins across multiple freespin wins)."""
     event = {
         "index": len(gamestate.book["events"]),
         "type": SET_TOTAL_WIN,
