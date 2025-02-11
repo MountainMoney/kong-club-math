@@ -20,6 +20,7 @@ class GeneralGameState(ABC):
         self.temp_wins = []
         self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
         self.sim = 0
+        self.repeat = True
         self.criteria = ""
         self.reset_seed()
         self.create_symbol_map()
@@ -186,11 +187,15 @@ class GeneralGameState(ABC):
         assert min(
             round(self.win_manager.basegame_wins + self.win_manager.freegame_wins, 2),
             self.config.wincap,
-        ) == round(self.win_manager.running_bet_win, 2), "Base + Free game payout mismatch!"
+        ) == round(
+            min(self.win_manager.running_bet_win, self.config.wincap), 2
+        ), "Base + Free game payout mismatch!"
         assert min(
             round(self.book["baseGameWins"] + self.book["freeGameWins"], 2),
             self.config.wincap,
-        ) == round(self.book["payoutMultiplier"], 2), "Base + Free game payout mismatch!"
+        ) == min(
+            round(self.book["payoutMultiplier"], 2), round(self.config.wincap, 2)
+        ), "Base + Free game payout mismatch!"
 
     def check_repeat(self) -> None:
         """Checks if the spin failed a criteria constraint at any point."""
@@ -201,9 +206,6 @@ class GeneralGameState(ABC):
 
             if self.get_current_distribution_conditions()["force_freespins"] and not (self.triggered_freespins):
                 self.repeat = True
-
-        if self.in_criteria("baseGame") and self.final_win == 0:
-            print("here")
 
     @abstractmethod
     def run_spin(self, sim):

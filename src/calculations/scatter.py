@@ -10,22 +10,26 @@ class ScatterWins(MultiplierStrategy):
     Scatter (pay-anywhere) class for handling wins win calculations and recording.
     """
 
-    def get_central_position(self, rows_for_overlay: List, winning_positions: List[Dict]) -> tuple:
+    def get_central_scatter_position(self, rows_for_overlay: List, winning_positions: List[Dict]) -> tuple:
         """Return position on screen to display win amount."""
         closest_to_middle = 100
-        reel_to_overlay = -1
-        row_to_overlay = -1
+        reel_to_overlay = 0
+        row_to_overlay = 0
         for pos in winning_positions:
             reel, row = pos["reel"], pos["row"]
             dist_from_middle = (reel - self.config.num_reels / 2) ** 2 + (
                 row - self.config.num_rows[reel] / 2
             ) ** 2
-            if dist_from_middle < closest_to_middle and row not in rows_for_overlay:
+            if (
+                dist_from_middle < closest_to_middle
+                and row not in rows_for_overlay
+                and len(row_to_overlay) < len(self.board[reel])
+            ):
                 closest_to_middle = dist_from_middle
                 reel_to_overlay = reel
                 row_to_overlay = row
 
-        assert all([row_to_overlay >= 0, reel_to_overlay >= 0])
+        # assert all([row_to_overlay >= 0, reel_to_overlay >= 0])
         return (reel_to_overlay, row_to_overlay)
 
     def record_scatter_wins(
@@ -88,7 +92,7 @@ class ScatterWins(MultiplierStrategy):
                         symbol_mult * self.global_multiplier,
                         self.gametype,
                     )
-                overlay_position = self.get_central_position(rows_for_overlay, symbols_on_board[sym])
+                overlay_position = self.get_central_scatter_position(rows_for_overlay, symbols_on_board[sym])
                 rows_for_overlay.append(overlay_position[1])
                 symbol_win_data = {
                     "symbol": sym,

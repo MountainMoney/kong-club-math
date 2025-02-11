@@ -8,9 +8,7 @@ class Option:
 
     def __eq__(self, __value: object) -> bool:
         if type(__value) == type(self):
-            return str(__value.name) == str(self.name) and str(__value.value) == str(
-                self.value
-            )
+            return str(__value.name) == str(self.name) and str(__value.value) == str(self.value)
         return False
 
 
@@ -36,11 +34,7 @@ class Search:
             for option1 in self.forceOptions:
                 for option2 in self.forceOptions:
                     if option1.name == option2.name:
-                        if not (
-                            option1.value == option2.value
-                            or option1.value == None
-                            or option2.value == None
-                        ):
+                        if not (option1.value == option2.value or option1.value == None or option2.value == None):
                             isEqual = False
                             break
 
@@ -56,15 +50,15 @@ class Search:
 
 
 class IdentityCondition:
+    """Return simulation ids which fulfil force-search or payout value conditions."""
+
     def __init__(self, search={}, opposite=False, win_amount=-1, win_range=(-1, -1)):
         if win_amount != -1:
             if win_range != (-1, -1):
                 raise Exception("Can't have both a win_amout and win_range condition.")
             win_range = (win_amount, win_amount)
         if search != {} and (win_range != (-1, -1)):
-            raise Exception(
-                "Can't have both a search condition and a win amount or win range condition."
-            )
+            raise Exception("Can't have both a search condition and a win amount or win range condition.")
         self.search: Search = Search(search)
         self.opposite: bool = opposite
         self.win_range_start: float = float(win_range[0])

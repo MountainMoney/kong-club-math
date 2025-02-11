@@ -20,7 +20,6 @@ from src.events.events import (
     fs_trigger_event,
     update_freespin_event,
     final_win_event,
-    update_global_mult_event,
 )
 
 
@@ -84,6 +83,14 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
                     reelstop_positions[r].append(s)
 
         return reelstop_positions
+
+    def emit_wayswin_events(self) -> None:
+        """Transmit win events asociated with ways wins."""
+        if self.win_manager.spin_win > 0:
+            win_info_event(self)
+            self.evaluate_wincap()
+            set_win_event(self)
+        set_total_event(self)
 
     def emit_linewin_events(self) -> None:
         """Transmit win events asociated with lines wins."""
@@ -164,8 +171,6 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         """Called before a new reveal during freespins."""
         self.fs += 1
         update_freespin_event(self)
-        self.global_multiplier = 1
-        update_global_mult_event(self)
         self.win_manager.reset_spin_win()
         self.tumblewin_mult = 0
         self.win_data = {}

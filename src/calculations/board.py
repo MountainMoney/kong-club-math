@@ -141,7 +141,7 @@ class Board(GeneralGameState):
             self.bottom_symbols = bottom_symbols
 
     def create_symbol(self, name: str) -> object:
-        """Create a new symbol and assign relevent attributes."""
+        """Create a new symbol and assign relevant attributes."""
         if name not in self.symbol_storage.symbols:
             raise ValueError(f"Symbol '{name}' is not registered.")
         symObject = self.symbol_storage.create_symbol_state(name)
@@ -165,8 +165,6 @@ class Board(GeneralGameState):
                 if self.board[reel][row].special:
                     for specialType in list(self.special_syms_on_board.keys()):
                         if self.board[reel][row].check_attribute(specialType):
-                            if row > 5:
-                                print("here")
                             self.special_syms_on_board[specialType].append({"reel": reel, "row": row})
 
     def transpose_board_string(self, board_string: List[List[str]]) -> List[List[str]]:

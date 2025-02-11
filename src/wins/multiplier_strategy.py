@@ -1,7 +1,6 @@
 """Specifies how to incorporate multipliers into base wins"""
 
 from typing import List, Dict
-
 from src.calculations.board import Board
 
 
@@ -22,7 +21,7 @@ class MultiplierStrategy(Board):
 
     def apply_global_mult(self, win_amount: float) -> tuple:
         """Enhance win global multiplier"""
-        return (win_amount * self.global_multiplier, self.global_multiplier)
+        return (round(win_amount * self.global_multiplier, 2), self.global_multiplier)
 
     def apply_added_symbol_mult(self, win_amount: float, positions: List[Dict]) -> tuple:
         """Get multiplier attribute from all winning positions"""
@@ -33,9 +32,9 @@ class MultiplierStrategy(Board):
                 and self.board[pos["reel"]][pos["row"]].get_attribute("multiplier") > 1
             ):
                 symbol_multiplier += self.board[pos["reel"]][pos["row"]].get_attribute("multiplier")
-        return (win_amount * max(symbol_multiplier, 1), max(symbol_multiplier, 1))
+        return (round(win_amount * max(symbol_multiplier, 1), 2), max(symbol_multiplier, 1))
 
-    def apply_combined_mult(self, win_amount: float, positions: List[Dict]):
+    def apply_combined_mult(self, win_amount: float, positions: List[Dict]) -> tuple:
         """Apply symbol multipliers and then global multiplier"""
         win, sym_mult = self.apply_added_symbol_mult(win_amount, positions)
         return (win, sym_mult * self.global_multiplier)

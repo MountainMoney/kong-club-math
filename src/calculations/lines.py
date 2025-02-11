@@ -77,8 +77,8 @@ class LineWins(MultiplierStrategy):
                             "lineIndex": line_index,
                             "multiplier": applied_mult,
                             "winWithoutMult": wild_win,
-                            "globalMult": self.global_multiplier,
-                            "lineMultiplier": applied_mult / self.global_multiplier,
+                            "globalMult": int(self.global_multiplier),
+                            "lineMultiplier": int(applied_mult / self.global_multiplier),
                         },
                     )
                 else:
@@ -93,8 +93,8 @@ class LineWins(MultiplierStrategy):
                             "lineIndex": line_index,
                             "multiplier": applied_mult,
                             "winWithoutMult": base_win,
-                            "globalMult": self.global_multiplier,
-                            "lineMultiplier": applied_mult / self.global_multiplier,
+                            "globalMult": int(self.global_multiplier),
+                            "lineMultiplier": int(applied_mult / self.global_multiplier),
                         },
                     )
 

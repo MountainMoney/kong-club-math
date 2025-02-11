@@ -1,11 +1,10 @@
 """Set standard gamestate configuration with default values."""
 
-import pathlib, os, sys
+import os
 import pathlib
 from src.config.betmode import BetMode
 from src.events.event_constants import *
 from src.write_data.force import *
-from src.calculations.symbol import Symbol
 
 
 class Config:
@@ -20,7 +19,6 @@ class Config:
         self.provider_name = "sample_provider"
         self.provider_number = int(self.game_id.split("_", maxsplit=1)[0])
         self.game_name = "sample_lines"
-        self.construct_paths(self.game_id)
 
         # Win information
         self.min_denomination = 0.1
@@ -122,10 +120,13 @@ class Config:
                 split_line = line.strip().split(",")
                 for reelIndex in range(len(split_line)):
                     if count == 0:
-                        reelstrips.append(["".join([ch for ch in split_line[reelIndex] if ch.isalnum()])])
+                        reelstrips.append(["".join([ch for ch in split_line[reelIndex] if ch.strip().isalnum()])])
                     else:
-                        reelstrips[reelIndex].append("".join([ch for ch in split_line[reelIndex] if ch.isalnum()]))
+                        reelstrips[reelIndex].append(
+                            "".join([ch for ch in split_line[reelIndex] if ch.strip().isalnum() and len(ch) > 0])
+                        )
 
+                    assert len(reelstrips[reelIndex][-1]) > 0, "Symbol is empty."
                 count += 1
 
         return reelstrips

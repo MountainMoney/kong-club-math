@@ -1,5 +1,7 @@
 from collections import defaultdict
 from abc import ABC, abstractmethod
+from math import atan2
+from typing import List, Dict
 from src.wins.multiplier_strategy import MultiplierStrategy
 
 
@@ -7,6 +9,19 @@ class ClusterWins(MultiplierStrategy):
     """
     BFS cluster finding algorithm and win-evaluation.
     """
+
+    def get_central_cluster_position(self, winning_positions: List[Dict]) -> tuple:
+        """Return position on screen to display win amount."""
+        all_reels = []
+        all_rows = []
+        for pos in winning_positions:
+            all_reels.append(pos["reel"])
+            all_rows.append(pos["row"])
+
+        reel_to_overlay = int(round(sum(all_reels) / len(all_rows)))
+        row_to_overlay = int(round(sum(all_rows) / len(all_rows)))
+
+        return (reel_to_overlay, row_to_overlay)
 
     def get_neighbours(self, reel, row, local_checked) -> list:
         """All neighbouring symbols within board range."""
@@ -90,13 +105,13 @@ class ClusterWins(MultiplierStrategy):
         multiplier_key: str = "multiplier",
         return_data: dict = {"totalWin": 0, "wins": []},
     ) -> type:
-        """Eetermine payout amount from cluster, including symbol multiplier and global multiplier value."""
+        """Determine payout amount from cluster, including symbol multiplier and global multiplier value."""
         exploding_symbols = []
         total_win = 0
         for sym in clusters:
             for cluster in clusters[sym]:
-                numSymsInCluster = len(cluster)
-                if (numSymsInCluster, sym) in self.config.paytable:
+                syms_in_cluster = len(cluster)
+                if (syms_in_cluster, sym) in self.config.paytable:
                     cluster_mult = 0
                     for positions in cluster:
                         if self.board[positions[0]][positions[1]].check_attribute(multiplier_key):
@@ -105,21 +120,20 @@ class ClusterWins(MultiplierStrategy):
                                     multiplier_key
                                 )
                     cluster_mult = max(cluster_mult, 1)
-                    symwin = self.config.paytable[(numSymsInCluster, sym)]
-                    symwin_mult = symwin * cluster_mult * self.global_multiplier
+                    sym_win = self.config.paytable[(syms_in_cluster, sym)]
+                    symwin_mult = sym_win * cluster_mult * self.global_multiplier
                     total_win += symwin_mult
-                    jsonPositions = [{"reel": p[0], "row": p[1]} for p in cluster]
+                    json_positions = [{"reel": p[0], "row": p[1]} for p in cluster]
                     return_data["wins"] += [
                         {
                             "symbol": sym,
-                            "clusterSize": numSymsInCluster,
+                            "clusterSize": syms_in_cluster,
                             "win": symwin_mult,
-                            "positions": jsonPositions,
+                            "positions": json_positions,
                             "meta": {
-                                "multiplier": cluster_mult,
-                                "winWithoutMult": symwin,
                                 "globalMult": self.global_multiplier,
-                                "clusterMultiplier": cluster_mult,
+                                "clusterMult": cluster_mult,
+                                "winWithoutMult": sym_win,
                             },
                         }
                     ]

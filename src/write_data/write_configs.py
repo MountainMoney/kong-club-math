@@ -4,7 +4,7 @@ import json
 
 
 def generate_configs(gamestate: object, json_padding: bool = True, assign_properties: bool = True):
-    """Construct frontend, backend and optimisation-required configuration files."""
+    """Construct frontend, backend and optimization-required configuration files."""
     make_fe_config(
         gamestate=gamestate,
         json_padding=json_padding,
@@ -27,7 +27,7 @@ def pass_fe_betmode(betmode):
 def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwargs):
     """
     json_padding formats symbols the same as the board {'name': symbol} (default), alternatively an array of strings ['H1',...] is passed
-    assign_properties will invode
+    assign_properties will invoke a symbol attribute
     """
     if assign_properties:
         assert json_padding is True, "json_padding must be `True` to invoke symbol properties in padding"
@@ -70,21 +70,23 @@ def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwarg
             symbols[sym.name]["special_properties"] = special_properties
 
     jsonInfo["symbols"] = symbols
-    reelStripDictionaryJSON = {}
+    reelstrip_json = {}
     if json_padding:
         for idx, reels in gamestate.config.padding_reels.items():
-            reelStripDictionaryJSON[idx] = [[] for _ in range(gamestate.config.num_reels)]
+            reelstrip_json[idx] = [[] for _ in range(gamestate.config.num_reels)]
             for c, _ in enumerate(reels):
                 column = reels[c]
                 for i, _ in enumerate(column):
-                    reelStripDictionaryJSON[idx][c].append({"name": column[i]})
-                    if len(gamestate.symbol_storage.symbols[column[i]].special_functions) > 0:
-                        pass
-                        # s = Symbol(gamestate.config, column[i])
-                        # s.apply_special_function()
-                        pass
+                    reelstrip_json[idx][c].append({"name": column[i]})
+                    # if column[i] in gamestate.special_symbol_functions and assign_properties:
+                    #     prop, val = gamestate.special_symbol_functions[column[c]]
+                    #     reelstrip_json[idx][c].append()
+                    #     pass
+                    #     # s = Symbol(gamestate.config, column[i])
+                    #     # s.apply_special_function()
+                    #     pass
         # TODO: implement special function
-        jsonInfo["paddingReels"] = reelStripDictionaryJSON
+        jsonInfo["paddingReels"] = reelstrip_json
     elif not json_padding:
         jsonInfo["paddingReels"] = gamestate.config.paddingReels
 
