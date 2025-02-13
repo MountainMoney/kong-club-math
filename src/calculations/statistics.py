@@ -1,7 +1,8 @@
 import random
+from typing import Union
 
 
-def get_random_outcome(distribution: dict, totalWeight: float = None) -> type:
+def get_random_outcome(distribution: dict, totalWeight: float = None) -> Union[float, int]:
     """Returns a value from a distibution passed as a dictionary: {value : weight, ...}"""
     assert isinstance(distribution, dict), "distribution must be of type: dict "
     if totalWeight is None:

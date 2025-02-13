@@ -38,8 +38,8 @@ class Board(GeneralGameState):
                     )
                 )
             for row in range(self.config.num_rows[reel]):
-                symbolID = self.reelstrip[reel][(reel_pos + row) % len(self.reelstrip[reel])]
-                sym = self.create_symbol(symbolID)
+                sym_id = self.reelstrip[reel][(reel_pos + row) % len(self.reelstrip[reel])]
+                sym = self.create_symbol(sym_id)
                 board[reel][row] = sym
                 if sym.special:
                     for special_symbol in self.special_syms_on_board:
@@ -47,7 +47,7 @@ class Board(GeneralGameState):
                             if board[reel][row].name == s:
                                 self.special_syms_on_board[special_symbol] += [{"reel": reel, "row": row}]
                                 if (
-                                    board[reel][row].get_attribute("scatter")
+                                    board[reel][row].check_attribute("scatter")
                                     and len(self.special_syms_on_board[special_symbol])
                                     >= self.config.anticipation_triggers[self.gametype]
                                     and first_scatter_reel == -1
@@ -108,8 +108,8 @@ class Board(GeneralGameState):
                     )
                 )
             for row in range(self.config.num_rows[reel]):
-                symbolID = self.reelstrip[reel][(reel_pos + row) % len(self.reelstrip[reel])]
-                sym = self.create_symbol(symbolID)
+                sym_id = self.reelstrip[reel][(reel_pos + row) % len(self.reelstrip[reel])]
+                sym = self.create_symbol(sym_id)
                 board[reel][row] = sym
 
                 if sym.special:
@@ -118,7 +118,7 @@ class Board(GeneralGameState):
                             if board[reel][row].name == s:
                                 self.special_syms_on_board[special_symbol] += [{"reel": reel, "row": row}]
                                 if (
-                                    board[reel][row].get_attribute("scatter")
+                                    board[reel][row].check_attribute("scatter")
                                     and len(self.special_syms_on_board[special_symbol])
                                     >= self.config.anticipation_triggers[self.gametype]
                                     and first_scatter_reel == -1

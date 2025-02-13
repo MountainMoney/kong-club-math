@@ -31,7 +31,7 @@ class Config:
 
         # Define special Symbols properties - list all possible symbol states during game-play
         self.basegame_type = "basegame"
-        self.freegame_type = "freeSpins"
+        self.freegame_type = "freegame"
 
         self.include_padding = True
 

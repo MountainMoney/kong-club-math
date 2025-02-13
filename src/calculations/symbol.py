@@ -24,7 +24,7 @@ class SymbolStorage:
 
 
 class Symbol:
-    """Create symbol from name (string) and assign relevent attribtutes and special functions."""
+    """Create symbol from name (string) and assign relevant attributes and special functions."""
 
     def __init__(self, config: object, name: str) -> None:
         self.name = name
@@ -35,9 +35,6 @@ class Symbol:
             if name in config.special_symbols[special_property]:
                 setattr(self, special_property, True)
                 is_special = True
-            else:
-                if not (hasattr(self, special_property)):
-                    setattr(self, special_property, False)
 
         if is_special:
             setattr(self, "special", True)
@@ -49,7 +46,7 @@ class Symbol:
         self.special_functions.append(special_function)
 
     def apply_special_function(self) -> callable:
-        """Apply registred symbol function."""
+        """Apply registered symbol function."""
         for fun in self.special_functions:
             fun(self)
 
@@ -58,9 +55,7 @@ class Symbol:
         paying_symbols = set()
         pay_value = []
         for tup, val in config.paytable.items():
-            assert isinstance(
-                tup[1], str
-            ), "paytable expects string for symbol name, (kind, symbol): value"
+            assert isinstance(tup[1], str), "paytable expects string for symbol name, (kind, symbol): value"
             paying_symbols.add(tup[1])
             if self.name == tup[1]:
                 pay_value.append({str(tup[0]): val})
@@ -78,9 +73,7 @@ class Symbol:
     def check_attribute(self, *args) -> bool:
         """Check if an attribute exists in a given list."""
         for arg in args:
-            if hasattr(self, arg) and (
-                type(getattr(self, arg)) != bool or getattr(self, arg) == True
-            ):
+            if hasattr(self, arg) and (not (isinstance(getattr(self, arg), bool)) or getattr(self, arg) is True):
                 return True
         return False
 
@@ -88,9 +81,9 @@ class Symbol:
         """Return existing attribute value."""
         return getattr(self, attribute)
 
-    def assign_attribute(self, attributeDict: dict) -> None:
+    def assign_attribute(self, attribute_dict: dict) -> None:
         """Assign attribute value to symbol."""
-        for prop, value in attributeDict.items():
+        for prop, value in attribute_dict.items():
             setattr(self, prop, value)
 
     def __eq__(self, name: str) -> bool:

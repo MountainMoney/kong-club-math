@@ -82,24 +82,32 @@ class BetMode:
         return self._is_feature
 
     def get_auto_close_disabled(self):
+        """
+        Auto close tells RGS if bet should be automatically closed (contacting the /endround API)
+        if the payout multiplier is 0x. Calling /endround means the player will not be able to
+        resume an interrupted bet.
+        """
         return self._auto_close_disabled
 
-    def getBuyBonus(self):
+    def get_buybonus(self) -> bool:
+        """Returns True if BetMode is a buy-bonus."""
         return self._is_buybonus
 
-    def get_wincap(self):
+    def get_wincap(self) -> float:
+        """Returns value of maximum win amount."""
         return self._wincap
 
-    def get_rtp(self):
+    def get_rtp(self) -> float:
+        """Returns total BetMode RTP."""
         return self._rtp
 
-    def get_distributions(self):
+    def get_distributions(self) -> dict:
+        """Returns dictionary of all BetMode distributions."""
         return self._distributions
 
     def get_distribution_conditions(self, targetCriteria: str) -> dict:
+        """Returns conditions required fro distribution simulation to be accepted."""
         for d in self.get_distributions():
             if d._criteria == targetCriteria:
                 return d._conditions
-        return RuntimeError(
-            f"target critera: {targetCriteria} not found in betmode-distributions."
-        )
+        return RuntimeError(f"target criteria: {targetCriteria} not found in betmode-distributions.")

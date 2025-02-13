@@ -1,5 +1,5 @@
 from src.config.config import Config
-from src.config.distributions import Distribution, DistributionConditions
+from src.config.distributions import Distribution
 from src.write_data.force import *
 from src.config.betmode import BetMode
 

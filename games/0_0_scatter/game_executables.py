@@ -7,7 +7,6 @@ from copy import copy
 from game_calculations import GameCalculations
 from game_events import send_mult_info_event
 from src.events.events import (
-    update_global_mult_event,
     set_win_event,
     set_total_event,
     fs_trigger_event,
@@ -37,11 +36,6 @@ class GameExecutables(GameCalculations):
         if self.win_manager.spin_win > 0:
             set_win_event(self)
         set_total_event(self)
-
-    def update_global_mult(self):
-        """Increment multiplier value and emit corresponding event."""
-        self.global_multiplier += 1
-        update_global_mult_event(self)
 
     def update_freespin_amount(self, scatter_key: str = "scatter"):
         """Update current and total freespin number and emit event."""

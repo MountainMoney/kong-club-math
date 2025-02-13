@@ -98,9 +98,13 @@ class LineWins(MultiplierStrategy):
                         },
                     )
 
+                if first_non_wild is not None:
+                    nme = first_non_wild.name
+                else:
+                    nme = "W"
                 self.record_line_win(
                     wild_matches + matches,
-                    first_non_wild.name,
+                    nme,
                     applied_mult,
                     self.gametype,
                 )

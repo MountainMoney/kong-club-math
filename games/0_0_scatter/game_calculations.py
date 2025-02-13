@@ -1,6 +1,5 @@
-import sys
-sys.path.append('./')
 from src.executables.executables import Executables
+
 
 class GameCalculations(Executables):
 
@@ -13,6 +12,8 @@ class GameCalculations(Executables):
                 if self.board[reel][row].check_attribute(multiplier_key):
                     board_mult += self.board[reel][row].get_attribute(multiplier_key)
                     num_mults += 1
-                    mult_info.append({'reel': reel, 'row': row, 'value': self.board[reel][row].get_attribute(multiplier_key)})
-    
+                    mult_info.append(
+                        {"reel": reel, "row": row, "value": self.board[reel][row].get_attribute(multiplier_key)}
+                    )
+
         return max(1, board_mult), mult_info

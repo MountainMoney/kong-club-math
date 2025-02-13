@@ -1,12 +1,13 @@
 """Template game configuration file, detailing required user-specified inputs."""
 
 from src.config.config import Config
-from src.config.distributions import Distribution, DistributionConditions
-from src.write_data.force import *
-from src.config.betmode import BetMode
+from src.config.distributions import Distribution
+from src.config.config import BetMode
 
 
 class GameConfig(Config):
+    """Template configuration class."""
+
     def __init__(self):
         super().__init__()
         self.game_id = ""
@@ -19,9 +20,7 @@ class GameConfig(Config):
 
         # Game Dimensions
         self.num_reels = 0
-        self.num_rows = [
-            0
-        ] * self.num_reels  # Optionally include variable number of rows per reel
+        self.num_rows = [0] * self.num_reels  # Optionally include variable number of rows per reel
         # Board and Symbol Properties
         self.paytable = {}
 

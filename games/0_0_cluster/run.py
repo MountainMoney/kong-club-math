@@ -5,6 +5,7 @@ from game_config import GameConfig
 from src.state.run_sims import create_books
 from src.write_data.write_configs import generate_configs
 
+
 if __name__ == "__main__":
 
     num_threads = 1

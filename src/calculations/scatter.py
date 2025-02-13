@@ -23,7 +23,7 @@ class ScatterWins(MultiplierStrategy):
             if (
                 dist_from_middle < closest_to_middle
                 and row not in rows_for_overlay
-                and len(row_to_overlay) < len(self.board[reel])
+                and len(rows_for_overlay) < len(self.board[reel])
             ):
                 closest_to_middle = dist_from_middle
                 reel_to_overlay = reel

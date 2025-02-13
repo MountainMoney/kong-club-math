@@ -1,0 +1,4 @@
+site_name: Zuck Engine Documentation
+site_url: https://github.com/twist-gaming/zuck-engine
+theme:
+  name: material

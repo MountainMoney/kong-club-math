@@ -1,7 +1,7 @@
 """ 
 Obtain and compare file hash using SHA256
     Args:
-    -f input arbitary number of filepaths separated by whitespace
+    -f input arbitrary number of filepaths separated by whitespace
     Example:
     python3 get_file_hash.py -f '../games/0_0_ways/library/lookup_tables/lookUpTable_base.csv'
 

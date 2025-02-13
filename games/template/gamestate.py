@@ -1,11 +1,10 @@
-import os, sys
-from game_override import GameStateOverride
+"""Handles the state and output for a single simulation round"""
 
-if os.getcwd() not in sys.path:
-    sys.path.append(os.getcwd())
+from game_override import GameStateOverride
 
 
 class GameState(GameStateOverride):
+    """Handle all game-logic and event updates for a given simulation number."""
 
     def run_spin(self, sim):
         self.reset_seed(sim)
@@ -19,4 +18,8 @@ class GameState(GameStateOverride):
 
     def run_freespin(self):
         self.reset_fs_spin()
-        pass
+        while self.fs < self.tot_fs:
+            self.update_freespin()
+            pass
+
+        self.end_freespin()

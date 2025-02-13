@@ -20,6 +20,7 @@ from src.events.events import (
     fs_trigger_event,
     update_freespin_event,
     final_win_event,
+    update_global_mult_event,
 )
 
 
@@ -65,7 +66,9 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
             sym_prob.append(len(reelstops[x]) / len(self.config.reels[reelstrip_id][x]))
         force_stop_positions = {}
         while len(force_stop_positions) != num_force_syms:
-            chosen_reel = random.choices(list(np.arange(0, self.config.num_reels)), sym_prob)[0]
+            possible_reels = [i for i in range(self.config.num_reels) if sym_prob[i] > 0]
+            possible_probs = [p for p in sym_prob if p > 0]
+            chosen_reel = random.choices(possible_reels, possible_probs)[0]
             chosen_stop = random.choice(reelstops[chosen_reel])
             sym_prob[chosen_reel] = 0
             force_stop_positions[int(chosen_reel)] = int(chosen_stop)
@@ -183,3 +186,8 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         """Check base and freespin sums, set payout multiplier."""
         self.update_final_win()
         final_win_event(self)
+
+    def update_global_mult(self):
+        """Increment multiplier value and emit corresponding event."""
+        self.global_multiplier += 1
+        update_global_mult_event(self)

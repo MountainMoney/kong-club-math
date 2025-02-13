@@ -1,5 +1,3 @@
-"""Main file for handling game logic and emitting events."""
-
 from game_override import GameStateOverride
 
 

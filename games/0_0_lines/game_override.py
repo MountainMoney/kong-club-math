@@ -9,9 +9,7 @@ class GameStateOverride(GameExecutables):
     """
 
     def reset_book(self):
-        # Reset global values used across multiple projects
         super().reset_book()
-        # Reset parameters relevant to local game only
         self.emit_win_event = True
 
     def assign_special_sym_function(self):
@@ -19,7 +17,7 @@ class GameStateOverride(GameExecutables):
             "W": [self.assign_mult_property],
         }
 
-    def assign_mult_property(self, symbol):
+    def assign_mult_property(self, symbol) -> dict:
         """Assign multiplier value to Wild symbol in freegame."""
         multiplier_value = 1
         if self.gametype == self.config.freegame_type:
