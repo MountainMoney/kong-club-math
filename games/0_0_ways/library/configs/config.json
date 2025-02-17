@@ -1,0 +1,68 @@
+{
+    "frontendConfig": {
+        "file": "config_fe_0_0_ways.json",
+        "sha256": "ecf818e9edac67a00ae00dc768665461126eb8d2f944f377eac03b2cd7b2f647"
+    },
+    "workingName": "sample ways game",
+    "gameID": "0_0_ways",
+    "rtp": 97.0,
+    "betDenomination": 1000,
+    "minDenomination": 10,
+    "providerNumber": 0,
+    "standardForceFile": {
+        "file": "force.json",
+        "sha256": "73074b17b7899ef8515f246d3786f379a89db3f1d3e56547af7c458e63292d6b"
+    },
+    "bookShelfConfig": [
+        {
+            "name": "base",
+            "tables": {
+                "file": "lookUpTable_base_0.csv",
+                "condition": "totalSpin > -1",
+                "sha256": "a5ac564573092af954fa507e020ac48c2577059b009c4cc0dfa19aed123e17dd",
+                "name": "0"
+            },
+            "cost": 1.0,
+            "rtp": 0.97,
+            "std": 138.52,
+            "bookLength": 1000,
+            "feature": true,
+            "autoEndRoundDisabled": false,
+            "buyBonus": false,
+            "maxWin": 5000,
+            "booksFile": {
+                "file": "books_base.json.zst",
+                "sha256": "8227efcd175bd61896e8bca4c385a96d40e6f220c37626780ce7a8420a088ca7"
+            },
+            "forceFile": {
+                "file": "force_for_rob_base.json",
+                "sha256": "7b0a72392e902716772a9342502aa8a16986d1f119fef9a35a3c0008f9821d42"
+            }
+        },
+        {
+            "name": "bonus",
+            "tables": {
+                "file": "lookUpTable_bonus_0.csv",
+                "condition": "totalSpin > -1",
+                "sha256": "db8fcee52860a49ac4601a09eb4a41d8b0a68f23f4c2810c59fc0ab63fd40f8c",
+                "name": "0"
+            },
+            "cost": 100.0,
+            "rtp": 0.97,
+            "std": 2.91,
+            "bookLength": 1000,
+            "feature": false,
+            "autoEndRoundDisabled": false,
+            "buyBonus": true,
+            "maxWin": 5000,
+            "booksFile": {
+                "file": "books_bonus.json.zst",
+                "sha256": "fa2cf45d2fd008936ff8ed8a95473c5521b1dfab5996e3f0175872e0469083b3"
+            },
+            "forceFile": {
+                "file": "force_for_rob_bonus.json",
+                "sha256": "ec9e90561cb769034bcaa8a02595a02642877436ccb43b77af547836edaaa5af"
+            }
+        }
+    ]
+}

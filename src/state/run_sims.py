@@ -20,11 +20,12 @@ def create_books(
     profiling: bool,
 ):
     """Main run-function for simulating game outcomes and outputting all files."""
-    for ns in num_sim_args.values():
+    for key, ns in num_sim_args.items():
         if all([ns > 0, ns > batch_size * batch_size]):
             assert (
                 ns % (threads * batch_size) == 0
             ), "mode-sims/(batch * threads) must be divisible with no remainder"
+        num_sim_args[key] = int(ns)
 
     if not compress and sum(num_sim_args.values()) > 1e4:
         warn("Generating large number of uncompressed books!")

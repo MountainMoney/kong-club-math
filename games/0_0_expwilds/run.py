@@ -8,11 +8,10 @@ if __name__ == "__main__":
     num_threads = 1
     rust_threaeds = 20
     batching_size = 5000
-    compression = False
+    compression = True
     profiling = False
 
-    num_sim_args = {"base": int(1e2), "bonus": int(1e2)}
-
+    num_sim_args = {"base": int(20), "bonus": int(20), "superspin": int(20)}
     config = GameConfig()
     gamestate = GameState(config)
 
@@ -25,3 +24,5 @@ if __name__ == "__main__":
         compression,
         profiling,
     )
+
+    generate_configs(gamestate)

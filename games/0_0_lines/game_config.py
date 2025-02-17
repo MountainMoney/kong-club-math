@@ -261,7 +261,7 @@ class GameConfig(Config):
                                 self.basegame_type: {"BR0": 1},
                                 self.freegame_type: {"FR0": 1},
                             },
-                            "scatter_triggers": {3: 20, 4: 5, 5: 1},
+                            "scatter_triggers": {3: 50, 4: 10, 5: 1},
                             "mult_values": {
                                 self.basegame_type: {1: 1},
                                 self.freegame_type: {

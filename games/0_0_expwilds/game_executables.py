@@ -1,7 +1,11 @@
-from .game_calculations import GameCalculations
+"""Executables related to updating expanding wilds and collecting prize values."""
+
+import random
+from copy import deepcopy
+from game_events import new_expanding_wild_event, update_expanding_wild_event
+from game_calculations import GameCalculations
 from src.calculations.statistics import get_random_outcome
 from src.events.events import reveal_event
-import random
 
 
 class GameExecutables(GameCalculations):
@@ -9,16 +13,27 @@ class GameExecutables(GameCalculations):
 
     def update_with_existing_wilds(self) -> None:
         """Replace drawn boards with existing sticky-wilds."""
+        updated_exp_wild = []
         for reel, _ in enumerate(self.expanding_wilds):
             if len(self.expanding_wilds[reel]) > 0:
+                new_mult_on_reveal = get_random_outcome(
+                    self.get_current_distribution_conditions()["mult_values"][self.gametype]
+                )
+                self.expanding_wilds[reel][0]["mult"] = new_mult_on_reveal
+                updated_exp_wild.append(
+                    {"reel": self.expanding_wilds[reel][0]["reel"], "row": 0, "mult": new_mult_on_reveal}
+                )
                 for row, _ in enumerate(self.board[self.expanding_wilds[reel][0]["reel"]]):
                     self.board[reel][row] = self.create_symbol("W")
                     self.board[reel][row].assign_attribute({"mult": self.expanding_wilds[reel][0]["mult"]})
 
+        if len(updated_exp_wild) > 0:
+            update_expanding_wild_event(self, updated_exp_wild)
         reveal_event(self)
 
     def assign_new_wilds(self, max_num_new_wilds: int):
         """Assign unused reels to have sticky symbol."""
+        new_exp_wilds = []
         for _ in range(max_num_new_wilds):
             if len(self.avaliable_reels) > 0:
                 chosen_reel = random.choice(self.avaliable_reels)
@@ -29,3 +44,52 @@ class GameExecutables(GameCalculations):
                 chosen_row = random.choice([i for i in range(self.config.num_rows[chosen_reel])])
                 expwild_details = {"reel": chosen_reel, "row": chosen_row, "mult": wr_mult}
                 self.expanding_wilds[chosen_reel].append(expwild_details)
+                new_exp_wilds.append(expwild_details)
+
+        if len(new_exp_wilds) > 0:
+            new_expanding_wild_event(self, new_exp_wilds)
+
+    # Superspin prize modes
+    def check_for_new_prize(self) -> list:
+        new_sticky_symbols = []
+        for reel, _ in enumerate(self.board):
+            for row, _ in enumerate(self.board[reel]):
+                if (
+                    self.board[reel][row].check_attribute("prize")
+                    and (reel, row) not in self.existing_sticky_symbols
+                ):
+                    sym_details = {
+                        "reel": reel,
+                        "row": row,
+                        "prize": self.board[reel][row].get_attribute("prize"),
+                    }
+                    if sym_details["row"] > 4:
+                        print("here")
+                    new_sticky_symbols.append(sym_details)
+                    self.sticky_symbols.append(deepcopy(sym_details))
+                    self.existing_sticky_symbols.append((sym_details["reel"], sym_details["row"]))
+
+        return new_sticky_symbols
+
+    def replace_board_with_stickys(self) -> None:
+        """replace with stickys and update special array."""
+        for sym in self.sticky_symbols:
+            self.board[sym["reel"]][sym["row"]] = self.create_symbol("P")
+            self.board[sym["reel"]][sym["row"]].assign_attribute(
+                {"prize": get_random_outcome(self.get_current_distribution_conditions()["prize_values"])}
+            )
+
+    def get_final_board_prize(self) -> dict:
+        """Get final board win."""
+        total_win = 0.0
+        winning_pos = []
+        for reel, _ in enumerate(self.board):
+            for row, _ in enumerate(self.board[reel]):
+                if self.board[reel][row].check_attribute("prize"):
+                    total_win += self.board[reel][row].get_attribute("prize")
+                    winning_pos.append(
+                        {"reel": reel, "row": row, "value": self.board[reel][row].get_attribute("prize")},
+                    )
+
+        return_data = {"totalWin": total_win, "wins": winning_pos}
+        return return_data

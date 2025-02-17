@@ -1,4 +1,4 @@
-from .game_executables import GameExecutables
+from game_executables import GameExecutables
 from src.calculations.statistics import get_random_outcome
 
 
@@ -15,9 +15,7 @@ class GameStateOverride(GameExecutables):
         self.avaliable_reels = [i for i in range(self.config.num_reels)]
 
     def assign_special_sym_function(self):
-        self.special_symbol_functions = {
-            "W": [self.assign_mult_property],
-        }
+        self.special_symbol_functions = {"W": [self.assign_mult_property], "P": [self.assign_prize_value]}
 
     def assign_mult_property(self, symbol):
         """Only assign multiplier values in freegame"""
@@ -25,7 +23,13 @@ class GameStateOverride(GameExecutables):
             multiplier_value = get_random_outcome(
                 self.get_current_distribution_conditions()["mult_values"][self.gametype]
             )
-            symbol.assign_attribute({"mult": multiplier_value})
+            symbol.assign_attribute({"multiplier": multiplier_value})
+
+    def assign_prize_value(self, symbol):
+        """Only assign multiplier values in freegame"""
+        if self.gametype != self.config.basegame_type:
+            multiplier_value = get_random_outcome(self.get_current_distribution_conditions()["prize_value"])
+            symbol.assign_attribute({"prize_value": multiplier_value})
 
     def check_game_repeat(self):
         """Check repeat conditions before imprinting simulation events."""
@@ -33,3 +37,9 @@ class GameStateOverride(GameExecutables):
             win_criteria = self.get_current_betmode_distributions().get_win_criteria()
             if win_criteria is not None and self.final_win != win_criteria:
                 self.repeat = True
+
+    def reset_superspin(self):
+        self.tot_fs = 3
+        self.fs = 0
+        self.sticky_symbols = []
+        self.existing_sticky_symbols = []
