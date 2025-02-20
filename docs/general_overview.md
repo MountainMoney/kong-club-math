@@ -1,15 +1,15 @@
 # Setup and installation
 
-# Installing a Python Package
+# Installing the Zuck-Engine&trade;
 
-This guide explains how to install a Python package using a `requirements.txt` file, set up a virtual environment, and install a package in editable mode.
+This guide details the recommended process for installing the Zuck-Engine and all required packages using the _setuptools_ standard package.
 
 ## Step 1: Create and Activate a Virtual Environment
 
-It's recommended to use a virtual environment to manage dependencies.
+It's recommended to use a virtual environment to manage dependencies. Using the Virtual Environment manager (_venv_), install Python version >=3.12 using:
 
 ```sh
-python -m venv venv
+python3.12 -m venv venv
 ```
 
 Activate the virtual environment:
@@ -33,13 +33,13 @@ pip install -r requirements.txt
 
 ## Step 3: Install the Package in Editable Mode
 
-If the package contains a `setup.py` and you want to install it in editable mode (for development purposes), run:
+Using the `setup.py` file, the package should be installed it in editable mode (for development purposes) with the command:
 
 ```sh
 pip install -e .
 ```
 
-This allows modifications to the package source code to take effect without reinstalling it.
+This allows modifications to the package source code to take effect without reinstallation. 
 
 ## Step 4: Verify Installation
 

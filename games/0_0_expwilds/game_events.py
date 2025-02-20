@@ -8,23 +8,28 @@ NEW_STICKY_SYMS = "newStickySymbols"
 WIN_DATA = "winInfo"
 
 
-def new_expanding_wild_event(gamestate, new_exp_wilds: list) -> None:
+def new_expanding_wild_event(gamestate) -> None:
     """Passed after reveal event"""
+    new_exp_wilds = gamestate.new_exp_wilds
     if gamestate.config.include_padding:
         for ew in new_exp_wilds:
             ew["row"] += 1
 
     dic = {"index": len(gamestate.book["events"]), "type": NEW_EXP_WILDS, "newWilds": new_exp_wilds}
-    gamestate.book["events"] += [dic]
+    gamestate.book["events"] += [deepcopy(dic)]
 
 
-def update_expanding_wild_event(gamestate, existing_wild_details: list) -> None:
+def update_expanding_wild_event(gamestate) -> None:
     """On each reveal - the multiplier value on the expanding wild is updated (sent before reveal)"""
+    existing_wild_details = deepcopy(gamestate.expanding_wilds)
+    wild_event = []
     if gamestate.config.include_padding:
         for ew in existing_wild_details:
-            ew["row"] += 1
+            if len(ew) > 0:
+                ew["row"] += 1
+                wild_event.append(ew)
 
-    dic = {"index": len(gamestate.book["events"]), "type": UPDATE_EXP_WILDS, "newWilds": existing_wild_details}
+    dic = {"index": len(gamestate.book["events"]), "type": UPDATE_EXP_WILDS, "existingWilds": wild_event}
     gamestate.book["events"] += [dic]
 
 

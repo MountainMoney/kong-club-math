@@ -1,4 +1,5 @@
 from game_override import GameStateOverride
+from game_events import updateGridMultiplierEvent
 
 
 class GameState(GameStateOverride):
@@ -36,18 +37,19 @@ class GameState(GameStateOverride):
         while self.fs < self.tot_fs:
             self.update_freespin()
             self.draw_board()
+            updateGridMultiplierEvent(self)
             # Apply game-specific actions (i.e special symbol attributes before or after evaluation)
 
             self.win_data = self.get_cluster_data()
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_tumble_win_events()
-
+            self.update_grid_mults()
             while self.win_data["totalWin"] > 0 and not (self.wincap_triggered):
                 self.tumble_game_board()
-                self.update_grid_mults()
                 self.win_data = self.get_cluster_data()
                 self.win_manager.update_spinwin(self.win_data["totalWin"])
                 self.emit_tumble_win_events()
+                self.update_grid_mults()
 
             self.set_end_tumble_event()
             self.win_manager.update_gametype_wins(self.gametype)

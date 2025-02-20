@@ -2,7 +2,6 @@
 
 import random
 from copy import deepcopy
-from game_events import new_expanding_wild_event, update_expanding_wild_event
 from game_calculations import GameCalculations
 from src.calculations.statistics import get_random_outcome
 from src.events.events import reveal_event
@@ -14,40 +13,34 @@ class GameExecutables(GameCalculations):
     def update_with_existing_wilds(self) -> None:
         """Replace drawn boards with existing sticky-wilds."""
         updated_exp_wild = []
-        for reel, _ in enumerate(self.expanding_wilds):
-            if len(self.expanding_wilds[reel]) > 0:
-                new_mult_on_reveal = get_random_outcome(
-                    self.get_current_distribution_conditions()["mult_values"][self.gametype]
-                )
-                self.expanding_wilds[reel][0]["mult"] = new_mult_on_reveal
-                updated_exp_wild.append(
-                    {"reel": self.expanding_wilds[reel][0]["reel"], "row": 0, "mult": new_mult_on_reveal}
-                )
-                for row, _ in enumerate(self.board[self.expanding_wilds[reel][0]["reel"]]):
-                    self.board[reel][row] = self.create_symbol("W")
-                    self.board[reel][row].assign_attribute({"mult": self.expanding_wilds[reel][0]["mult"]})
-
-        if len(updated_exp_wild) > 0:
-            update_expanding_wild_event(self, updated_exp_wild)
-        reveal_event(self)
+        for expwild in self.expanding_wilds:
+            new_mult_on_reveal = get_random_outcome(
+                self.get_current_distribution_conditions()["mult_values"][self.gametype]
+            )
+            expwild["mult"] = new_mult_on_reveal
+            updated_exp_wild.append({"reel": expwild["reel"], "row": 0, "mult": new_mult_on_reveal})
+            for row, _ in enumerate(self.board[expwild["reel"]]):
+                self.board[expwild["reel"]][row] = self.create_symbol("W")
+                self.board[expwild["reel"]][row].assign_attribute({"multiplier": new_mult_on_reveal})
 
     def assign_new_wilds(self, max_num_new_wilds: int):
         """Assign unused reels to have sticky symbol."""
-        new_exp_wilds = []
+        self.new_exp_wilds = []
         for _ in range(max_num_new_wilds):
             if len(self.avaliable_reels) > 0:
                 chosen_reel = random.choice(self.avaliable_reels)
+                chosen_row = random.choice([i for i in range(self.config.num_rows[chosen_reel])])
                 self.avaliable_reels.remove(chosen_reel)
+
                 wr_mult = get_random_outcome(
                     self.get_current_distribution_conditions()["mult_values"][self.gametype]
                 )
-                chosen_row = random.choice([i for i in range(self.config.num_rows[chosen_reel])])
                 expwild_details = {"reel": chosen_reel, "row": chosen_row, "mult": wr_mult}
-                self.expanding_wilds[chosen_reel].append(expwild_details)
-                new_exp_wilds.append(expwild_details)
-
-        if len(new_exp_wilds) > 0:
-            new_expanding_wild_event(self, new_exp_wilds)
+                self.board[expwild_details["reel"]][expwild_details["row"]] = self.create_symbol("W")
+                self.board[expwild_details["reel"]][expwild_details["row"]].assign_attribute(
+                    {"multiplier": wr_mult}
+                )
+                self.new_exp_wilds.append(expwild_details)
 
     # Superspin prize modes
     def check_for_new_prize(self) -> list:

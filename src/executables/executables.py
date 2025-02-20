@@ -177,6 +177,7 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         self.win_manager.reset_spin_win()
         self.tumblewin_mult = 0
         self.win_data = {}
+        self.new_exp_wilds = []
 
     def end_freespin(self) -> None:
         """Transmit total amount awarded during freespins."""

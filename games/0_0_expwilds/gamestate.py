@@ -3,6 +3,7 @@
 from game_override import GameStateOverride
 from game_events import win_info_event, new_sticky_event
 from src.events.events import update_freespin_event, reveal_event, set_total_event, set_win_event
+from game_events import new_expanding_wild_event, update_expanding_wild_event
 from src.calculations.statistics import get_random_outcome
 
 
@@ -34,18 +35,26 @@ class GameState(GameStateOverride):
 
     def run_freespin(self):
         self.reset_fs_spin()
-        self.expanding_wilds = [[] for _ in range(self.config.num_reels)]
+        self.expanding_wilds = []
         self.avaliable_reels = [i for i in range(self.config.num_reels)]
 
         while self.fs < self.tot_fs:
             self.update_freespin()
             self.draw_board(emit_event=False)
 
+            wild_on_reveal = get_random_outcome(self.get_current_distribution_conditions()["landing_wilds"])
+            self.assign_new_wilds(wild_on_reveal)
             self.update_with_existing_wilds()  # Override board with expanding wilds, update mults on each
 
-            wild_on_reveal = get_random_outcome(self.get_current_distribution_conditions()["landing_wilds"])
-            if wild_on_reveal > 0:  # Assign new expanding wilds - send event with positions
-                self.assign_new_wilds(wild_on_reveal)
+            reveal_event(self)
+            if len(self.expanding_wilds) > 0:
+                update_expanding_wild_event(self)
+            if len(self.new_exp_wilds) > 0:
+                new_expanding_wild_event(self)
+
+            for wild in self.new_exp_wilds:
+                self.expanding_wilds.append({"reel": wild["reel"], "row": 0, "mult": wild["mult"]})
+            self.expanding_wilds = sorted(self.expanding_wilds, key=lambda x: x["reel"])
 
             self.win_data = self.get_lines()
             self.win_manager.update_spinwin(self.win_data["totalWin"])

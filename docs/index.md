@@ -2,10 +2,10 @@
 ### Powered by **CarrotRGS**
 
 Welcome to the Zuck-Engine!
-Your one-stop-shop for slots.
+Your one-stop-shop for spectacular slots.
 
 
-## Directory
+## Directory Structure
     src/ 
         calculations/ # Board and Symbol setup, various win-type game logic
         config/ # Creates configuration files required by the RGS, frontend and optimization algorithm

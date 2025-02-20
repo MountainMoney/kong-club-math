@@ -223,7 +223,7 @@ class GameConfig(Config):
                 cost=1.0,
                 rtp=self.rtp,
                 max_win=self.wincap,
-                auto_close_disables=False,
+                auto_close_disabled=False,
                 is_feature=True,
                 is_buybonus=False,
                 distributions=[
@@ -317,7 +317,7 @@ class GameConfig(Config):
                 cost=100.0,
                 rtp=self.rtp,
                 max_win=self.wincap,
-                auto_close_disables=False,
+                auto_close_disabled=False,
                 is_feature=False,
                 is_buybonus=True,
                 distributions=[

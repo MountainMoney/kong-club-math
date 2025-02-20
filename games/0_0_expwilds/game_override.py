@@ -11,7 +11,7 @@ class GameStateOverride(GameExecutables):
     def reset_book(self):
         """Reset game specific properties"""
         super().reset_book()
-        self.expanding_wilds = [[] for _ in range(self.config.num_reels)]
+        self.expanding_wilds = []
         self.avaliable_reels = [i for i in range(self.config.num_reels)]
 
     def assign_special_sym_function(self):

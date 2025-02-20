@@ -12,7 +12,7 @@ class BetMode:
     description="Starting Game Mode",
     rtp=0.97,
     cost=1.0,
-    auto_close_disables=False,
+    auto_close_disabled=False,
     is_feature = False,
     is_enhanced_mode=False,
     is_buybonus=False,
@@ -25,7 +25,7 @@ class BetMode:
         cost: float,
         rtp: float,
         max_win: float,
-        auto_close_disables: bool,
+        auto_close_disabled: bool,
         is_feature: bool,
         is_buybonus: bool,
         distributions: object,
@@ -33,7 +33,7 @@ class BetMode:
         self._name = name
         self._cost = cost
         self._wincap = max_win
-        self._auto_close_disabled = auto_close_disables
+        self._auto_close_disabled = auto_close_disabled
         self._is_feature = is_feature
         self._is_buybonus = is_buybonus
         self._distributions = distributions
@@ -43,7 +43,7 @@ class BetMode:
     def __repr__(self):
         return (
             f"BetMode(name={self._name},"
-            f"cost={self._cost}, max_win={self._wincap}, rtp={self._rtp}, auto_close_disables={self._auto_close_disabled} "
+            f"cost={self._cost}, max_win={self._wincap}, rtp={self._rtp}, auto_close_disabled={self._auto_close_disabled} "
             f"is_feature={self._is_feature}, is_buybonus={self._is_buybonus} "
         )
 
