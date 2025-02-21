@@ -39,7 +39,4 @@ class GameState(GameStateOverride):
 
             self.win_manager.update_gametype_wins(self.gametype)
 
-            if self.check_fs_condition():
-                self.update_fs_retrigger_amt()
-
         self.end_freespin()

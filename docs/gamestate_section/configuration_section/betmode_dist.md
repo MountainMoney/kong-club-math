@@ -12,6 +12,8 @@ Within each `BetMode` there is a set of `Distribution` Classes which determine t
         * `force_wincap`
         * `force_freespins`
 
+    Note that `force_wincap` and `force_freespins` are set to `False` by default and do not have to be explicitly added.
+    
     The most common use for the Distribution Conditions is when drawing a random value using the BetMode's built-in method `get_distribution_conditions()`. i.e.
     ```python
         multiplplier = get_random_outcome(betmode.get_distribution_conditions()['mult_values'])
@@ -22,6 +24,9 @@ Within each `BetMode` there is a set of `Distribution` Classes which determine t
         ...
     ```
 
-    Optionally there is also a `win_criteria` condition which incorporates a payout multiplier into the simulation acceptance. The two commonly used condtions are `win_criteria = 0.0` and `win_criteria = self.wincap`. When calling `self.check_repeat()` at the end of a simulation, if `win_criteria` is not `None` (default), the final win amount must match the value passed. 
+4. Win criteria (optional)
+
+    
+    There is also a `win_criteria` condition which incorporates a payout multiplier into the simulation acceptance. The two commonly used condtions are `win_criteria = 0.0` and `win_criteria = self.wincap`. When calling `self.check_repeat()` at the end of a simulation, if `win_criteria` is not `None` (default), the final win amount must match the value passed. 
 
     The intention behind betmode distribution conditions is to give the option to handle game actions in a way which depends on the (known) expected simulation. This is most clear if for example a simulation is known to correspond to a `max-win` scenario. Instead of repeatly drawing random outcomes which are most likely to be rejected, we can alter the probabilties of larger payouts occurring by biasing a particular reelset, weighting larger prize or multiplier values etc..

@@ -15,9 +15,8 @@ class Distribution:
         conditions: dict = {},
         required_distribution_conditions: list = [
             "reel_weights",
-            "force_wincap",
-            "force_freespins",
         ],
+        default_distribution_conditions: dict = {"force_wincap": False, "force_freespins": False},
     ):
 
         assert quota > 0, "non-zero quota value must be assigned"
@@ -25,6 +24,7 @@ class Distribution:
         self._quota = quota
         self._criteria = criteria
         self._required_distribution_conditions = required_distribution_conditions
+        self._default_distribution_conditions = default_distribution_conditions
         self._win_criteria = win_criteria
         self.verify_and_set_conditions(conditions)
 
@@ -33,6 +33,11 @@ class Distribution:
         condition_keys = list(conditions.keys())
         for rk in self._required_distribution_conditions:
             assert rk in condition_keys, f"condition missing required key: {rk}\n condition_keys"
+
+        for rk in list(self._default_distribution_conditions.keys()):
+            if rk not in condition_keys:
+                conditions[rk] = self._default_distribution_conditions[rk]
+
         self._conditions = conditions
 
     def get_criteria(self):

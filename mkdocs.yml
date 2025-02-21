@@ -45,6 +45,7 @@ nav:
   - High-Level Structure:
       - State Machine: overview_section/state_overview.md
       - Game Structure: overview_section/game_struct.md
+      - Game Format: overview_section/game_format.md
 
   - Gamestate Structure:
     - Simulation Acceptance: gamestate_section/repeat_info.md
@@ -65,7 +66,14 @@ nav:
     - Force Files: gamestate_section/force_info.md
 
   - Source Files:
-    - Calculations: source_section/calculations_info.md
+    - Calculations: 
+      - Board: source_section/board_info.md
+      - Tumble: source_section/tumble_info.md
+      - Statistics: source_section/statistics_info.md
+      - Lines: source_section/lines_info.md
+      - Ways: source_section/ways_info.md
+      - Scatter: source_section/scatter_info.md
+      - Cluster: source_section/cluster_info.md
     - Config: source_section/config_info.md
     - Events: source_section/event_info.md
     - Executables: source_section/executables_info.md
