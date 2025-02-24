@@ -7,7 +7,6 @@ from src.write_data.write_data import *
 from src.wins.win_manager import WinManager
 from src.calculations.symbol import SymbolStorage
 from src.state.books import Book
-from src.state.spin_state import SpinState
 
 
 class GeneralGameState(ABC):
@@ -23,10 +22,13 @@ class GeneralGameState(ABC):
         self.create_symbol_map()
         self.assign_special_sym_function()
         self.sim = 0
-        self.book = Book(self.sim)
-        # self.spin_state = SpinState(self.config, self.sim, self.win_manager)
-        self.repeat = True
         self.criteria = ""
+        self.book = Book(self.sim, self.criteria)
+        self.repeat = True
+        self.win_data = {
+            "totalWin": 0,
+            "wins": [],
+        }
         self.reset_seed()
         self.reset_book()
         self.reset_fs_spin()
@@ -55,7 +57,7 @@ class GeneralGameState(ABC):
         self.top_symbols = None
         self.bottom_symbols = None
         self.book_id = self.sim + 1
-        self.book = Book(self.book_id)
+        self.book = Book(self.book_id, self.criteria)
         self.win_data = {
             "totalWin": 0,
             "wins": [],
@@ -110,20 +112,6 @@ class GeneralGameState(ABC):
             if d._criteria == self.criteria:
                 return d._conditions
         return RuntimeError("could not locate betmode conditions")
-
-    # State verifications/checks
-    def get_wincap_triggered(self) -> bool:
-        """Break out of spin progress if max-win is triggered."""
-        if self.wincap_triggered:
-            return True
-        return False
-
-    def in_criteria(self, *args) -> bool:
-        """Checks if the current win criteria matches a given list."""
-        for arg in args:
-            if self.criteria == arg:
-                return True
-        return False
 
     def record(self, description: dict) -> None:
         """
@@ -235,9 +223,7 @@ class GeneralGameState(ABC):
             thread_index * num_sims + (total_threads * num_sims) * repeat_count,
             (thread_index + 1) * num_sims + (total_threads * num_sims) * repeat_count,
         ):
-            # spin_state = SpinState(self.config, sim_to_criteria[sim], sim, self.win_manager)
             self.criteria = sim_to_criteria[sim]
-            # self.spin_state = SpinState(sim_to_criteria[sim])
             self.run_spin(sim)
         mode_cost = self.get_current_betmode().get_cost()
         print(

@@ -30,3 +30,9 @@ class Conditions(GeneralGameState):
             if self.gametype == arg:
                 return True
         return False
+
+    def get_wincap_triggered(self) -> bool:
+        """Break out of spin progress if max-win is triggered."""
+        if self.wincap_triggered:
+            return True
+        return False

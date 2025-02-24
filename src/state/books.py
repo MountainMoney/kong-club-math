@@ -6,12 +6,12 @@ from copy import deepcopy
 class Book:
     "Stores simulation information."
 
-    def __init__(self, book_id: int):
+    def __init__(self, book_id: int, criteria: str):
         "Initialize simulation book"
         self.id = book_id
         self.payout_multiplier = 0.0
         self.events = []
-        self.criteria = ""
+        self.criteria = criteria
         self.basegame_wins = 0.0
         self.freegame_wins = 0.0
 

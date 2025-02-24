@@ -1,6 +1,6 @@
 # Setup and installation
 
-# Installing the Zuck-Engine&trade;
+# Installing the Carrot MathEngine
 
 This guide details the recommended process for installing the Carrot-MathEngine and all required packages using the _setuptools_ standard package.
 
@@ -9,7 +9,7 @@ This guide details the recommended process for installing the Carrot-MathEngine 
 It's recommended to use a virtual environment to manage dependencies. Using the Virtual Environment manager (_venv_), install Python version >=3.12 using:
 
 ```sh
-python3.12 -m venv venv
+python3.12 -m venv env
 ```
 
 Activate the virtual environment:
@@ -20,7 +20,7 @@ Activate the virtual environment:
   ```
 - **macOS/Linux**:
   ```sh
-  source venv/bin/activate
+  source env/bin/activate
   ```
 
 ## Step 2: Install Dependencies
