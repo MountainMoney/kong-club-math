@@ -56,8 +56,6 @@ class GameExecutables(GameCalculations):
                         "row": row,
                         "prize": self.board[reel][row].get_attribute("prize"),
                     }
-                    if sym_details["row"] > 4:
-                        print("here")
                     new_sticky_symbols.append(sym_details)
                     self.sticky_symbols.append(deepcopy(sym_details))
                     self.existing_sticky_symbols.append((sym_details["reel"], sym_details["row"]))
@@ -68,9 +66,7 @@ class GameExecutables(GameCalculations):
         """replace with stickys and update special array."""
         for sym in self.sticky_symbols:
             self.board[sym["reel"]][sym["row"]] = self.create_symbol("P")
-            self.board[sym["reel"]][sym["row"]].assign_attribute(
-                {"prize": get_random_outcome(self.get_current_distribution_conditions()["prize_values"])}
-            )
+            self.board[sym["reel"]][sym["row"]].assign_attribute({"prize": sym["prize"]})
 
     def get_final_board_prize(self) -> dict:
         """Get final board win."""

@@ -4,9 +4,10 @@ import random
 
 from src.config.config import *
 from src.write_data.write_data import *
-from src.calculations.symbol import Symbol
 from src.wins.win_manager import WinManager
 from src.calculations.symbol import SymbolStorage
+from src.state.books import Book
+from src.state.spin_state import SpinState
 
 
 class GeneralGameState(ABC):
@@ -19,13 +20,15 @@ class GeneralGameState(ABC):
         self.special_symbol_functions = {}
         self.temp_wins = []
         self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
+        self.create_symbol_map()
+        self.assign_special_sym_function()
         self.sim = 0
+        self.book = Book(self.sim)
+        # self.spin_state = SpinState(self.config, self.sim, self.win_manager)
         self.repeat = True
         self.criteria = ""
         self.reset_seed()
-        self.create_symbol_map()
         self.reset_book()
-        self.assign_special_sym_function()
         self.reset_fs_spin()
 
     def create_symbol_map(self) -> None:
@@ -52,12 +55,7 @@ class GeneralGameState(ABC):
         self.top_symbols = None
         self.bottom_symbols = None
         self.book_id = self.sim + 1
-        self.book = {
-            "id": self.book_id,
-            "payoutMultiplier": 0.0,
-            "events": [],
-            "criteria": self.criteria,
-        }
+        self.book = Book(self.book_id)
         self.win_data = {
             "totalWin": 0,
             "wins": [],
@@ -170,7 +168,7 @@ class GeneralGameState(ABC):
                     "bookIds": [book_id],
                 }
         self.temp_wins = []
-        self.library[self.sim + 1] = copy(self.book)
+        self.library[self.sim + 1] = copy(self.book.to_json())
         self.win_manager.update_end_round_wins()
 
     def update_final_win(self) -> None:
@@ -180,9 +178,9 @@ class GeneralGameState(ABC):
         freewin = round(min(self.win_manager.freegame_wins, self.config.wincap), 2)
 
         self.final_win = final
-        self.book["payoutMultiplier"] = self.final_win
-        self.book["baseGameWins"] = basewin
-        self.book["freeGameWins"] = freewin
+        self.book.payout_multiplier = self.final_win
+        self.book.basegame_wins = basewin
+        self.book.freegame_wins = freewin
 
         assert min(
             round(self.win_manager.basegame_wins + self.win_manager.freegame_wins, 2),
@@ -191,10 +189,10 @@ class GeneralGameState(ABC):
             min(self.win_manager.running_bet_win, self.config.wincap), 2
         ), "Base + Free game payout mismatch!"
         assert min(
-            round(self.book["baseGameWins"] + self.book["freeGameWins"], 2),
+            round(self.book.basegame_wins + self.book.freegame_wins, 2),
             self.config.wincap,
         ) == min(
-            round(self.book["payoutMultiplier"], 2), round(self.config.wincap, 2)
+            round(self.book.payout_multiplier, 2), round(self.config.wincap, 2)
         ), "Base + Free game payout mismatch!"
 
     def check_repeat(self) -> None:
@@ -237,7 +235,9 @@ class GeneralGameState(ABC):
             thread_index * num_sims + (total_threads * num_sims) * repeat_count,
             (thread_index + 1) * num_sims + (total_threads * num_sims) * repeat_count,
         ):
+            # spin_state = SpinState(self.config, sim_to_criteria[sim], sim, self.win_manager)
             self.criteria = sim_to_criteria[sim]
+            # self.spin_state = SpinState(sim_to_criteria[sim])
             self.run_spin(sim)
         mode_cost = self.get_current_betmode().get_cost()
         print(

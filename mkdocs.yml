@@ -1,4 +1,4 @@
-site_name: Carrot Math-Engine
+site_name: Carrot MathEngine
 site_url: https://github.com/twist-gaming/zuck-engine
 theme:
   favicon: assets/favicon.ico
@@ -80,10 +80,10 @@ nav:
     - Win Manager: source_section/win_manager.md
     - Outputs: source_section/file_info.md
 
-  - Utilities: utils_section/utilities.md
+  - Utilities[NA]: utils_section/utilities.md
   - Example Games: sample_section/sample_games.md
-  - Uploads: uploads_section/upload_info.md
+  - Uploads [NA]: uploads_section/upload_info.md
 
-  - Tests: tests_section/test_info.md
+  - Tests [NA]: tests_section/test_info.md
   
-  - Optimization Algorithm: optimization_section/optimization_algorithm.md
+  - Optimization Algorithm [NA]: optimization_section/optimization_algorithm.md

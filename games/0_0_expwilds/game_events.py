@@ -15,8 +15,8 @@ def new_expanding_wild_event(gamestate) -> None:
         for ew in new_exp_wilds:
             ew["row"] += 1
 
-    dic = {"index": len(gamestate.book["events"]), "type": NEW_EXP_WILDS, "newWilds": new_exp_wilds}
-    gamestate.book["events"] += [deepcopy(dic)]
+    event = {"index": len(gamestate.book.events), "type": NEW_EXP_WILDS, "newWilds": new_exp_wilds}
+    gamestate.book.add_event(event)
 
 
 def update_expanding_wild_event(gamestate) -> None:
@@ -29,8 +29,8 @@ def update_expanding_wild_event(gamestate) -> None:
                 ew["row"] += 1
                 wild_event.append(ew)
 
-    dic = {"index": len(gamestate.book["events"]), "type": UPDATE_EXP_WILDS, "existingWilds": wild_event}
-    gamestate.book["events"] += [dic]
+    event = {"index": len(gamestate.book.events), "type": UPDATE_EXP_WILDS, "existingWilds": wild_event}
+    gamestate.book.add_event(event)
 
 
 def new_sticky_event(gamestate, new_sticky_syms: list):
@@ -39,8 +39,8 @@ def new_sticky_event(gamestate, new_sticky_syms: list):
         for sym in new_sticky_syms:
             sym["row"] += 1
 
-    dic = {"index": len(gamestate.book["events"]), "type": NEW_STICKY_SYMS, "newPrizes": new_sticky_syms}
-    gamestate.book["events"] += [dic]
+    event = {"index": len(gamestate.book.events), "type": NEW_STICKY_SYMS, "newPrizes": new_sticky_syms}
+    gamestate.book.add_event(event)
 
 
 def win_info_event(gamestate, include_padding_index=True):
@@ -56,10 +56,10 @@ def win_info_event(gamestate, include_padding_index=True):
         else:
             prize_details.append({"reel": w["reel"], "row": w["row"], "value": w["value"]})
 
-    dict_data = {
-        "index": len(gamestate.book["events"]),
+    event = {
+        "index": len(gamestate.book.events),
         "type": WIN_DATA,
         "totalWin": int(round(min(gamestate.win_data["totalWin"], gamestate.config.wincap) * 100, 0)),
         "wins": win_data_copy["wins"],
     }
-    gamestate.book["events"] += [deepcopy(dict_data)]
+    gamestate.book.add_event(event)

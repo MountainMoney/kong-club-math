@@ -38,7 +38,7 @@ class GameState(GameStateOverride):
         self.expanding_wilds = []
         self.avaliable_reels = [i for i in range(self.config.num_reels)]
 
-        while self.fs < self.tot_fs:
+        while self.fs < self.tot_fs and not self.wincap_triggered:
             self.update_freespin()
             self.draw_board(emit_event=False)
 

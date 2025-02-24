@@ -1,23 +1,30 @@
-# Reveal events
-REVEAL = "reveal"
+"""Single class containing all reuseable event  `type` constants."""
 
-# Win events
-WIN_DATA = "winInfo"
-FINAL_WIN = "finalWin"
-SET_WIN = "setWin"
-SET_TOTAL_WIN = "setTotalWin"
-WINCAP = "winCap"
+from enum import Enum
 
-# Freespin events
-UPDATE_FS = "updateFreeSpin"
-FREESPINTRIGGER = "freeSpinTrigger"
-FREESPINRETRIGGER = "freeSpinRetrigger"
-FREE_SPIN_END = "freeSpinEnd"
 
-# Tumble events
-TUMBLE_BOARD = "tumbleBoard"
-SET_TUMBLE_WIN = "setTumbleWin"
-UPDATE_TUMBLE_WIN = "updateTumbleWin"
+class EventConstants(Enum):
+    "Define all standard event 'type' keys."
+    # Reveal events
+    REVEAL = "reveal"
 
-# Special symbol events
-UPDATE_GLOBAL_MULT = "updateGlobalMult"
+    # Win events
+    WIN_DATA = "winInfo"
+    FINAL_WIN = "finalWin"
+    SET_WIN = "setWin"
+    SET_TOTAL_WIN = "setTotalWin"
+    WINCAP = "winCap"
+
+    # Freespin events
+    UPDATE_FS = "updateFreeSpin"
+    FREESPINTRIGGER = "freeSpinTrigger"
+    FREESPINRETRIGGER = "freeSpinRetrigger"
+    FREE_SPIN_END = "freeSpinEnd"
+
+    # Tumble events
+    TUMBLE_BOARD = "tumbleBoard"
+    SET_TUMBLE_WIN = "setTumbleWin"
+    UPDATE_TUMBLE_WIN = "updateTumbleWin"
+
+    # Special symbol events
+    UPDATE_GLOBAL_MULT = "updateGlobalMult"

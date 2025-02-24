@@ -21,9 +21,9 @@ def send_mult_info_event(gamestate, board_mult: int, mult_info: dict, base_win: 
 
     assert round(updatedWin, 1) == round(base_win * board_mult, 1)
     event = {
-        "index": len(gamestate.book["events"]),
+        "index": len(gamestate.book.events),
         "type": BOARD_MULT_INFO,
         "multInfo": multiplier_info,
         "winInfo": winInfo,
     }
-    gamestate.book["events"] += [event]
+    gamestate.book.add_event(event)
