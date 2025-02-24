@@ -1,7 +1,7 @@
-# Zuck-Engine&trade;
+# Carrot MathEngine
 ### Powered by **CarrotRGS**
 
-Welcome to the Zuck-Engine!
+Welcome to the Carrot-MathEngine!
 Your one-stop-shop for spectacular slots.
 
 

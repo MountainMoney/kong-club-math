@@ -2,7 +2,7 @@
 
 # Installing the Zuck-Engine&trade;
 
-This guide details the recommended process for installing the Zuck-Engine and all required packages using the _setuptools_ standard package.
+This guide details the recommended process for installing the Carrot-MathEngine and all required packages using the _setuptools_ standard package.
 
 ## Step 1: Create and Activate a Virtual Environment
 

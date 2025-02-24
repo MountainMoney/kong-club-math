@@ -56,7 +56,7 @@ class GameConfig(Config):
             (3, "L5"): 0.2,
             (99, "X"): 0,  # only included for symbol register
         }
-        self.pay_lines = {
+        self.paylines = {
             # horizontal lines
             1: [0, 0, 0, 0, 0],
             2: [1, 1, 1, 1, 1],

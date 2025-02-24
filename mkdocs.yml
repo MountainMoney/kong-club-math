@@ -1,4 +1,4 @@
-site_name: Zuck-Engine Documentation and Examples
+site_name: Carrot Math-Engine
 site_url: https://github.com/twist-gaming/zuck-engine
 theme:
   favicon: assets/favicon.ico
@@ -69,7 +69,6 @@ nav:
     - Calculations: 
       - Board: source_section/board_info.md
       - Tumble: source_section/tumble_info.md
-      - Statistics: source_section/statistics_info.md
       - Lines: source_section/lines_info.md
       - Ways: source_section/ways_info.md
       - Scatter: source_section/scatter_info.md

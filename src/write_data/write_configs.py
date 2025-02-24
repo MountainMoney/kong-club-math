@@ -63,7 +63,7 @@ def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwarg
         json_info[key] = val
 
     if hasattr(gamestate.config, "pay_lines"):
-        json_info["paylines"] = gamestate.config.pay_lines
+        json_info["paylines"] = gamestate.config.paylines
 
     symbols = {}
     for sym in gamestate.symbol_storage.symbols.values():

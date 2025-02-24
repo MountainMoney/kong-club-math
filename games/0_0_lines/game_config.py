@@ -53,7 +53,7 @@ class GameConfig(Config):
             (3, "L5"): 0.1,
         }
 
-        self.pay_lines = {
+        self.paylines = {
             1: [
                 0,
                 0,

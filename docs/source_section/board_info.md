@@ -20,3 +20,9 @@ The reelset used is drawn from the weighted possible reelstrips as defined in th
         self.get_current_distribution_conditions()["reel_weights"][self.gametype]
     )
 ```
+
+Specific stopping positions can also be forced given a reelstip-id and integer stopping values from `force_board_from_reelstrips()`. If no integer value are provided for a reel, a random position is chosen. This function is typically used in conjunction with `executables.force_special_board`, which will search a reelstrip for a particular symbol name and randomly select a specified number of stopping positions, chosen to land on a randomly selected board row. 
+
+Additionally the `Board` class handled symbol generation, displaying the current `.board` in the terminal, and retrieving symbol positions and properties as defined in `config.special_symbols`. 
+
+

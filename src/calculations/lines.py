@@ -29,8 +29,8 @@ class LineWins(MultiplierStrategy):
             "wins": [],
         }
 
-        for line_index in self.config.pay_lines.keys():
-            line = self.config.pay_lines[line_index]
+        for line_index in self.config.paylines.keys():
+            line = self.config.paylines[line_index]
             first_sym = self.board[0][line[0]]
             finished_wild_win = False if first_sym.check_attribute(wild_key) else True
             first_non_wild = first_sym if finished_wild_win else None
