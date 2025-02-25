@@ -24,7 +24,7 @@ class GameStateOverride(GameExecutables):
         self.reset_grid_bool()
 
     def update_freespin(self) -> None:
-        """Called before a new reveal during freespins."""
+        """Called before a new reveal during freegame."""
         self.fs += 1
         update_freespin_event(self)
         self.global_multiplier = self.fs

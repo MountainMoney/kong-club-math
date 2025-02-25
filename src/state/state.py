@@ -68,7 +68,7 @@ class GeneralGameState(ABC):
         self.tot_fs = 0
         self.fs = 0
         self.wincap_triggered = False
-        self.triggered_freespins = False
+        self.triggered_freegame = False
         self.gametype = self.config.basegame_type
         self.repeat = False
         self.anticipation = [0] * self.config.num_reels
@@ -80,7 +80,7 @@ class GeneralGameState(ABC):
 
     def reset_fs_spin(self) -> None:
         """Use if using repeat during freespin games."""
-        self.triggered_freespins = True
+        self.triggered_freegame = True
         self.fs = 0
         self.gametype = self.config.freegame_type
         self.win_manager.reset_spin_win()
@@ -190,7 +190,7 @@ class GeneralGameState(ABC):
             if win_criteria is not None and self.final_win != win_criteria:
                 self.repeat = True
 
-            if self.get_current_distribution_conditions()["force_freespins"] and not (self.triggered_freespins):
+            if self.get_current_distribution_conditions()["force_freegame"] and not (self.triggered_freegame):
                 self.repeat = True
 
     @abstractmethod

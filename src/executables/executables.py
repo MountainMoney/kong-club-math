@@ -35,13 +35,13 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         """Instead of retrying to draw a board, force the initial revel to have a
         specific number of scatters, if the betmode criteria specifies this."""
         if (
-            self.get_current_distribution_conditions()["force_freespins"]
+            self.get_current_distribution_conditions()["force_freegame"]
             and self.gametype == self.config.basegame_type
         ):
             num_scatters = get_random_outcome(self.get_current_distribution_conditions()["scatter_triggers"])
             self.force_special_board("scatter", num_scatters)
         elif (
-            not (self.get_current_distribution_conditions()["force_freespins"])
+            not (self.get_current_distribution_conditions()["force_freegame"])
             and self.gametype == self.config.basegame_type
         ):
             self.create_board_reelstrips()
@@ -137,7 +137,7 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
 
     def check_freespin_entry(self, scatter_key: str = "scatter") -> bool:
         """Ensure that betmode criteria is expecting freespin trigger."""
-        if self.get_current_distribution_conditions()["force_freespins"] and len(
+        if self.get_current_distribution_conditions()["force_freegame"] and len(
             self.special_syms_on_board[scatter_key]
         ) >= min(self.config.freespin_triggers[self.gametype].keys()):
             return True
@@ -171,7 +171,7 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         fs_trigger_event(self, freegame_trigger=True, basegame_trigger=False)
 
     def update_freespin(self) -> None:
-        """Called before a new reveal during freespins."""
+        """Called before a new reveal during freegame."""
         self.fs += 1
         update_freespin_event(self)
         self.win_manager.reset_spin_win()
@@ -180,7 +180,7 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         self.new_exp_wilds = []
 
     def end_freespin(self) -> None:
-        """Transmit total amount awarded during freespins."""
+        """Transmit total amount awarded during freegame."""
         freespin_end_event(self)
 
     def evaluate_finalwin(self) -> None:

@@ -22,7 +22,7 @@ The events are crucial as all events need to be handled by the front-end. The us
 ```
 `"index"` keeps track of the current number of events in a simulation, `"type"` is a unique keyword used to identify an event and is generally a one-word description. `"fields"` are strings who's corresponding value can have any data-type, as required. Once constructed, the event is appended to the book, "events" field":
 ```python
-    gamestate.book["events"].append(event)
+    gamestate.book.add_event(event)
 ```
 
 Events are handled separately in the gamestate to game calculations or executables. They are imported explicitly and not attached to the gamestate object. Once the math-engine has made the appropriate board transformation or action, the event should be emitted immediately, as it will provide a *snapshot* of the current state of the game. For example:

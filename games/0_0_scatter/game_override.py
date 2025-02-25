@@ -20,7 +20,7 @@ class GameStateOverride(GameExecutables):
         self.global_multiplier = 1
 
     def update_freespin(self) -> None:
-        """Called before a new reveal during freespins."""
+        """Called before a new reveal during freegame."""
         self.fs += 1
         update_freespin_event(self)
         # This game does not reset the global multiplier on each spin

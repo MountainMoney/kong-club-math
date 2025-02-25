@@ -18,7 +18,7 @@ class GameState(GameStateOverride):
             self.emit_wayswin_events()
 
             self.win_manager.update_gametype_wins(self.gametype)
-            # Check Scatter condition and trigger freespins
+            # Check Scatter condition and trigger freegame
             if self.check_fs_condition() and self.check_freespin_entry():
                 self.run_freespin_from_base()
 

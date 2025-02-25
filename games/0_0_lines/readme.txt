@@ -1,3 +1,5 @@
+# Lines Games
+
 This is an example of a simple lines-game-win
 
 Wilds have multipliers in the freeGame and have the effect of multiplying a given line win the addition multiplier values attached to Wild symbols, 

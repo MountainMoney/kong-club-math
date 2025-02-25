@@ -16,7 +16,7 @@ class Distribution:
         required_distribution_conditions: list = [
             "reel_weights",
         ],
-        default_distribution_conditions: dict = {"force_wincap": False, "force_freespins": False},
+        default_distribution_conditions: dict = {"force_wincap": False, "force_freegame": False},
     ):
 
         assert quota > 0, "non-zero quota value must be assigned"

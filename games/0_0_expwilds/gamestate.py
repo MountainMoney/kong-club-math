@@ -3,7 +3,7 @@
 from game_override import GameStateOverride
 from game_events import win_info_prize_event, new_sticky_event
 from src.events.events import update_freespin_event, reveal_event, set_total_event, set_win_event
-from game_events import new_expanding_wild_event, update_expanding_wild_event
+from game_events import new_expanding_wild_event, update_expanding_wild_event, reveal_prize_event
 from src.calculations.statistics import get_random_outcome
 
 
@@ -74,7 +74,7 @@ class GameState(GameStateOverride):
                 while len(self.special_syms_on_board["prize"]):
                     self.create_board_reelstrips()
             self.replace_board_with_stickys()
-            reveal_event(self)
+            reveal_prize_event(self)
 
             new_sticky_symbols = self.check_for_new_prize()
             if len(new_sticky_symbols) > 0:

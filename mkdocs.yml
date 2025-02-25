@@ -50,14 +50,9 @@ nav:
       - Configs: gamestate_section/configuration_section/config_overview.md
       - BetMode: gamestate_section/configuration_section/betmode_overview.md
       - Distribution: gamestate_section/configuration_section/betmode_dist.md
-    - Gamestate: 
-      - gamestate: gamestate_section/gamestate_overview.md
-      - executables: gamestate_section/gamestate_executables.md
-      - calculations: gamestate_section/gamestate_calculations.md
-      - override: gamestate_section/gamestate_override.md
     - Symbols and Board:
-      - symbols: gamestate_section/syms_board_section/symbol_info.md
-      - board: gamestate_section/syms_board_section/board_info.md
+      - Symbols: gamestate_section/syms_board_section/symbol_info.md
+      - Board: gamestate_section/syms_board_section/board_info.md
     - Wins: gamestate_section/win_info.md
     - Events: gamestate_section/events_info.md
     - Force Files: gamestate_section/force_info.md

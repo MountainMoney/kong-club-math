@@ -73,7 +73,7 @@ def fs_trigger_event(
             "positions": scatter_positions,
         }
 
-    assert gamestate.tot_fs > 0, "total freespins (gamestate.tot_fs) must be >0"
+    assert gamestate.tot_fs > 0, "total freegame (gamestate.tot_fs) must be >0"
     gamestate.book.add_event(event)
 
 
@@ -139,11 +139,7 @@ def win_info_event(gamestate, include_padding_index=True):
     include_padding_index: starts winning-symbol positions at row=1, to account for top/bottom symbol inclusion in board
     """
     win_data_copy = {}
-    a = id(gamestate.win_data["wins"])
     win_data_copy["wins"] = deepcopy(gamestate.win_data["wins"])
-    b = id(win_data_copy["wins"])
-    if a == b:
-        print("copy error")
     for idx, w in enumerate(win_data_copy["wins"]):
         if include_padding_index:
             new_positions = []
@@ -191,7 +187,7 @@ def update_tumble_win_event(gamestate):
 
 
 def update_freespin_event(gamestate):
-    """Update the current spin number and total freespins"""
+    """Update the current spin number and total freegame"""
     event = {
         "index": len(gamestate.book.events),
         "type": EventConstants.UPDATE_FS.value,

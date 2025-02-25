@@ -157,7 +157,6 @@ class FileDetails:
             books_name = mode + "_books"
             lut_name = mode + "_LUT"
             force_name = mode + "_forceFile"
-            win_dist_name = mode + "_winDistribution"
             if books:
                 try:
                     all_file_paths[books_name] = "/".join(
@@ -177,14 +176,6 @@ class FileDetails:
                     all_file_paths[force_name] = "/".join([gamePath, "Forces", "force_record_" + mode + ".json"])
                 except FileNotFoundError:
                     print("Force File Upload Error!")
-
-            if winDist:
-                try:
-                    all_file_paths[win_dist_name] = "/".join(
-                        [gamePath, "Lookup_tables", "windist_" + mode + "_0.csv"]
-                    )
-                except FileNotFoundError:
-                    print("No Win Distribution File Found!")
 
             if eventList:
                 all_file_paths["eventFile"] = "/".join([gamePath, "configs", "event_config_" + mode + ".json"])
@@ -237,10 +228,10 @@ class FileDetails:
         for bookshelf in config_details["bookShelfConfig"]:
             lut_file = "/".join(
                 [
-                    "Games",
+                    "games",
                     self.game_to_upload,
-                    "Library",
-                    "LookUpTables",
+                    "library",
+                    "lookup_tables",
                     "lookUpTable_" + bookshelf["name"] + "_0.csv",
                 ]
             )

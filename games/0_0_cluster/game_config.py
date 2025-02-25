@@ -117,7 +117,7 @@ class GameConfig(Config):
                             },
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -150,7 +150,7 @@ class GameConfig(Config):
                                 },
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -180,7 +180,7 @@ class GameConfig(Config):
                                 },
                             },
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                         },
                     ),
                     Distribution(
@@ -200,7 +200,7 @@ class GameConfig(Config):
                                 }
                             },
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                         },
                     ),
                 ],
@@ -245,7 +245,7 @@ class GameConfig(Config):
                             },
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -278,7 +278,7 @@ class GameConfig(Config):
                                 },
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                 ],

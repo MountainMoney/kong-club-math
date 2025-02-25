@@ -125,7 +125,7 @@ class GameConfig(Config):
                             "landing_wilds": {0: 100, 1: 20, 2: 5, 3: 2},
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -142,7 +142,7 @@ class GameConfig(Config):
                             "landing_wilds": {0: 200, 1: 15, 2: 5, 3: 1},
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -152,7 +152,7 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                         },
                     ),
                     Distribution(
@@ -161,7 +161,7 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                         },
                     ),
                 ],
@@ -190,7 +190,7 @@ class GameConfig(Config):
                             "landing_wilds": {0: 100, 1: 15, 2: 10, 3: 2},
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -207,7 +207,7 @@ class GameConfig(Config):
                             "scatter_triggers": {4: 1, 5: 2},
                             "landing_wilds": {0: 200, 1: 20, 2: 5, 3: 1},
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                 ],
@@ -239,9 +239,8 @@ class GameConfig(Config):
                                 50: 5,
                                 100: 2,
                             },
-                            "scatter_triggers": {},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -251,7 +250,7 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {self.basegame_type: {"SSR": 1}},
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                             "prize_values": {
                                 1: 500,
                                 2: 100,
@@ -282,7 +281,7 @@ class GameConfig(Config):
                                 100: 2,
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                 ],

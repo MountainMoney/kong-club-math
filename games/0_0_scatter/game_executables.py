@@ -19,7 +19,7 @@ class GameExecutables(GameCalculations):
 
     def set_end_tumble_event(self):
         """After all tumbling events have finished, multiply tumble-win by sum of mult symbols."""
-        if self.gametype == self.config.freegame_type:  # Only multipliers in freeSpins
+        if self.gametype == self.config.freegame_type:  # Only multipliers in freegame
             board_mult, mult_info = self.get_board_multipliers()
             base_tumble_win = copy(self.win_manager.spin_win)
             self.win_manager.set_spin_win(base_tumble_win * board_mult)

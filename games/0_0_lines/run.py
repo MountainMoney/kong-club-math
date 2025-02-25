@@ -8,15 +8,15 @@ from src.write_data.write_configs import generate_configs
 
 if __name__ == "__main__":
 
-    num_threads = 10
+    num_threads = 1
     rust_threaeds = 20
     batching_size = 50000
     compression = False
-    profiling = False
+    profiling = True
 
     num_sim_args = {
-        "base": int(50),
-        "bonus": int(50),
+        "base": int(1e3),
+        "bonus": int(1e3),
     }
 
     config = GameConfig()
