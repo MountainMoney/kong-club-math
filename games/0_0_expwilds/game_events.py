@@ -6,6 +6,7 @@ NEW_EXP_WILDS = "newExpandingWilds"
 UPDATE_EXP_WILDS = "updateExpandingWilds"
 NEW_STICKY_SYMS = "newStickySymbols"
 WIN_DATA = "winInfo"
+PRIZE_WIN_DATA = "prizeWinInfo"
 
 
 def new_expanding_wild_event(gamestate) -> None:
@@ -43,7 +44,7 @@ def new_sticky_event(gamestate, new_sticky_syms: list):
     gamestate.book.add_event(event)
 
 
-def win_info_event(gamestate, include_padding_index=True):
+def win_info_prize_event(gamestate, include_padding_index=True):
     """
     include_padding_index: starts winning-symbol positions at row=1, to account for top/bottom symbol inclusion in board
     """
@@ -52,14 +53,14 @@ def win_info_event(gamestate, include_padding_index=True):
     prize_details = []
     for _, w in enumerate(win_data_copy["wins"]):
         if include_padding_index:
-            prize_details.append({"reel": w["reel"], "row": w["row"] + 1, "value": w["value"]})
+            prize_details.append({"reel": w["reel"], "row": w["row"] + 1, "prize": int(w["value"])})
         else:
-            prize_details.append({"reel": w["reel"], "row": w["row"], "value": w["value"]})
+            prize_details.append({"reel": w["reel"], "row": w["row"], "prize": int(w["value"])})
 
     event = {
         "index": len(gamestate.book.events),
-        "type": WIN_DATA,
+        "type": PRIZE_WIN_DATA,
         "totalWin": int(round(min(gamestate.win_data["totalWin"], gamestate.config.wincap) * 100, 0)),
-        "wins": win_data_copy["wins"],
+        "wins": prize_details,
     }
     gamestate.book.add_event(event)

@@ -89,4 +89,3 @@ virtualenv==20.29.2
 watchdog==6.0.0
 XlsxWriter==3.2.0
 zstandard==0.23.0
--e git+https://github.com/twist-gaming/zuck-engine.git@1304ddfd8b51097f509ab3ea8e1cb84e6b68beec#egg=zuckengine

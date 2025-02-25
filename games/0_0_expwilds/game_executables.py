@@ -4,7 +4,6 @@ import random
 from copy import deepcopy
 from game_calculations import GameCalculations
 from src.calculations.statistics import get_random_outcome
-from src.events.events import reveal_event
 
 
 class GameExecutables(GameCalculations):
@@ -44,6 +43,7 @@ class GameExecutables(GameCalculations):
 
     # Superspin prize modes
     def check_for_new_prize(self) -> list:
+        """Check for prizes landing on most recent reveal."""
         new_sticky_symbols = []
         for reel, _ in enumerate(self.board):
             for row, _ in enumerate(self.board[reel]):

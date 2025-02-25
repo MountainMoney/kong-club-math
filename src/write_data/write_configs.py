@@ -3,6 +3,7 @@
 import json
 import os
 import shutil
+import warnings
 from utils.get_file_hash import get_hash
 from utils.analysis.distribution_functions import get_distribution_std, get_lookup_length
 
@@ -153,9 +154,13 @@ def make_be_config(gamestate):
         }
         data_file = str.join("_", ["books", bet.get_name() + ".json.zst"])
         data_loc = str.join("/", [config.compressed_path, data_file])
-        data_sha = get_hash(data_loc)
+        try:
+            data_sha = get_hash(data_loc)
+        except FileNotFoundError:
+            data_sha = ""
+            warnings.warn("Compressed books file not found. Hash is empty.")
 
-        force_file = str.join("_", ["force_for_rob", bet.get_name() + ".json"])
+        force_file = str.join("_", ["force_record", bet.get_name() + ".json"])
         force_loc = str.join("/", [config.force_path, force_file])
         force_sha = get_hash(force_loc)
 

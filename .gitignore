@@ -4,7 +4,7 @@ __pycache__
 
 **/configs/*
 **/forces/*
-**books/*
+**/books/*
 **/lookup_tables/*
 **/books_compressed/*
 **temp_multi_threaded_files

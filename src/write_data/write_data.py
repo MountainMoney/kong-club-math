@@ -46,11 +46,11 @@ def makeForceJson(gamestate: object):
 
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
-        if os.path.isfile(file_path) and filename.endswith(".json") and filename.startswith("force_for_rob_"):
+        if os.path.isfile(file_path) and filename.endswith(".json") and filename.startswith("force_record_"):
             with open(file_path, mode="r", encoding="utf-8") as file:
                 data = json.load(file)
 
-                modename = filename[len("force_for_rob_") : -len(".json")]
+                modename = filename[len("force_record_") : -len(".json")]
                 force_data[modename] = {}
 
                 if isinstance(data, list):
@@ -227,7 +227,7 @@ def output_lookup_and_force_files(
         force_results_dict_just_for_rob.append(force_dict)
     json_object_for_rob = json.dumps(force_results_dict_just_for_rob, indent=4)
     file = open(
-        str.join("/", [gamestate.config.force_path, "force_for_rob_" + betmode + ".json"]),
+        str.join("/", [gamestate.config.force_path, "force_record_" + betmode + ".json"]),
         "w",
     )
     file.write(json_object_for_rob)

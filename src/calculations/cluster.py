@@ -165,7 +165,7 @@ class ClusterWins(MultiplierStrategy):
         return return_data
 
     def recordClusterWins(self) -> None:
-        """Force_for_rob win description keys."""
+        """force_record win description keys."""
         for win in self.win_data["wins"]:
             self.record(
                 {
