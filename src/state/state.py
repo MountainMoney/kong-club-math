@@ -216,7 +216,8 @@ class GeneralGameState(ABC):
         compress=True,
         write_event_list=True,
     ) -> None:
-        """Assigns criteria and runs individual simulations. Results are stored in tempory file to be combined when all threads are finished."""
+        """Assigns criteria and runs individual simulations. Results are stored in temporary file to be combined when all threads are finished."""
+        self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
         self.betmode = betmode
         self.num_sims = num_sims
         for sim in range(

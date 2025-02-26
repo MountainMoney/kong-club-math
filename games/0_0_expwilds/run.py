@@ -9,7 +9,7 @@ if __name__ == "__main__":
     rust_threaeds = 20
     batching_size = 5000
     compression = False
-    profiling = False
+    profiling = True
 
     num_sim_args = {"base": int(20), "bonus": int(20), "superspin": int(20)}
     config = GameConfig()

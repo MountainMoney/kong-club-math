@@ -2,7 +2,11 @@
 ### Powered by **CarrotRGS**
 
 Welcome to the Carrot-MathEngine!
-Your one-stop-shop for spectacular slots.
+
+**Your one-stop-shop for spectacular slots!**
+
+
+This engine provides a framework for creating and optimizing slot games, and outputs all files in a format agreeable to the Carrot RGS. This engine is used to define game rules, implement game logic, optimize win-distributions, generate compressed simulation results and perform statistical analysis on custom-defined events. By using a discrete set of outcomes, we can enforce strict control on game mechanics and hit-rates, without the need to explicitly *solve* potentially complex mathematical models.
 
 
 ## Directory Structure

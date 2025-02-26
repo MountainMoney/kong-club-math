@@ -1,7 +1,5 @@
 """Evaluates and records winds for lines games."""
 
-from typing import List, Dict
-from src.calculations.board import Board
 from src.wins.multiplier_strategy import MultiplierStrategy
 
 
