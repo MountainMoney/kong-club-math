@@ -93,16 +93,3 @@ def get_scatterpay_wins(
     return_data["totalWin"] = total_win
 
     return board, return_data, exploding_symbols
-
-    # def record_scatter_wins(
-    #     self, num_winning_syms: int, symbol: int, total_multiplier: int, gametype: str
-    # ) -> None:
-    #     """Force-file description key generator."""
-    #     self.record(
-    #         {
-    #             "win_size": num_winning_syms,
-    #             "symbol": symbol,
-    #             "totalMult": total_multiplier,
-    #             "gametype": gametype,
-    #         }
-    #     )

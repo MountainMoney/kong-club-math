@@ -5,11 +5,6 @@ from src.config.config import Config
 from src.wins.multiplier_strategy import apply_mult
 
 
-# def record_line_win(self, kind: int, symbol: str, mult: int, gametype: str) -> None:
-#     """Force file description for line-win."""
-#     self.record({"kind": kind, "symbol": symbol, "mult": mult, "gametype": gametype})
-
-
 def line_win_info(symbol: str, kind: int, win: float, positions: list, meta_data: dict) -> dict:
     """Construct line-win event key."""
     return {
@@ -107,17 +102,6 @@ def get_lines(
                         "lineMultiplier": int(applied_mult / global_multiplier),
                     },
                 )
-
-            # if first_non_wild is not None:
-            #     nme = first_non_wild.name
-            # else:
-            #     nme = "W"
-            # self.record_line_win(
-            #     wild_matches + matches,
-            #     nme,
-            #     applied_mult,
-            #     gametype,
-            # )
 
             return_data["totalWin"] += line_win
             return_data["wins"].append(win_dict)

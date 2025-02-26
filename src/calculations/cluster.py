@@ -176,15 +176,3 @@ def get_cluster_data(
     # self.exploding_symbols = exploding_symbols
 
     return return_data, board, exploding_symbols
-
-    # def recordClusterWins(self) -> None:
-    #     """force_record win description keys."""
-    #     for win in self.win_data["wins"]:
-    #         self.record(
-    #             {
-    #                 "clusterSize": win["clusterSize"],
-    #                 "symbol": win["symbol"],
-    #                 "mult": win["meta"]["multiplier"],
-    #                 "gametype": self.gametype,
-    #             }
-    #         )

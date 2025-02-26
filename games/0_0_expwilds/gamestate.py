@@ -23,6 +23,7 @@ class GameState(GameStateOverride):
                 self.draw_board(emit_event=True)
 
                 self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
+                self.record_lines_wins()
                 self.win_manager.update_spinwin(self.win_data["totalWin"])
                 self.emit_linewin_events()
 
@@ -58,6 +59,7 @@ class GameState(GameStateOverride):
             self.expanding_wilds = sorted(self.expanding_wilds, key=lambda x: x["reel"])
 
             self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
+            self.record_lines_wins()
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_linewin_events()
             self.win_manager.update_gametype_wins(self.gametype)

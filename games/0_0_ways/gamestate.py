@@ -15,7 +15,9 @@ class GameState(GameStateOverride):
 
             # Evaluate base-game board
             self.win_data = get_ways_data(self.config, self.board)
-            self.win_manager.update_spinwin(self.win_data["totalWin"])
+            if self.win_data["totalWin"] > 0:
+                self.record_ways()
+                self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_wayswin_events()
 
             self.win_manager.update_gametype_wins(self.gametype)
@@ -35,7 +37,9 @@ class GameState(GameStateOverride):
             self.draw_board(emit_event=True)
 
             self.win_data = get_ways_data(self.config, self.board)
-            self.win_manager.update_spinwin(self.win_data["totalWin"])
+            if self.win_data["totalWin"] > 0:
+                self.record_ways()
+                self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_wayswin_events()
 
             if self.check_fs_condition():

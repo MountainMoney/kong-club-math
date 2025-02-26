@@ -1,9 +1,9 @@
 """Ways wins executables/calculations."""
 
+from collections import defaultdict
 from src.calculations.board import Board
 from src.config.config import Config
 from src.wins.multiplier_strategy import apply_mult
-from collections import defaultdict
 
 
 def get_ways_data(config: Config, board: Board, wild_key: str = "wild"):
@@ -76,14 +76,5 @@ def get_ways_data(config: Config, board: Board, wild_key: str = "wild"):
                 }
             ]
             return_data["totalWin"] += win
-            # if record_wins:
-            #     self.record(
-            #         {
-            #             "kind": kind,
-            #             "symbol": symbol,
-            #             "ways": ways,
-            #             "gametype": self.gametype,
-            #         }
-            #     )
 
     return return_data

@@ -187,3 +187,50 @@ class Executables(Conditions, Tumble):
         """Increment multiplier value and emit corresponding event."""
         self.global_multiplier += 1
         update_global_mult_event(self)
+
+    # Recording different win-types
+    def record_ways_wins(self) -> None:
+        """Record Ways type wins"""
+        for win in self.win_data["wins"]:
+            self.record(
+                {
+                    "kind": len(win["positions"]),
+                    "symbol": win["symbol"],
+                    "ways": win["meta"]["ways"],
+                    "gametype": self.gametype,
+                }
+            )
+
+    def record_lines_wins(self) -> None:
+        """Data for force-file."""
+
+        def record_line(kind: int, symbol: str, mult: int, gametype: str) -> None:
+            """Force file description for line-win."""
+            self.record({"kind": kind, "symbol": symbol, "mult": mult, "gametype": gametype})
+
+        for win in self.win_data["wins"]:
+            record_line(len(win["positions"]), win["symbol"], win["meta"]["multiplier"], self.gametype)
+
+    def record_cluster_wins(self) -> None:
+        """force_record win description keys."""
+        for win in self.win_data["wins"]:
+            self.record(
+                {
+                    "clusterSize": win["clusterSize"],
+                    "symbol": win["symbol"],
+                    "mult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
+                    "gametype": self.gametype,
+                }
+            )
+
+    def record_scatter_wins(self) -> None:
+        """Force-file description key generator."""
+        for win in self.win_data["wins"]:
+            self.record(
+                {
+                    "win_size": len(win["positions"]),
+                    "symbol": win["symbol"],
+                    "totalMult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
+                    "gametype": self.gametype,
+                }
+            )

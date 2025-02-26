@@ -13,6 +13,7 @@ class GameState(GameStateOverride):
             self.draw_board()
 
             self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
+            self.record_lines_wins()
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_linewin_events()
 
