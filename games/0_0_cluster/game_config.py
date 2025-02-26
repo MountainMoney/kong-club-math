@@ -6,6 +6,7 @@ from src.config.betmode import BetMode
 
 
 class GameConfig(Config):
+    """Singleton cluster game configuration class."""
 
     _instance = None
 

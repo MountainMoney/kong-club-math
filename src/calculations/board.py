@@ -4,6 +4,7 @@ import random
 from typing import List
 from src.state.state import GeneralGameState
 from src.calculations.statistics import get_random_outcome
+from src.config.config import Config
 
 
 class Board(GeneralGameState):

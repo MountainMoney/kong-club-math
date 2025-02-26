@@ -59,7 +59,7 @@ def check_all_neighbours(
     og_symbol: str,
     wild_key: str = "wild",
 ):
-    """Recursively check neights for like-symbols."""
+    """Recursively check neighbours for like-symbols."""
     neighbours = get_neighbours(board, reel, row, local_checked)
     for reel_, row_ in neighbours:
         if in_cluster(board, reel_, row_, og_symbol, wild_key):
@@ -150,7 +150,7 @@ def evaluate_clusters(
                     } not in exploding_symbols:
                         exploding_symbols.append({"reel": positions[0], "row": positions[1]})
 
-    return board, return_data, exploding_symbols, total_win
+    return board, return_data, total_win
 
 
 def get_cluster_data(
@@ -166,13 +166,15 @@ def get_cluster_data(
         "totalWin": 0,
         "wins": [],
     }
-    board, return_data, exploding_symbols, total_win = evaluate_clusters(
-        config, board, clusters, multiplier_key=multiplier_key, return_data=return_data
+    board, return_data, total_win = evaluate_clusters(
+        config,
+        board,
+        clusters,
+        global_multiplier=global_multiplier,
+        multiplier_key=multiplier_key,
+        return_data=return_data,
     )
 
     return_data["totalWin"] += total_win
-    # self.clusters = clusters
-    # self.win_manager.tumble_win = total_win
-    # self.exploding_symbols = exploding_symbols
 
-    return return_data, board, exploding_symbols
+    return return_data

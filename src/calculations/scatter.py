@@ -40,7 +40,6 @@ def get_scatterpay_wins(
         "totalWin": 0,
         "wins": [],
     }
-    exploding_symbols = []
     rows_for_overlay = []
     symbols_on_board = defaultdict(list)
     wild_positions = []
@@ -65,9 +64,6 @@ def get_scatterpay_wins(
                 symbol_mult = max(symbol_mult, 1)
 
                 board[p["reel"]][p["row"]].assign_attribute({"explode": True})
-                # Account for special symbols, such as wilds which can apply to multiple groups
-                if p not in exploding_symbols:
-                    exploding_symbols.append(p)
 
             overlay_position = get_central_scatter_position(
                 rows_for_overlay, symbols_on_board[sym], len(board), len(board[0])
@@ -92,4 +88,4 @@ def get_scatterpay_wins(
 
     return_data["totalWin"] = total_win
 
-    return board, return_data, exploding_symbols
+    return return_data

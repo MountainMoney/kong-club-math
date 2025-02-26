@@ -120,7 +120,7 @@ def set_tumble_event(gamestate):
 
 
 def wincap_event(gamestate):
-    """Emit to indicate spin actions should stop due to maximum win amount achieved."""
+    """Emit to indicate end of spin actions."""
     event = {
         "index": len(gamestate.book.events),
         "type": EventConstants.WINCAP.value,
@@ -233,12 +233,13 @@ def tumble_board_event(gamestate):
     """States the symbol positions removed from a board during tumble, and which new symbols should take their place."""
     special_attributes = list(gamestate.config.special_symbols.keys())
 
-    if gamestate.config.include_padding:
-        exploding = []
-        for sym in gamestate.exploding_symbols:
-            exploding.append({"reel": sym["reel"], "row": sym["row"] + 1})
-    else:
-        exploding = gamestate.exploding_symbols
+    exploding = []
+    for win in gamestate.win_data["wins"]:
+        for pos in win["positions"]:
+            if gamestate.config.include_padding:
+                exploding.append({"reel": pos["reel"], "row": pos["row"] + 1})
+            else:
+                exploding.append({"reel": pos["reel"], "row": pos["row"]})
 
     exploding = sorted(exploding, key=lambda x: x["reel"])
 
