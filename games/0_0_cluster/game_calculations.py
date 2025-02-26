@@ -32,7 +32,7 @@ class GameCalculations(Executables):
                     json_positions = [{"reel": p[0], "row": p[1]} for p in cluster]
                     sym_win = self.config.paytable[(syms_in_cluster, sym)]
                     symwin_mult = sym_win * cluster_mult
-                    symwin_mult, global_mult = self.apply_mult("global", symwin_mult, json_positions)
+                    symwin_mult, global_mult = self.apply_mult(self.board, "global", symwin_mult, json_positions)
                     total_win += symwin_mult
 
                     overlay_position = self.get_central_cluster_position(json_positions)

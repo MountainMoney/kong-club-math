@@ -11,15 +11,12 @@ class GameState(GameStateOverride):
             self.reset_book()
             self.draw_board()
 
-            self.win_data = self.get_scatterpay_wins(record_wins=True)  # Evaluate wins
-            self.win_manager.update_spinwin(self.win_data["totalWin"])  # Update wallet
+            self.get_scatterpays_update_wins()
             self.emit_tumble_win_events()  # Transmit win information
 
             while self.win_data["totalWin"] > 0 and not (self.wincap_triggered):
                 self.tumble_game_board()
-                self.win_data = self.get_scatterpay_wins(record_wins=True)
-                self.win_manager.update_spinwin(self.win_data["totalWin"])
-                self.emit_tumble_win_events()
+                self.get_scatterpays_update_wins()
 
             self.set_end_tumble_event()
             self.win_manager.update_gametype_wins(self.gametype)
@@ -39,16 +36,13 @@ class GameState(GameStateOverride):
             self.update_freespin()
             self.draw_board()
 
-            self.win_data = self.get_scatterpay_wins(record_wins=True)
-            self.win_manager.update_spinwin(self.win_data["totalWin"])
-            self.emit_tumble_win_events()
+            self.get_scatterpays_update_wins()
+            self.emit_tumble_win_events()  # Transmit win information
 
             while self.win_data["totalWin"] > 0 and not (self.wincap_triggered):
                 self.tumble_game_board()
                 self.update_global_mult()  # Special mechanic - increase multiplier with every tumble
-                self.win_data = self.get_scatterpay_wins()
-                self.win_manager.update_spinwin(self.win_data["totalWin"])
-                self.emit_tumble_win_events()
+                self.get_scatterpays_update_wins()
 
             self.set_end_tumble_event()
             self.win_manager.update_gametype_wins(self.gametype)

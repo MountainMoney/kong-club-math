@@ -5,13 +5,9 @@
 from copy import copy
 
 from game_calculations import GameCalculations
+from src.calculations.scatter import get_scatterpay_wins
 from game_events import send_mult_info_event
-from src.events.events import (
-    set_win_event,
-    set_total_event,
-    fs_trigger_event,
-    update_tumble_win_event,
-)
+from src.events.events import set_win_event, set_total_event, fs_trigger_event, update_tumble_win_event
 
 
 class GameExecutables(GameCalculations):
@@ -45,3 +41,11 @@ class GameExecutables(GameCalculations):
         else:
             basegame_trigger, freegame_trigger = False, True
         fs_trigger_event(self, basegame_trigger=basegame_trigger, freegame_trigger=freegame_trigger)
+
+    def get_scatterpays_update_wins(self):
+        self.board, self.win_data, self.exploding_symbols = get_scatterpay_wins(
+            self.config, self.board, global_multiplier=self.global_multiplier
+        )  # Evaluate wins
+        self.win_manager.tumble_win = self.win_data["totalWin"]
+        self.win_manager.update_spinwin(self.win_data["totalWin"])  # Update wallet
+        self.emit_tumble_win_events()  # Transmit win information

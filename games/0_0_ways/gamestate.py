@@ -1,6 +1,7 @@
 """Game logic and event emission for standard 'ways' game with a fixed board size."""
 
 from game_override import GameStateOverride
+from src.calculations.ways import get_ways_data
 
 
 class GameState(GameStateOverride):
@@ -13,7 +14,7 @@ class GameState(GameStateOverride):
             self.draw_board(emit_event=True)
 
             # Evaluate base-game board
-            self.win_data = self.get_ways_data(record_wins=True)
+            self.win_data = get_ways_data(self.config, self.board)
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_wayswin_events()
 
@@ -33,7 +34,7 @@ class GameState(GameStateOverride):
             self.update_freespin()
             self.draw_board(emit_event=True)
 
-            self.win_data = self.get_ways_data(record_wins=True)
+            self.win_data = get_ways_data(self.config, self.board)
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_wayswin_events()
 

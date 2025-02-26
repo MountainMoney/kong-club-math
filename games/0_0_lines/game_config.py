@@ -6,6 +6,14 @@ from src.config.config import BetMode
 
 
 class GameConfig(Config):
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         super().__init__()
         self.game_id = "0_0_lines"

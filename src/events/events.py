@@ -230,7 +230,7 @@ def update_global_mult_event(gamestate):
 
 
 def tumble_board_event(gamestate):
-    """States the symbol positions removed from a board during tumeble, and which new symbols should take their place."""
+    """States the symbol positions removed from a board during tumble, and which new symbols should take their place."""
     special_attributes = list(gamestate.config.special_symbols.keys())
 
     if gamestate.config.include_padding:

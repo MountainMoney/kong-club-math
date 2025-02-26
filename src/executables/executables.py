@@ -1,11 +1,6 @@
 import random
-import numpy as np
 from typing import List
 from src.state.state_conditions import Conditions
-from src.calculations.lines import LineWins
-from src.calculations.cluster import ClusterWins
-from src.calculations.scatter import ScatterWins
-from src.calculations.ways import WaysWins
 from src.calculations.tumble import Tumble
 from src.calculations.statistics import get_random_outcome
 from src.events.events import (
@@ -24,7 +19,7 @@ from src.events.events import (
 )
 
 
-class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWins):
+class Executables(Conditions, Tumble):
     """
     The purpose of this Class is to group together common actions which are likely to be reused between games.
     These can be overridden in the GameExecutables or GameCalculations if game-specific alterations are required.
