@@ -1,7 +1,7 @@
 
 # Game Configuration Files
 
-The GameState object requires certain parameters to be specified, and should be manually filled out for each new game. These elements are all defined in the `__init__` function. Full details of the expected inputs and data-types are given in the [Source Files/Config](../source_section/config_info.md) section. 
+The GameState object requires certain parameters to be specified, and should be manually filled out for each new game. These elements are all defined in the `__init__` function. Full details of the expected inputs and data-types are given in the [Source Files/Config](../../source_section/config_info.md) section. 
 
 General aspects of the game setup which should be considered when creating a `game_config.py` are:
 

@@ -1,11 +1,6 @@
 import random
-import numpy as np
 from typing import List
 from src.state.state_conditions import Conditions
-from src.calculations.lines import LineWins
-from src.calculations.cluster import ClusterWins
-from src.calculations.scatter import ScatterWins
-from src.calculations.ways import WaysWins
 from src.calculations.tumble import Tumble
 from src.calculations.statistics import get_random_outcome
 from src.events.events import (
@@ -24,7 +19,7 @@ from src.events.events import (
 )
 
 
-class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWins):
+class Executables(Conditions, Tumble):
     """
     The purpose of this Class is to group together common actions which are likely to be reused between games.
     These can be overridden in the GameExecutables or GameCalculations if game-specific alterations are required.
@@ -35,13 +30,13 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         """Instead of retrying to draw a board, force the initial revel to have a
         specific number of scatters, if the betmode criteria specifies this."""
         if (
-            self.get_current_distribution_conditions()["force_freespins"]
+            self.get_current_distribution_conditions()["force_freegame"]
             and self.gametype == self.config.basegame_type
         ):
             num_scatters = get_random_outcome(self.get_current_distribution_conditions()["scatter_triggers"])
             self.force_special_board("scatter", num_scatters)
         elif (
-            not (self.get_current_distribution_conditions()["force_freespins"])
+            not (self.get_current_distribution_conditions()["force_freegame"])
             and self.gametype == self.config.basegame_type
         ):
             self.create_board_reelstrips()
@@ -137,7 +132,7 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
 
     def check_freespin_entry(self, scatter_key: str = "scatter") -> bool:
         """Ensure that betmode criteria is expecting freespin trigger."""
-        if self.get_current_distribution_conditions()["force_freespins"] and len(
+        if self.get_current_distribution_conditions()["force_freegame"] and len(
             self.special_syms_on_board[scatter_key]
         ) >= min(self.config.freespin_triggers[self.gametype].keys()):
             return True
@@ -171,7 +166,7 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         fs_trigger_event(self, freegame_trigger=True, basegame_trigger=False)
 
     def update_freespin(self) -> None:
-        """Called before a new reveal during freespins."""
+        """Called before a new reveal during freegame."""
         self.fs += 1
         update_freespin_event(self)
         self.win_manager.reset_spin_win()
@@ -180,7 +175,7 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         self.new_exp_wilds = []
 
     def end_freespin(self) -> None:
-        """Transmit total amount awarded during freespins."""
+        """Transmit total amount awarded during freegame."""
         freespin_end_event(self)
 
     def evaluate_finalwin(self) -> None:
@@ -192,3 +187,50 @@ class Executables(Conditions, Tumble, LineWins, ClusterWins, ScatterWins, WaysWi
         """Increment multiplier value and emit corresponding event."""
         self.global_multiplier += 1
         update_global_mult_event(self)
+
+    # Recording different win-types
+    def record_ways_wins(self) -> None:
+        """Record Ways type wins"""
+        for win in self.win_data["wins"]:
+            self.record(
+                {
+                    "kind": len(win["positions"]),
+                    "symbol": win["symbol"],
+                    "ways": win["meta"]["ways"],
+                    "gametype": self.gametype,
+                }
+            )
+
+    def record_lines_wins(self) -> None:
+        """Data for force-file."""
+
+        def record_line(kind: int, symbol: str, mult: int, gametype: str) -> None:
+            """Force file description for line-win."""
+            self.record({"kind": kind, "symbol": symbol, "mult": mult, "gametype": gametype})
+
+        for win in self.win_data["wins"]:
+            record_line(len(win["positions"]), win["symbol"], win["meta"]["multiplier"], self.gametype)
+
+    def record_cluster_wins(self) -> None:
+        """force_record win description keys."""
+        for win in self.win_data["wins"]:
+            self.record(
+                {
+                    "clusterSize": win["clusterSize"],
+                    "symbol": win["symbol"],
+                    "mult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
+                    "gametype": self.gametype,
+                }
+            )
+
+    def record_scatter_wins(self) -> None:
+        """Force-file description key generator."""
+        for win in self.win_data["wins"]:
+            self.record(
+                {
+                    "win_size": len(win["positions"]),
+                    "symbol": win["symbol"],
+                    "totalMult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
+                    "gametype": self.gametype,
+                }
+            )

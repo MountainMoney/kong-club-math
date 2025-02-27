@@ -1,5 +1,5 @@
-site_name: Carrot Math-Engine
-site_url: https://github.com/twist-gaming/zuck-engine
+site_name: Carrot MathEngine
+site_url: https://github.com/twist-gaming/CarrotMathEngine
 theme:
   favicon: assets/favicon.ico
   logo: assets/carrot.png
@@ -34,9 +34,6 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.superfences
 
 
 nav:
@@ -53,14 +50,9 @@ nav:
       - Configs: gamestate_section/configuration_section/config_overview.md
       - BetMode: gamestate_section/configuration_section/betmode_overview.md
       - Distribution: gamestate_section/configuration_section/betmode_dist.md
-    - Gamestate: 
-      - gamestate: gamestate_section/gamestate_overview.md
-      - executables: gamestate_section/gamestate_executables.md
-      - calculations: gamestate_section/gamestate_calculations.md
-      - override: gamestate_section/gamestate_override.md
     - Symbols and Board:
-      - symbols: gamestate_section/syms_board_section/symbol_info.md
-      - board: gamestate_section/syms_board_section/board_info.md
+      - Symbols: gamestate_section/syms_board_section/symbol_info.md
+      - Board: gamestate_section/syms_board_section/board_info.md
     - Wins: gamestate_section/win_info.md
     - Events: gamestate_section/events_info.md
     - Force Files: gamestate_section/force_info.md
@@ -80,10 +72,10 @@ nav:
     - Win Manager: source_section/win_manager.md
     - Outputs: source_section/file_info.md
 
-  - Utilities: utils_section/utilities.md
+  - Utilities[NA]: utils_section/utilities.md
   - Example Games: sample_section/sample_games.md
-  - Uploads: uploads_section/upload_info.md
+  - Uploads [NA]: uploads_section/upload_info.md
 
-  - Tests: tests_section/test_info.md
+  - Tests [NA]: tests_section/test_info.md
   
-  - Optimization Algorithm: optimization_section/optimization_algorithm.md
+  - Optimization Algorithm [NA]: optimization_section/optimization_algorithm.md

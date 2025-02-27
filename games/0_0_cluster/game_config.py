@@ -6,6 +6,15 @@ from src.config.betmode import BetMode
 
 
 class GameConfig(Config):
+    """Singleton cluster game configuration class."""
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         super().__init__()
         self.game_id = "0_0_cluster"
@@ -117,7 +126,7 @@ class GameConfig(Config):
                             },
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -150,7 +159,7 @@ class GameConfig(Config):
                                 },
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -180,7 +189,7 @@ class GameConfig(Config):
                                 },
                             },
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                         },
                     ),
                     Distribution(
@@ -200,7 +209,7 @@ class GameConfig(Config):
                                 }
                             },
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                         },
                     ),
                 ],
@@ -245,7 +254,7 @@ class GameConfig(Config):
                             },
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -278,7 +287,7 @@ class GameConfig(Config):
                                 },
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                 ],

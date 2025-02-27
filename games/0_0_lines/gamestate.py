@@ -1,4 +1,5 @@
 from game_override import GameStateOverride
+from src.calculations.lines import get_lines
 
 
 class GameState(GameStateOverride):
@@ -11,7 +12,8 @@ class GameState(GameStateOverride):
             self.reset_book()
             self.draw_board()
 
-            self.win_data = self.get_lines()
+            self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
+            self.record_lines_wins()
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_linewin_events()
 
@@ -30,7 +32,7 @@ class GameState(GameStateOverride):
             self.update_freespin()
             self.draw_board()
 
-            self.win_data = self.get_lines()
+            self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_linewin_events()
 

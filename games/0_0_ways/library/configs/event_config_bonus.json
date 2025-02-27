@@ -171,7 +171,7 @@
                 "meta": {
                     "ways": 20,
                     "globalMult": 1,
-                    "winWithoutMult": 400,
+                    "winWithoutMult": 4.0,
                     "symbolMult": 7
                 }
             }

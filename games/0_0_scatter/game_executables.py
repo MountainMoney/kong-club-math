@@ -5,13 +5,9 @@
 from copy import copy
 
 from game_calculations import GameCalculations
+from src.calculations.scatter import get_scatterpay_wins
 from game_events import send_mult_info_event
-from src.events.events import (
-    set_win_event,
-    set_total_event,
-    fs_trigger_event,
-    update_tumble_win_event,
-)
+from src.events.events import set_win_event, set_total_event, fs_trigger_event, update_tumble_win_event
 
 
 class GameExecutables(GameCalculations):
@@ -19,7 +15,7 @@ class GameExecutables(GameCalculations):
 
     def set_end_tumble_event(self):
         """After all tumbling events have finished, multiply tumble-win by sum of mult symbols."""
-        if self.gametype == self.config.freegame_type:  # Only multipliers in freeSpins
+        if self.gametype == self.config.freegame_type:  # Only multipliers in freegame
             board_mult, mult_info = self.get_board_multipliers()
             base_tumble_win = copy(self.win_manager.spin_win)
             self.win_manager.set_spin_win(base_tumble_win * board_mult)
@@ -45,3 +41,13 @@ class GameExecutables(GameCalculations):
         else:
             basegame_trigger, freegame_trigger = False, True
         fs_trigger_event(self, basegame_trigger=basegame_trigger, freegame_trigger=freegame_trigger)
+
+    def get_scatterpays_update_wins(self):
+        """Return the board since we are assigning the 'explode' attribute."""
+        self.win_data = get_scatterpay_wins(
+            self.config, self.board, global_multiplier=self.global_multiplier
+        )  # Evaluate wins, self.board is modified in-place
+        self.record_scatter_wins()
+        self.win_manager.tumble_win = self.win_data["totalWin"]
+        self.win_manager.update_spinwin(self.win_data["totalWin"])  # Update wallet
+        self.emit_tumble_win_events()  # Transmit win information

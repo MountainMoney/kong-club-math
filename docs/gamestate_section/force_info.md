@@ -1,6 +1,6 @@
 # Custom Defined Events
 
-Every betmode will have a corresponding `force_for_rob_<betmode>.json`. This file records the `book-id` corresponding to a custom defined search key. Anytime `self.record()` is called where
+Every betmode will have a corresponding `force_record_<betmode>.json`. This file records the `book-id` corresponding to a custom defined search key. Anytime `self.record()` is called where
 ```python
     def record(self, description: dict) -> None:
         self.temp_wins.append(description)
@@ -19,7 +19,7 @@ The current simulation number will be appended to the description/key if it exis
         self.update_freespin_amount()
         self.run_freespin()
 ```
-This will ultimately output a `force_for_rob_<betmode>.json` with the entries:
+This will ultimately output a `force_record_<betmode>.json` with the entries:
 ```json
 [
     {

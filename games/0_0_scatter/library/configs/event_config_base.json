@@ -3,81 +3,142 @@
         "type": "reveal",
         "board": [
             [
-                "L1",
-                "H1",
-                "L1",
-                "L2",
-                "L2",
-                "L3",
-                "L2",
-                "L3",
-                "H3"
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "H1"
+                },
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "L3"
+                },
+                {
+                    "name": "L2"
+                }
             ],
             [
-                "L2",
-                "L2",
-                "L3",
-                "L2",
-                "L2",
-                "L3",
-                "L2",
-                "L2",
-                "H2"
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "L3"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "L3"
+                },
+                {
+                    "name": "L2"
+                }
             ],
             [
-                "L3",
-                "H3",
-                "L1",
-                "L1",
-                "H4",
-                "L2",
-                "H4",
-                "H4",
-                "H2"
+                {
+                    "name": "L3"
+                },
+                {
+                    "name": "H3"
+                },
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "H4"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "H4"
+                }
             ],
             [
-                "H4",
-                "L1",
-                "H2",
-                "H2",
-                "H4",
-                "H2",
-                "H2",
-                "L3",
-                "L3"
+                {
+                    "name": "H4"
+                },
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "H2"
+                },
+                {
+                    "name": "H2"
+                },
+                {
+                    "name": "H4"
+                },
+                {
+                    "name": "H2"
+                },
+                {
+                    "name": "H2"
+                }
             ],
             [
-                "L1",
-                "L1",
-                "H3",
-                "H1",
-                "H1",
-                "L2",
-                "L2",
-                "L3",
-                "L3"
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "H3"
+                },
+                {
+                    "name": "H1"
+                },
+                {
+                    "name": "H1"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "L2"
+                }
             ],
             [
-                "L1",
-                "L2",
-                "L2",
-                "H1",
-                "H4",
-                "H4",
-                "H2",
-                "H3",
-                "H2"
-            ],
-            [
-                "L3",
-                "L3",
-                "L3",
-                "H3",
-                "H1",
-                "L3",
-                "H3",
-                "H3",
-                "H2"
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "L2"
+                },
+                {
+                    "name": "H1"
+                },
+                {
+                    "name": "H4"
+                },
+                {
+                    "name": "H4"
+                },
+                {
+                    "name": "H2"
+                }
             ]
         ],
         "paddingPositions": [
@@ -86,12 +147,10 @@
             195,
             16,
             65,
-            30,
-            126
+            30
         ],
-        "gameType": "baseGame",
+        "gameType": "basegame",
         "anticipation": [
-            0,
             0,
             0,
             0,
@@ -100,115 +159,216 @@
             0
         ]
     },
-    "setWin": {
-        "type": "setWin",
-        "amount": 0,
-        "winLevel": 1
-    },
-    "finalWin": {
-        "type": "finalWin",
-        "amount": 0
-    },
     "winInfo": {
         "type": "winInfo",
-        "totalWin": 80,
+        "totalWin": 120,
         "wins": [
             {
-                "symbol": "L3",
-                "clusterSize": 6,
-                "win": 80,
+                "symbol": "L2",
+                "win": 120,
                 "positions": [
                     {
                         "reel": 0,
-                        "row": 2
-                    },
-                    {
-                        "reel": 1,
-                        "row": 2
-                    },
-                    {
-                        "reel": 1,
-                        "row": 3
-                    },
-                    {
-                        "reel": 2,
-                        "row": 3
-                    },
-                    {
-                        "reel": 3,
                         "row": 3
                     },
                     {
                         "reel": 0,
+                        "row": 4
+                    },
+                    {
+                        "reel": 1,
+                        "row": 1
+                    },
+                    {
+                        "reel": 1,
                         "row": 3
+                    },
+                    {
+                        "reel": 1,
+                        "row": 4
+                    },
+                    {
+                        "reel": 2,
+                        "row": 5
+                    },
+                    {
+                        "reel": 4,
+                        "row": 5
+                    },
+                    {
+                        "reel": 5,
+                        "row": 1
+                    },
+                    {
+                        "reel": 5,
+                        "row": 2
                     }
                 ],
                 "meta": {
-                    "multiplier": 1,
-                    "winWithoutMult": 80
+                    "globalMult": 1,
+                    "clusterMult": 1,
+                    "winWithoutMult": 1.2,
+                    "overlay": {
+                        "reel": 2,
+                        "row": 4
+                    }
                 }
             }
         ]
+    },
+    "updateTumbleWin": {
+        "type": "updateTumbleWin",
+        "amount": 120
     },
     "tumbleBoard": {
         "type": "tumbleBoard",
         "newSymbols": [
             [
-                "L1",
-                "H2"
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "L1"
+                }
             ],
             [
-                "H3",
-                "H2"
+                {
+                    "name": "H4"
+                },
+                {
+                    "name": "L1"
+                },
+                {
+                    "name": "L2"
+                }
             ],
             [
-                "L3"
-            ],
-            [
-                "H4"
+                {
+                    "name": "H3"
+                }
             ],
             [],
-            [],
-            []
+            [
+                {
+                    "name": "H2"
+                }
+            ],
+            [
+                {
+                    "name": "H4"
+                },
+                {
+                    "name": "H4"
+                }
+            ]
         ],
         "explodingSymbols": [
             {
                 "reel": 0,
-                "row": 2
-            },
-            {
-                "reel": 1,
-                "row": 2
+                "row": 3
             },
             {
                 "reel": 0,
-                "row": 3
+                "row": 4
+            },
+            {
+                "reel": 1,
+                "row": 1
             },
             {
                 "reel": 1,
                 "row": 3
             },
             {
-                "reel": 2,
-                "row": 3
+                "reel": 1,
+                "row": 4
             },
             {
-                "reel": 3,
-                "row": 3
+                "reel": 2,
+                "row": 5
+            },
+            {
+                "reel": 4,
+                "row": 5
+            },
+            {
+                "reel": 5,
+                "row": 1
+            },
+            {
+                "reel": 5,
+                "row": 2
             }
         ]
     },
+    "setWin": {
+        "type": "setWin",
+        "amount": 770,
+        "winLevel": 5
+    },
     "setTotalWin": {
         "type": "setTotalWin",
-        "amount": 80
+        "amount": 770
+    },
+    "finalWin": {
+        "type": "finalWin",
+        "amount": 770
     },
     "freeSpinTrigger": {
         "type": "freeSpinTrigger",
-        "totalFs": 12
+        "totalFs": 10,
+        "positions": [
+            {
+                "reel": 0,
+                "row": 2
+            },
+            {
+                "reel": 1,
+                "row": 1
+            },
+            {
+                "reel": 3,
+                "row": 1
+            },
+            {
+                "reel": 4,
+                "row": 4
+            },
+            {
+                "reel": 5,
+                "row": 4
+            }
+        ]
     },
     "updateFreeSpin": {
         "type": "updateFreeSpin",
-        "amount": 0,
-        "total": 12
+        "amount": 1,
+        "total": 10
+    },
+    "updateGlobalMult": {
+        "type": "updateGlobalMult",
+        "globalMult": 1
+    },
+    "boardMultiplierInfo": {
+        "type": "boardMultiplierInfo",
+        "multInfo": {
+            "positions": [
+                {
+                    "reel": 0,
+                    "row": 5,
+                    "multiplier": 10
+                }
+            ]
+        },
+        "winInfo": {
+            "tumbleWin": 4740,
+            "boardMult": 10,
+            "totalWin": 47400
+        }
+    },
+    "freeSpinEnd": {
+        "type": "freeSpinEnd",
+        "amount": 79180,
+        "winLevel": 9
     }
 }

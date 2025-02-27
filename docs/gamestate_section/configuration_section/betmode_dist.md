@@ -10,9 +10,9 @@ Within each `BetMode` there is a set of `Distribution` Classes which determine t
     * Conditions can have an arbitary number of keys. Though the required keys are:
         * `reel_weights` 
         * `force_wincap`
-        * `force_freespins`
+        * `force_freegame`
 
-    Note that `force_wincap` and `force_freespins` are set to `False` by default and do not have to be explicitly added.
+    Note that `force_wincap` and `force_freegame` are set to `False` by default and do not have to be explicitly added.
     
     The most common use for the Distribution Conditions is when drawing a random value using the BetMode's built-in method `get_distribution_conditions()`. i.e.
     ```python
@@ -20,7 +20,7 @@ Within each `BetMode` there is a set of `Distribution` Classes which determine t
     ```
     Or to check if a board forcing the `freegame` should be drawn with:
     ```python
-    if get_distribution_conditions()['force_freespins']:
+    if get_distribution_conditions()['force_freegame']:
         ...
     ```
 

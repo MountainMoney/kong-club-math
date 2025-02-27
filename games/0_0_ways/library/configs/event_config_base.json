@@ -164,7 +164,7 @@
                 "meta": {
                     "ways": 1,
                     "globalMult": 1,
-                    "winWithoutMult": 10,
+                    "winWithoutMult": 0.1,
                     "symbolMult": 0
                 }
             },
@@ -201,7 +201,7 @@
                 "meta": {
                     "ways": 8,
                     "globalMult": 1,
-                    "winWithoutMult": 160,
+                    "winWithoutMult": 1.6,
                     "symbolMult": 0
                 }
             }

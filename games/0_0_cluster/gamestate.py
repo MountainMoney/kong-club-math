@@ -3,6 +3,7 @@ from game_events import updateGridMultiplierEvent
 
 
 class GameState(GameStateOverride):
+    """Core function handling simulation results."""
 
     def run_spin(self, sim):
         self.reset_seed(sim)
@@ -12,14 +13,12 @@ class GameState(GameStateOverride):
             self.reset_book()
             self.draw_board()
 
-            self.win_data = self.get_cluster_data()
-            self.win_manager.update_spinwin(self.win_data["totalWin"])
+            self.get_clusters_update_wins()
             self.emit_tumble_win_events()
 
             while self.win_data["totalWin"] > 0 and not (self.wincap_triggered):
                 self.tumble_game_board()
-                self.win_data = self.get_cluster_data()
-                self.win_manager.update_spinwin(self.win_data["totalWin"])
+                self.get_clusters_update_wins()
                 self.emit_tumble_win_events()
 
             self.set_end_tumble_event()
@@ -40,14 +39,12 @@ class GameState(GameStateOverride):
             updateGridMultiplierEvent(self)
             # Apply game-specific actions (i.e special symbol attributes before or after evaluation)
 
-            self.win_data = self.get_cluster_data()
-            self.win_manager.update_spinwin(self.win_data["totalWin"])
+            self.get_clusters_update_wins()
             self.emit_tumble_win_events()
             self.update_grid_mults()
             while self.win_data["totalWin"] > 0 and not (self.wincap_triggered):
                 self.tumble_game_board()
-                self.win_data = self.get_cluster_data()
-                self.win_manager.update_spinwin(self.win_data["totalWin"])
+                self.get_clusters_update_wins()
                 self.emit_tumble_win_events()
                 self.update_grid_mults()
 

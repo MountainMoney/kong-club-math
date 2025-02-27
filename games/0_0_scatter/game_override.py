@@ -20,7 +20,7 @@ class GameStateOverride(GameExecutables):
         self.global_multiplier = 1
 
     def update_freespin(self) -> None:
-        """Called before a new reveal during freespins."""
+        """Called before a new reveal during freegame."""
         self.fs += 1
         update_freespin_event(self)
         # This game does not reset the global multiplier on each spin
@@ -34,12 +34,14 @@ class GameStateOverride(GameExecutables):
         self.special_symbol_functions = {"M": [self.assign_mult_property]}
 
     def assign_mult_property(self, symbol):
+        """Use betmode conditions to assign multiplier attribute to multiplier symbol."""
         multiplier_value = get_random_outcome(
             self.get_current_distribution_conditions()["mult_values"][self.gametype]
         )
         symbol.assign_attribute({"multiplier": multiplier_value})
 
     def check_game_repeat(self):
+        """Verify final win matches required betmode conditions."""
         if self.repeat == False:
             win_criteria = self.get_current_betmode_distributions().get_win_criteria()
             if win_criteria is not None and self.final_win != win_criteria:

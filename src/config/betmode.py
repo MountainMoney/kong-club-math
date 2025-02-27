@@ -57,12 +57,12 @@ class BetMode:
         """Initialize force keys."""
         self._force_keys = []
 
-    def add_force_key(self, forceKey: list):
+    def add_force_key(self, force_key: list):
         """Update force keys."""
-        self._force_keys.append(str(forceKey))  # type:ignore
+        self._force_keys.append(str(force_key))  # type:ignore
 
     def lock_force_keys(self):
-        """Fialise force keys."""
+        """Finalize force keys at the end of betmode simulation."""
         self._force_keys = tuple(sorted(self._force_keys))
 
     def get_force_keys(self):
@@ -78,7 +78,7 @@ class BetMode:
         return self._cost
 
     def get_feature(self):
-        """Return feature."""
+        """Return feature"""
         return self._is_feature
 
     def get_auto_close_disabled(self):

@@ -2,7 +2,11 @@
 ### Powered by **CarrotRGS**
 
 Welcome to the Carrot-MathEngine!
-Your one-stop-shop for spectacular slots.
+
+**Your one-stop-shop for spectacular slots!**
+
+
+This engine provides a framework for creating and optimizing slot games, and outputs all files in a format agreeable to the Carrot RGS. This engine is used to define game rules, implement game logic, optimize win-distributions, generate compressed simulation results and perform statistical analysis on custom-defined events. By using a discrete set of outcomes, we can enforce strict control on game mechanics and hit-rates, without the need to explicitly *solve* potentially complex mathematical models.
 
 
 ## Directory Structure
@@ -22,15 +26,9 @@ Your one-stop-shop for spectacular slots.
         0_0_scatter # Pay-anywhere cascading example game
         0_0_expwilds # Example of expanding Wild-reel game, with prize-collection feature game
 
-    test/ # [**TBC**] Test cases for various win-types
+    tests/ # [**TBC**] Test cases for various win-types
     utils/ # [**TBC**] Useful functions to aid with file and game analysis
-    uplods/ # [**TBC**] Data transformation and upload verification
+    uploads/ # [**TBC**] Data transformation and upload verification
     optimization/ # [**TBC**] Optimization algorithm
     docs/ # Markdown files
 
-
-## Commands
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.

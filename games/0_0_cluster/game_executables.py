@@ -1,10 +1,13 @@
 from game_calculations import GameCalculations
 from game_events import updateGridMultiplierEvent
+from src.calculations.cluster import get_cluster_data
 
 
 class GameExecutables(GameCalculations):
+    """Game dependent grouped functions."""
 
     def reset_grid_mults(self):
+        """Initialize all grid position multipliers."""
         self.position_multipliers = [
             [0 for _ in range(self.config.num_rows[reel])] for reel in range(self.config.num_reels)
         ]
@@ -28,3 +31,12 @@ class GameExecutables(GameCalculations):
                             self.position_multipliers[pos["reel"]][pos["row"]], self.config.maximum_board_mult
                         )
             updateGridMultiplierEvent(self)
+
+    def get_clusters_update_wins(self):
+        """Find clusters on board and update win manager."""
+        self.win_data = get_cluster_data(
+            config=self.config, board=self.board, global_multiplier=self.global_multiplier
+        )
+        self.record_cluster_wins()
+        self.win_manager.update_spinwin(self.win_data["totalWin"])
+        self.win_manager.tumble_win = self.win_data["totalWin"]

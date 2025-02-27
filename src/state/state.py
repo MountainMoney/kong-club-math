@@ -4,9 +4,9 @@ import random
 
 from src.config.config import *
 from src.write_data.write_data import *
-from src.calculations.symbol import Symbol
 from src.wins.win_manager import WinManager
 from src.calculations.symbol import SymbolStorage
+from src.state.books import Book
 
 
 class GeneralGameState(ABC):
@@ -19,13 +19,18 @@ class GeneralGameState(ABC):
         self.special_symbol_functions = {}
         self.temp_wins = []
         self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
-        self.sim = 0
-        self.repeat = True
-        self.criteria = ""
-        self.reset_seed()
         self.create_symbol_map()
-        self.reset_book()
         self.assign_special_sym_function()
+        self.sim = 0
+        self.criteria = ""
+        self.book = Book(self.sim, self.criteria)
+        self.repeat = True
+        self.win_data = {
+            "totalWin": 0,
+            "wins": [],
+        }
+        self.reset_seed()
+        self.reset_book()
         self.reset_fs_spin()
 
     def create_symbol_map(self) -> None:
@@ -52,12 +57,7 @@ class GeneralGameState(ABC):
         self.top_symbols = None
         self.bottom_symbols = None
         self.book_id = self.sim + 1
-        self.book = {
-            "id": self.book_id,
-            "payoutMultiplier": 0.0,
-            "events": [],
-            "criteria": self.criteria,
-        }
+        self.book = Book(self.book_id, self.criteria)
         self.win_data = {
             "totalWin": 0,
             "wins": [],
@@ -68,7 +68,7 @@ class GeneralGameState(ABC):
         self.tot_fs = 0
         self.fs = 0
         self.wincap_triggered = False
-        self.triggered_freespins = False
+        self.triggered_freegame = False
         self.gametype = self.config.basegame_type
         self.repeat = False
         self.anticipation = [0] * self.config.num_reels
@@ -80,7 +80,7 @@ class GeneralGameState(ABC):
 
     def reset_fs_spin(self) -> None:
         """Use if using repeat during freespin games."""
-        self.triggered_freespins = True
+        self.triggered_freegame = True
         self.fs = 0
         self.gametype = self.config.freegame_type
         self.win_manager.reset_spin_win()
@@ -112,20 +112,6 @@ class GeneralGameState(ABC):
             if d._criteria == self.criteria:
                 return d._conditions
         return RuntimeError("could not locate betmode conditions")
-
-    # State verifications/checks
-    def get_wincap_triggered(self) -> bool:
-        """Break out of spin progress if max-win is triggered."""
-        if self.wincap_triggered:
-            return True
-        return False
-
-    def in_criteria(self, *args) -> bool:
-        """Checks if the current win criteria matches a given list."""
-        for arg in args:
-            if self.criteria == arg:
-                return True
-        return False
 
     def record(self, description: dict) -> None:
         """
@@ -170,7 +156,7 @@ class GeneralGameState(ABC):
                     "bookIds": [book_id],
                 }
         self.temp_wins = []
-        self.library[self.sim + 1] = copy(self.book)
+        self.library[self.sim + 1] = copy(self.book.to_json())
         self.win_manager.update_end_round_wins()
 
     def update_final_win(self) -> None:
@@ -180,9 +166,9 @@ class GeneralGameState(ABC):
         freewin = round(min(self.win_manager.freegame_wins, self.config.wincap), 2)
 
         self.final_win = final
-        self.book["payoutMultiplier"] = self.final_win
-        self.book["baseGameWins"] = basewin
-        self.book["freeGameWins"] = freewin
+        self.book.payout_multiplier = self.final_win
+        self.book.basegame_wins = basewin
+        self.book.freegame_wins = freewin
 
         assert min(
             round(self.win_manager.basegame_wins + self.win_manager.freegame_wins, 2),
@@ -191,10 +177,10 @@ class GeneralGameState(ABC):
             min(self.win_manager.running_bet_win, self.config.wincap), 2
         ), "Base + Free game payout mismatch!"
         assert min(
-            round(self.book["baseGameWins"] + self.book["freeGameWins"], 2),
+            round(self.book.basegame_wins + self.book.freegame_wins, 2),
             self.config.wincap,
         ) == min(
-            round(self.book["payoutMultiplier"], 2), round(self.config.wincap, 2)
+            round(self.book.payout_multiplier, 2), round(self.config.wincap, 2)
         ), "Base + Free game payout mismatch!"
 
     def check_repeat(self) -> None:
@@ -204,7 +190,7 @@ class GeneralGameState(ABC):
             if win_criteria is not None and self.final_win != win_criteria:
                 self.repeat = True
 
-            if self.get_current_distribution_conditions()["force_freespins"] and not (self.triggered_freespins):
+            if self.get_current_distribution_conditions()["force_freegame"] and not (self.triggered_freegame):
                 self.repeat = True
 
     @abstractmethod
@@ -230,7 +216,8 @@ class GeneralGameState(ABC):
         compress=True,
         write_event_list=True,
     ) -> None:
-        """Assigns criteria and runs individual simulations. Results are stored in tempory file to be combined when all threads are finished."""
+        """Assigns criteria and runs individual simulations. Results are stored in temporary file to be combined when all threads are finished."""
+        self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
         self.betmode = betmode
         self.num_sims = num_sims
         for sim in range(

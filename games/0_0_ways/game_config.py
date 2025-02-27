@@ -6,6 +6,13 @@ from src.config.betmode import BetMode
 class GameConfig(Config):
     """Game specific configuration class."""
 
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         super().__init__()
         self.game_id = "0_0_ways"
@@ -84,7 +91,7 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                             "scatter_triggers": {3: 100, 4: 20, 5: 5},
                             "mult_values": {1: 200, 2: 100, 3: 80, 4: 50, 5: 20},
                         },
@@ -98,7 +105,7 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                             "scatter_triggers": {3: 100, 4: 20, 5: 5},
                             "mult_values": {1: 200, 2: 100, 3: 80, 4: 50, 5: 20},
                         },
@@ -110,7 +117,7 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                             "mult_values": {1: 1},
                         },
                     ),
@@ -120,7 +127,7 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                             "mult_values": {1: 1},
                         },
                     ),
@@ -144,7 +151,7 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                             "scatter_triggers": {3: 100, 4: 20, 5: 5},
                             "mult_values": {1: 200, 2: 100, 3: 80, 4: 50, 5: 20},
                         },

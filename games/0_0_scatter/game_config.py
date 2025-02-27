@@ -5,6 +5,15 @@ from src.config.betmode import BetMode
 
 
 class GameConfig(Config):
+    """Load all game specific parameters and elements"""
+
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self):
         super().__init__()
         self.game_id = "0_0_scatter"
@@ -20,7 +29,7 @@ class GameConfig(Config):
         self.num_reels = 6
         self.num_rows = [5] * self.num_reels  # Optionally include variable number of rows per reel
         # Board and Symbol Properties
-        t1, t2, t3, t4 = (8, 9), (9, 10), (10, 12), (13, 36)
+        t1, t2, t3, t4 = (8, 8), (9, 10), (11, 13), (14, 36)
         pay_group = {
             (t1, "H1"): 3.0,
             (t2, "H1"): 7.5,
@@ -120,7 +129,7 @@ class GameConfig(Config):
                             },
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -137,7 +146,7 @@ class GameConfig(Config):
                                 self.freegame_type: {2: 100, 4: 80, 5: 50, 7: 20, 10: 10},
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -151,7 +160,7 @@ class GameConfig(Config):
                                 self.freegame_type: {2: 100, 4: 80, 5: 50, 7: 20, 10: 10},
                             },
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                         },
                     ),
                     Distribution(
@@ -161,7 +170,7 @@ class GameConfig(Config):
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
                             "mult_values": {self.basegame_type: {2: 100, 4: 80, 5: 50, 7: 20, 10: 10}},
                             "force_wincap": False,
-                            "force_freespins": False,
+                            "force_freegame": False,
                         },
                     ),
                 ],
@@ -190,7 +199,7 @@ class GameConfig(Config):
                             },
                             "scatter_triggers": {4: 10, 5: 5, 6: 1},
                             "force_wincap": True,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                     Distribution(
@@ -207,7 +216,7 @@ class GameConfig(Config):
                                 self.freegame_type: {2: 100, 4: 80, 5: 50, 7: 20, 10: 10},
                             },
                             "force_wincap": False,
-                            "force_freespins": True,
+                            "force_freegame": True,
                         },
                     ),
                 ],

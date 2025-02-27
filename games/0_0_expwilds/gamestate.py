@@ -1,9 +1,10 @@
 """Handles the state and output for a single simulation round"""
 
 from game_override import GameStateOverride
-from game_events import win_info_event, new_sticky_event
+from game_events import win_info_prize_event, new_sticky_event
+from src.calculations.lines import get_lines
 from src.events.events import update_freespin_event, reveal_event, set_total_event, set_win_event
-from game_events import new_expanding_wild_event, update_expanding_wild_event
+from game_events import new_expanding_wild_event, update_expanding_wild_event, reveal_prize_event
 from src.calculations.statistics import get_random_outcome
 
 
@@ -21,7 +22,8 @@ class GameState(GameStateOverride):
             else:
                 self.draw_board(emit_event=True)
 
-                self.win_data = self.get_lines()
+                self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
+                self.record_lines_wins()
                 self.win_manager.update_spinwin(self.win_data["totalWin"])
                 self.emit_linewin_events()
 
@@ -38,7 +40,7 @@ class GameState(GameStateOverride):
         self.expanding_wilds = []
         self.avaliable_reels = [i for i in range(self.config.num_reels)]
 
-        while self.fs < self.tot_fs:
+        while self.fs < self.tot_fs and not self.wincap_triggered:
             self.update_freespin()
             self.draw_board(emit_event=False)
 
@@ -56,7 +58,8 @@ class GameState(GameStateOverride):
                 self.expanding_wilds.append({"reel": wild["reel"], "row": 0, "mult": wild["mult"]})
             self.expanding_wilds = sorted(self.expanding_wilds, key=lambda x: x["reel"])
 
-            self.win_data = self.get_lines()
+            self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
+            self.record_lines_wins()
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_linewin_events()
             self.win_manager.update_gametype_wins(self.gametype)
@@ -74,7 +77,7 @@ class GameState(GameStateOverride):
                 while len(self.special_syms_on_board["prize"]):
                     self.create_board_reelstrips()
             self.replace_board_with_stickys()
-            reveal_event(self)
+            reveal_prize_event(self)
 
             new_sticky_symbols = self.check_for_new_prize()
             if len(new_sticky_symbols) > 0:
@@ -89,7 +92,7 @@ class GameState(GameStateOverride):
             self.win_manager.update_gametype_wins(self.gametype)
 
         if self.win_manager.spin_win > 0:
-            win_info_event(self)
+            win_info_prize_event(self)
             self.evaluate_wincap()
             set_win_event(self)
         set_total_event(self)

@@ -4,7 +4,6 @@ import random
 from copy import deepcopy
 from game_calculations import GameCalculations
 from src.calculations.statistics import get_random_outcome
-from src.events.events import reveal_event
 
 
 class GameExecutables(GameCalculations):
@@ -44,6 +43,7 @@ class GameExecutables(GameCalculations):
 
     # Superspin prize modes
     def check_for_new_prize(self) -> list:
+        """Check for prizes landing on most recent reveal."""
         new_sticky_symbols = []
         for reel, _ in enumerate(self.board):
             for row, _ in enumerate(self.board[reel]):
@@ -56,8 +56,6 @@ class GameExecutables(GameCalculations):
                         "row": row,
                         "prize": self.board[reel][row].get_attribute("prize"),
                     }
-                    if sym_details["row"] > 4:
-                        print("here")
                     new_sticky_symbols.append(sym_details)
                     self.sticky_symbols.append(deepcopy(sym_details))
                     self.existing_sticky_symbols.append((sym_details["reel"], sym_details["row"]))
@@ -68,9 +66,7 @@ class GameExecutables(GameCalculations):
         """replace with stickys and update special array."""
         for sym in self.sticky_symbols:
             self.board[sym["reel"]][sym["row"]] = self.create_symbol("P")
-            self.board[sym["reel"]][sym["row"]].assign_attribute(
-                {"prize": get_random_outcome(self.get_current_distribution_conditions()["prize_values"])}
-            )
+            self.board[sym["reel"]][sym["row"]].assign_attribute({"prize": sym["prize"]})
 
     def get_final_board_prize(self) -> dict:
         """Get final board win."""

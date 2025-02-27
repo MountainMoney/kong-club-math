@@ -28,7 +28,7 @@ Sub-folders within library/ are automatically generated if they do not exist at 
 
 While all commonly used engine functions are handled by classes within their respective src/ directory, every game is likely to be unique in some way and these game-files allow the user to override existing functions in order to add additional engine features to suit their use-case, or implement game-specific logic. 
 
-The game_config/executables/calculations/events/override files offer extensions on actions defined in the [Source Files](../source_section/calculations_info.md) section, which should be consulted for more detailed information.
+The game_config/executables/calculations/events/override files offer extensions on actions defined in the [Source Files](../source_section/executables_info.md) section, which should be consulted for more detailed information.
 
 ## Run-file
 
@@ -46,7 +46,7 @@ This file is used to set simulation parameters, specifically the configuration a
  
 All simulations are passed to the `create_books()` function which carries out all the simulations and handles file output. This function will populate `library/` `books_compressed`, `books`, `forces`,  `lookup_tables` folders.
 
-Once the simulations are completed, the **gamestate** is passed to `generate_configs(gamestate)` which handles generating config files used for the frontend (`config_fe.json`), backend (`config.json`) and [optimization](optimization_algorithm.md) (`config_math.json`). 
+Once the simulations are completed, the **gamestate** is passed to `generate_configs(gamestate)` which handles generating config files used for the frontend (`config_fe.json`), backend (`config.json`) and [optimization](../optimization_section/optimization_algorithm.md) (`config_math.json`). 
 
 ## Library Folders
 
@@ -54,7 +54,7 @@ Once the simulations are completed, the **gamestate** is passed to `generate_con
 Depending on the **compression** tag passed to `create_books()` the `books/` or `books_compressed/` folders will be populated with the events emitted from the simulation. 
 
 #### configs
-This will consist of three `.json` files for the math, frontend and backend. The details of which are described [here](file_output.md).
+This will consist of three `.json` files for the math, frontend and backend. The details of which are described [here](../source_section/config_info.md).
 
 #### lookup_tables
 Once any given simulation is compete the events associated are stored within the books, and the corresponding payout details are recorded in a lookup table of the format:
@@ -86,5 +86,6 @@ The **Executables** class inherits all miscellaneous game-logic and board-action
  * Ways
  * Scatter (pay anywhere)
  * Cluster 
+ * Expanding wild + prize collection
 
 Additionally other classes attached to **Executables** are tumbling/cascading of winning symbols and **Conditions** for checking the current simulation state

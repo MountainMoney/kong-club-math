@@ -27,9 +27,9 @@ class GameStateOverride(GameExecutables):
 
     def assign_prize_value(self, symbol):
         """Only assign multiplier values in freegame"""
-        if self.gametype != self.config.basegame_type:
-            multiplier_value = get_random_outcome(self.get_current_distribution_conditions()["prize_value"])
-            symbol.assign_attribute({"prize_value": multiplier_value})
+        # if self.gametype != self.config.basegame_type:
+        multiplier_value = get_random_outcome(self.get_current_distribution_conditions()["prize_values"])
+        symbol.assign_attribute({"prize": multiplier_value})
 
     def check_game_repeat(self):
         """Check repeat conditions before imprinting simulation events."""

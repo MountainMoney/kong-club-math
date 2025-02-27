@@ -1,7 +1,7 @@
 """Defines reusable events"""
 
 from copy import deepcopy
-from src.events.event_constants import *
+from src.events.event_constants import EventConstants
 
 
 def json_ready_sym(symbol: object, special_attributes: list = None):
@@ -32,15 +32,14 @@ def reveal_event(gamestate):
             board_client[reel].append(json_ready_sym(gamestate.bottom_symbols[reel], special_attributes))
 
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": REVEAL,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.REVEAL.value,
         "board": board_client,
         "paddingPositions": gamestate.reel_positions,
         "gameType": gamestate.gametype,
         "anticipation": gamestate.anticipation,
     }
-
-    gamestate.book["events"] += [deepcopy(event)]
+    gamestate.book.add_event(event)
 
 
 def fs_trigger_event(
@@ -61,29 +60,29 @@ def fs_trigger_event(
 
     if basegame_trigger:
         event = {
-            "index": len(gamestate.book["events"]),
-            "type": FREESPINTRIGGER,
+            "index": len(gamestate.book.events),
+            "type": EventConstants.FREESPINTRIGGER.value,
             "totalFs": gamestate.tot_fs,
             "positions": scatter_positions,
         }
     elif freegame_trigger:
         event = {
-            "index": len(gamestate.book["events"]),
-            "type": FREESPINRETRIGGER,
+            "index": len(gamestate.book.events),
+            "type": EventConstants.FREESPINRETRIGGER.value,
             "totalFs": gamestate.tot_fs,
             "positions": scatter_positions,
         }
 
-    assert gamestate.tot_fs > 0, "total freespins (gamestate.tot_fs) must be >0"
-    gamestate.book["events"] += [deepcopy(event)]
+    assert gamestate.tot_fs > 0, "total freegame (gamestate.tot_fs) must be >0"
+    gamestate.book.add_event(event)
 
 
 def set_win_event(gamestate, winlevel_key: str = "standard"):
     """Used for updating cumulative win ticker (for a single outcome)."""
     if not gamestate.wincap_triggered:
         event = {
-            "index": len(gamestate.book["events"]),
-            "type": SET_WIN,
+            "index": len(gamestate.book.events),
+            "type": EventConstants.SET_WIN.value,
             "amount": int(
                 min(
                     round(gamestate.win_manager.spin_win * 100, 0),
@@ -92,14 +91,14 @@ def set_win_event(gamestate, winlevel_key: str = "standard"):
             ),
             "winLevel": gamestate.config.get_win_level(gamestate.win_manager.spin_win, winlevel_key),
         }
-        gamestate.book["events"] += [event]
+        gamestate.book.add_event(event)
 
 
 def set_total_event(gamestate):
     """Updates win amount for a betting round (including cumulative wins across multiple freespin wins)."""
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": SET_TOTAL_WIN,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.SET_TOTAL_WIN.value,
         "amount": int(
             round(
                 min(gamestate.win_manager.running_bet_win, gamestate.config.wincap) * 100,
@@ -107,24 +106,24 @@ def set_total_event(gamestate):
             )
         ),
     }
-    gamestate.book["events"] += [event]
+    gamestate.book.add_event(event)
 
 
 def set_tumble_event(gamestate):
     """Update banner indicating wins from successive tumbles."""
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": SET_TUMBLE_WIN,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.SET_TUMBLE_WIN.value,
         "amount": int(round(min(gamestate.tumble_win, gamestate.config.wincap) * 100)),
     }
-    gamestate.book["events"] += [event]
+    gamestate.book.add_event(event)
 
 
 def wincap_event(gamestate):
-    """Emit to indicate spin actions should stop due to maximum win amount achieved."""
+    """Emit to indicate end of spin actions."""
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": WINCAP,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.WINCAP.value,
         "amount": int(
             round(
                 min(gamestate.win_manager.running_bet_win, gamestate.config.wincap) * 100,
@@ -132,7 +131,7 @@ def wincap_event(gamestate):
             )
         ),
     }
-    gamestate.book["events"] += [event]
+    gamestate.book.add_event(event)
 
 
 def win_info_event(gamestate, include_padding_index=True):
@@ -140,11 +139,7 @@ def win_info_event(gamestate, include_padding_index=True):
     include_padding_index: starts winning-symbol positions at row=1, to account for top/bottom symbol inclusion in board
     """
     win_data_copy = {}
-    a = id(gamestate.win_data["wins"])
     win_data_copy["wins"] = deepcopy(gamestate.win_data["wins"])
-    b = id(win_data_copy["wins"])
-    if a == b:
-        print("copy error")
     for idx, w in enumerate(win_data_copy["wins"]):
         if include_padding_index:
             new_positions = []
@@ -157,109 +152,103 @@ def win_info_event(gamestate, include_padding_index=True):
             round(min(win_data_copy["wins"][idx]["win"], gamestate.config.wincap) * 100, 0)
         )
         win_data_copy["wins"][idx]["positions"] = new_positions
-        if "meta" in win_data_copy["wins"][idx]["positions"]:
-            win_data_copy["wins"][idx]["meta"] = win_data_copy["wins"][idx]["meta"]
+        if "meta" in win_data_copy["wins"][idx]:
             win_data_copy["wins"][idx]["meta"]["winWithoutMult"] = int(
-                round(
+                int(
                     min(
-                        win_data_copy["wins"][idx]["meta"]["winWithoutMult"],
-                        gamestate.config.wincap,
-                    )
-                    * 100,
-                    0,
+                        win_data_copy["wins"][idx]["meta"]["winWithoutMult"] * 100,
+                        gamestate.config.wincap * 100,
+                    ),
                 )
             )
             if "overlay" in win_data_copy["wins"][idx]["meta"] and include_padding_index:
                 win_data_copy["wins"][idx]["meta"]["overlay"]["row"] += 1
 
-    dict_data = {
-        "index": len(gamestate.book["events"]),
-        "type": WIN_DATA,
+    event = {
+        "index": len(gamestate.book.events),
+        "type": EventConstants.WIN_DATA.value,
         "totalWin": int(round(min(gamestate.win_data["totalWin"], gamestate.config.wincap) * 100, 0)),
         "wins": win_data_copy["wins"],
     }
-    gamestate.book["events"] += [deepcopy(dict_data)]
+    gamestate.book.add_event(event)
 
 
 def update_tumble_win_event(gamestate):
     """Update a banner to record successive tumble wins."""
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": UPDATE_TUMBLE_WIN,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.UPDATE_TUMBLE_WIN.value,
         "amount": int(round(min(gamestate.win_manager.spin_win, gamestate.config.wincap) * 100, 0)),
     }
-    gamestate.book["events"] += [event]
+    gamestate.book.add_event(event)
 
 
 def update_freespin_event(gamestate):
-    """Update the current spin number and total freespins"""
+    """Update the current spin number and total freegame"""
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": UPDATE_FS,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.UPDATE_FS.value,
         "amount": int(gamestate.fs),
         "total": int(gamestate.tot_fs),
     }
-    gamestate.book["events"] += [event]
+    gamestate.book.add_event(event)
 
 
 def freespin_end_event(gamestate, winlevel_key="endFeature"):
     """End of feature trigger."""
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": FREE_SPIN_END,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.FREE_SPIN_END.value,
         "amount": int(min(gamestate.win_manager.freegame_wins, gamestate.config.wincap) * 100),
         "winLevel": gamestate.config.get_win_level(gamestate.win_manager.freegame_wins, winlevel_key),
     }
-    gamestate.book["events"] += [event]
+    gamestate.book.add_event(event)
 
 
 def final_win_event(gamestate):
     """Assigns final payout multiplier for a simulation."""
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": FINAL_WIN,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.FINAL_WIN.value,
         "amount": int(round(min(gamestate.final_win, gamestate.config.wincap) * 100, 0)),
     }
-    gamestate.book["events"] += [event]
+    gamestate.book.add_event(event)
 
 
 def update_global_mult_event(gamestate):
     """Increment global multiplier value."""
     event = {
-        "index": len(gamestate.book["events"]),
-        "type": UPDATE_GLOBAL_MULT,
+        "index": len(gamestate.book.events),
+        "type": EventConstants.UPDATE_GLOBAL_MULT.value,
         "globalMult": int(gamestate.global_multiplier),
     }
 
-    gamestate.book["events"] += [deepcopy(event)]
+    gamestate.book.add_event(event)
 
 
 def tumble_board_event(gamestate):
-    """States the symbol positions removed from a board during tumeble, and which new symbols should take their place."""
+    """States the symbol positions removed from a board during tumble, and which new symbols should take their place."""
     special_attributes = list(gamestate.config.special_symbols.keys())
 
-    if gamestate.config.include_padding:
-        exploding = []
-        for sym in gamestate.exploding_symbols:
-            exploding.append({"reel": sym["reel"], "row": sym["row"] + 1})
-    else:
-        exploding = gamestate.exploding_symbols
+    exploding = []
+    for win in gamestate.win_data["wins"]:
+        for pos in win["positions"]:
+            if gamestate.config.include_padding:
+                exploding.append({"reel": pos["reel"], "row": pos["row"] + 1})
+            else:
+                exploding.append({"reel": pos["reel"], "row": pos["row"]})
 
     exploding = sorted(exploding, key=lambda x: x["reel"])
 
     new_symbols = [[] for _ in range(gamestate.config.num_reels)]
-    count = 0
     for r, _ in enumerate(gamestate.new_symbols_from_tumble):
         if len(gamestate.new_symbols_from_tumble[r]) > 0:
             new_symbols[r] = [json_ready_sym(s, special_attributes) for s in gamestate.new_symbols_from_tumble[r]]
 
-    gamestate.book["events"] += deepcopy(
-        [
-            {
-                "index": len(gamestate.book["events"]),
-                "type": TUMBLE_BOARD,
-                "newSymbols": new_symbols,
-                "explodingSymbols": exploding,
-            }
-        ]
-    )
+    event = {
+        "index": len(gamestate.book.events),
+        "type": EventConstants.TUMBLE_BOARD.value,
+        "newSymbols": new_symbols,
+        "explodingSymbols": exploding,
+    }
+    gamestate.book.add_event(event)

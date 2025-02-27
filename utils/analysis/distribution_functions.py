@@ -33,6 +33,7 @@ def get_distribution_average(dist: dict) -> float:
 
 
 def get_distribution_std(filename: str) -> float:
+    """Given a (weighted) lookup-table, return standard deviation."""
     dist = make_win_distribution(filename)
     av = get_distribution_average(dist)
     win_amounts = np.array(list(dist.keys()))
@@ -43,4 +44,5 @@ def get_distribution_std(filename: str) -> float:
 
 
 def get_distribution_median(dist: dict) -> float:
+    """Return median of an ordered win-distribution."""
     return list(dist.keys())[int(round(len(dist) / 2))]

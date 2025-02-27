@@ -1,6 +1,8 @@
+# Lines Games
+
 This is an example of a simple lines-game-win
 
-Wilds have multipliers in the freeGame and have the effect of multipling a given line win the the additative multiplier values attached to Wild symbols, 
+Wilds have multipliers in the freeGame and have the effect of multiplying a given line win the addition multiplier values attached to Wild symbols, 
 only when the multiplier value is > 1.
 
 Basegame:
