@@ -25,14 +25,14 @@ This class acts as a super-class, ensuring shared components across all simulati
 - Reelsets
 
 
-These **global `GameState` attributes** remain consistent across all games, modes, and simulations. When a simulation runs, `run_spin()` creates a sub-instance of the **General GameState**, allowing modifications to game data through the `self` object. The central idea is that the **GameState** represents the current state of the simulation. And components within this state are modified directly. This reduces the need to be passing objects back and forth between functions when writing game logic.
+These **global `GameState` attributes** remain consistent across all game modes, and simulations. When a simulation runs, `run_spin()` creates a sub-instance of the **General GameState**, allowing modifications to game data through the `self` object. The central idea is that the **GameState** represents the current state of the simulation. And components within this state are modified directly. This reduces the need to be passing objects back and forth between functions when writing game logic. 
 
 
 At a high-level, the structure of the engine is shown: 
 ![below](../engine_flowchart.png)
 
 
-There is a super-class containing essentially all core functionality. When setting up a custom game, these events will extend (or override) the core functionality as per Python's MRO. This `GameState` class is then used to keep track of simulation details. Once complete, all relevant output files are generated sequentially for each BetMode. Finally these outputs can be used for optimization before being uploaded/published to the Admin Control Panel (ACP).
+There is a super-class containing essentially all core functionality. When setting up a custom game, these events will extend (or override) the core functionality as per Python's Method Resolution Order (MRO). This `GameState` class is then used to keep track of simulation details. Once complete, all relevant output files are generated sequentially for each BetMode. Finally these outputs can be used for optimization before being uploaded/published to the Admin Control Panel (ACP).
 
 ## Class Inheritance
 
@@ -56,7 +56,19 @@ Each game has unique rules, such as cluster multipliers or cascading wins, which
 #### **GameExecutables (game/game_executables.py)**
 Executable functions group multiple game actions together. These functions can be overridden to introduce new mechanics at the game level.
 
-Example: Updating free spins based on Scatters:
+In the case of triggering freespins, for example. Generally the number of scatters active on a game-board would be counted and the appropriate number of spins are assigned from the config file definition:
+```python
+config.freespin_triggers = {3:8 ,4:10, 5:12}
+```
+Where 3 scatters award 8 spins etc... This is a commonly carried out procedure, so there is a function in `Executables.update_freespin_amount()` to assign freespins,
+```python
+    def update_freespin_amount(self, scatter_key: str = "scatter") -> None:
+        self.tot_fs = self.config.freespin_triggers[self.gametype][self.count_special_symbols(scatter_key)]
+        fs_trigger_event(self, basegame_trigger=True, freegame_trigger=False)
+```
+
+However in the `0_0_scatter` sample game, we would instead want to assign the total spins to be 2x the number of active Scatters. Therefore we can override the function in the `GameExecutables` class:
+
 ```python
 def update_freespin_amount(self, scatter_key: str = "scatter"):
     self.tot_fs = self.count_special_symbols(scatter_key) * 2

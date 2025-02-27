@@ -183,7 +183,7 @@ class Executables(Conditions, Tumble):
         self.update_final_win()
         final_win_event(self)
 
-    def update_global_mult(self):
+    def update_global_mult(self) -> None:
         """Increment multiplier value and emit corresponding event."""
         self.global_multiplier += 1
         update_global_mult_event(self)

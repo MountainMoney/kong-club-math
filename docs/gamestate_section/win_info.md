@@ -36,7 +36,7 @@ This additional information includes any symbol or global multiplier values appl
 
 ### Multiplier methods
 
-For generality all win methods inherit functions from the `MultiplierStrategy` class. By calling `apply_mult()` with a specified strategy (`global`, `symbol`, `combined`), base win amount and winning symbol positions, total win amounts are returned inclusive of any global multipliers or symbol multipliers. By default, if the `combined` or `symbol` strategy is used, multiplier values are added together from winning symbol positions, where the symbol object contains the `multiplier` attribute.
+For generality all win methods utilize functions from the `wins/multiplier_strategy` file. By calling `apply_mult()` with a specified strategy (`global`, `symbol`, `combined`), base win amount and winning symbol positions, total win amounts are returned inclusive of any global multipliers or symbol multipliers. By default, if the `combined` or `symbol` strategy is used, multiplier values are added together from winning symbol positions, where the symbol object contains the `multiplier` attribute.
 
 ### Overlay values
 
