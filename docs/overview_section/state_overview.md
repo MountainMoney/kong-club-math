@@ -125,4 +125,4 @@ The **payoutMultipler** attached to a **book** represents the final amount paid 
 |       ...         |          ...      |        ...        |
 
 
-All files generated from the `MathEngine` will have the prefix `lookUpTable_mode.csv`. This is the file consumed by the optimization algorithm, which has the effect of modifying the weight values, which are initially set to `1`. Optimized lookup tables will have the prefix `lookUpTable_mode_0.csv`
+All files generated from the Math Engine will have the prefix `lookUpTable_mode.csv`. This is the file consumed by the optimization algorithm, which has the effect of modifying the weight values, which are initially set to `1`. Optimized lookup tables will have the prefix `lookUpTable_mode_0.csv`
