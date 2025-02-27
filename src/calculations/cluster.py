@@ -128,6 +128,8 @@ def evaluate_clusters(
                 symwin_mult = sym_win * cluster_mult * global_multiplier
                 total_win += symwin_mult
                 json_positions = [{"reel": p[0], "row": p[1]} for p in cluster]
+
+                central_pos = get_central_cluster_position(json_positions)
                 return_data["wins"] += [
                     {
                         "symbol": sym,
@@ -138,6 +140,7 @@ def evaluate_clusters(
                             "globalMult": global_multiplier,
                             "clusterMult": cluster_mult,
                             "winWithoutMult": sym_win,
+                            "overlay": {"reel": central_pos[0], "row": central_pos[1]},
                         },
                     }
                 ]

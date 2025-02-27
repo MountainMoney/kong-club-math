@@ -152,16 +152,13 @@ def win_info_event(gamestate, include_padding_index=True):
             round(min(win_data_copy["wins"][idx]["win"], gamestate.config.wincap) * 100, 0)
         )
         win_data_copy["wins"][idx]["positions"] = new_positions
-        if "meta" in win_data_copy["wins"][idx]["positions"]:
-            win_data_copy["wins"][idx]["meta"] = win_data_copy["wins"][idx]["meta"]
+        if "meta" in win_data_copy["wins"][idx]:
             win_data_copy["wins"][idx]["meta"]["winWithoutMult"] = int(
-                round(
+                int(
                     min(
-                        win_data_copy["wins"][idx]["meta"]["winWithoutMult"],
-                        gamestate.config.wincap,
-                    )
-                    * 100,
-                    0,
+                        win_data_copy["wins"][idx]["meta"]["winWithoutMult"] * 100,
+                        gamestate.config.wincap * 100,
+                    ),
                 )
             )
             if "overlay" in win_data_copy["wins"][idx]["meta"] and include_padding_index:

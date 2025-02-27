@@ -1,7 +1,7 @@
 {
     "frontendConfig": {
         "file": "config_fe_0_0_ways.json",
-        "sha256": "ecf818e9edac67a00ae00dc768665461126eb8d2f944f377eac03b2cd7b2f647"
+        "sha256": "e94c14529f5f1e9480cc7e35d0d878da23563f7c3a1ac918ce116a0316a9e8bd"
     },
     "workingName": "sample ways game",
     "gameID": "0_0_ways",
@@ -11,7 +11,7 @@
     "providerNumber": 0,
     "standardForceFile": {
         "file": "force.json",
-        "sha256": "73074b17b7899ef8515f246d3786f379a89db3f1d3e56547af7c458e63292d6b"
+        "sha256": "73972ac6995b8bf7c600193c1ed7d9fa2df4b87188308289cf2a97b919aae926"
     },
     "bookShelfConfig": [
         {
@@ -32,11 +32,11 @@
             "maxWin": 5000,
             "booksFile": {
                 "file": "books_base.json.zst",
-                "sha256": "8227efcd175bd61896e8bca4c385a96d40e6f220c37626780ce7a8420a088ca7"
+                "sha256": ""
             },
             "forceFile": {
-                "file": "force_for_rob_base.json",
-                "sha256": "7b0a72392e902716772a9342502aa8a16986d1f119fef9a35a3c0008f9821d42"
+                "file": "force_record_base.json",
+                "sha256": "fffbd0ff34d8cb8633d1ad7650cdbae14ae4a492b6e8c665af0add9301c1ae4b"
             }
         },
         {
@@ -57,11 +57,11 @@
             "maxWin": 5000,
             "booksFile": {
                 "file": "books_bonus.json.zst",
-                "sha256": "fa2cf45d2fd008936ff8ed8a95473c5521b1dfab5996e3f0175872e0469083b3"
+                "sha256": ""
             },
             "forceFile": {
-                "file": "force_for_rob_bonus.json",
-                "sha256": "ec9e90561cb769034bcaa8a02595a02642877436ccb43b77af547836edaaa5af"
+                "file": "force_record_bonus.json",
+                "sha256": "92690c76b2dd5f18bae08fa4098d5119a3e1e3962bdea61d23946e9cdd16d174"
             }
         }
     ]

@@ -41,6 +41,9 @@ src/write_data/write_configs.py
 src/write_data/write_data.py
 tests/__init__.py
 uploads/__init__.py
+uploads/aws_classes.py
+uploads/aws_constants.py
+uploads/aws_upload.py
 utils/__init__.py
 utils/get_file_hash.py
 utils/analysis/__init__.py
