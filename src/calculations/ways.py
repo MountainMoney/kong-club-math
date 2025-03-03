@@ -6,7 +6,7 @@ from src.config.config import Config
 from src.wins.multiplier_strategy import apply_mult
 
 
-def get_ways_data(config: Config, board: Board, wild_key: str = "wild"):
+def get_ways_data(config: Config, board: Board, wild_key: str = "wild", multiplier_key="multiplier"):
     """Ways calculation with possibility for global multiplier application."""
     return_data = {
         "totalWin": 0,
@@ -35,16 +35,16 @@ def get_ways_data(config: Config, board: Board, wild_key: str = "wild"):
                 # Note that here multipliers on subsequent reels multiplier (not add, like in lines games)
                 for s in potential_wins[symbol][reel]:
                     if (
-                        board[s["reel"]][s["row"]].check_attribute("multiplier")
-                        and board[s["reel"]][s["row"]].get_attribute("multiplier") > 1
+                        board[s["reel"]][s["row"]].check_attribute(multiplier_key)
+                        and board[s["reel"]][s["row"]].get_attribute(multiplier_key) > 1
                     ):
-                        mult_enhance += board[s["reel"]][s["row"]].get_attribute("multiplier")
+                        mult_enhance += board[s["reel"]][s["row"]].get_attribute(multiplier_key)
                 for s in wilds[reel]:
                     if (
-                        board[s["reel"]][s["row"]].check_attribute("multiplier")
-                        and board[s["reel"]][s["row"]].get_attribute("multiplier") > 1
+                        board[s["reel"]][s["row"]].check_attribute(multiplier_key)
+                        and board[s["reel"]][s["row"]].get_attribute(multiplier_key) > 1
                     ):
-                        mult_enhance += board[s["reel"]][s["row"]].get_attribute("multiplier")
+                        mult_enhance += board[s["reel"]][s["row"]].get_attribute(multiplier_key)
 
                 ways *= len(potential_wins[symbol][reel]) + len(wilds[reel]) + mult_enhance
                 cumulative_sym_mult += mult_enhance
