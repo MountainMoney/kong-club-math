@@ -1,6 +1,6 @@
 # Wallet Manger
 
-When a set of simulations are setup and executed through `src/state/run_sims()` function a new instance of the `WinManager` class is spawned. This class is responsible for tracking `basegame` and `freegame` wins for single simulation rounds (when running `run_spin()`), and also for cumulative win amounts for a given `BetMode`. 
+When a set of simulations are setup and executed through the `src/state/run_sims()` function, a new instance of the `WinManager` class is spawned. This class is responsible for tracking `basegame` and `freegame` wins for single simulation rounds (when running `run_spin()`), and also for cumulative win amounts for a given `BetMode`. 
 
 ```python
 class WinManager:

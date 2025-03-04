@@ -17,7 +17,6 @@ Irrespective of the win method applied, win information is stored in the gamesta
 ```
 This initialized `win_data` structure is the return value for all provided win calculation functions. If using the predefined win events, the dictionary items within `wins` must contain the "position" key to account for modifying the row number if needed for the padding symbols. All wins information for the current game board should be included in this structure. Such as all winning symbol combinations, win amounts and positions. The built-in functions also include a `meta' key which includes any additional information which the front-end may need to display. For the win-lines, as an example this appears as:
 ```python
-...
 'wins': {
     'symbol': 'H1',
     'kind': 5,

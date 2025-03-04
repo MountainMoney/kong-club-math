@@ -1,5 +1,5 @@
-site_name: Carrot MathEngine
-site_url: https://github.com/twist-gaming/CarrotMathEngine
+site_name: Carrot Math Engine
+site_url: https://github.com/twist-gaming/carrot-math-engine
 theme:
   favicon: assets/favicon.ico
   logo: assets/carrot.png
@@ -24,7 +24,6 @@ theme:
     text: Merriweather Sans
     code: Red Hat Mono
 
-
 markdown_extensions:
   - attr_list
   - pymdownx.emoji:
@@ -34,7 +33,6 @@ markdown_extensions:
       anchor_linenums: true
       line_spans: __span
       pygments_lang_class: true
-
 
 nav:
   - Home: index.md
@@ -78,4 +76,6 @@ nav:
 
   - Tests [NA]: tests_section/test_info.md
   
-  - Optimization Algorithm [NA]: optimization_section/optimization_algorithm.md
+  - Optimization Algorithm: optimization_section/optimization_algorithm.md
+
+  - Frontend Documentation: fe_assets/fe_readme.md
