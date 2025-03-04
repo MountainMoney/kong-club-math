@@ -5,8 +5,9 @@ from src.calculations.ways import get_ways_data
 
 
 class GameState(GameStateOverride):
+    """Handle basegame and freegame logic."""
 
-    def run_spin(self, sim):
+    def run_spin(self, sim: int) -> None:
         self.reset_seed(sim)
         self.repeat = True
         while self.repeat:
@@ -30,7 +31,7 @@ class GameState(GameStateOverride):
 
         self.imprint_wins()
 
-    def run_freespin(self):
+    def run_freespin(self) -> None:
         self.reset_fs_spin()
         while self.fs < self.tot_fs:
             self.update_freespin()

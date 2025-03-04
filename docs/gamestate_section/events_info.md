@@ -12,17 +12,17 @@ Events are the JSON objects returned from the RGS `play/` API and make up the va
 
 The events are crucial as all events need to be handled by the front-end. The user is free to determine their event structure, though to follow the example games, all events have the format,
 ```python
-    event = {
-        "index": [int],
-        "type": [str],
-        "<field_1>": [T],
-        ...
-        "<field_n>": [T]
-    }
+event = {
+    "index": [int],
+    "type": [str],
+    "<field_1>": [T],
+    ...
+    "<field_n>": [T]
+}
 ```
 `"index"` keeps track of the current number of events in a simulation, `"type"` is a unique keyword used to identify an event and is generally a one-word description. `"fields"` are strings who's corresponding value can have any data-type, as required. Once constructed, the event is appended to the book, "events" field":
 ```python
-    gamestate.book.add_event(event)
+gamestate.book.add_event(event)
 ```
 
 Events are handled separately in the gamestate to game calculations or executables. They are imported explicitly and not attached to the gamestate object. Once the math-engine has made the appropriate board transformation or action, the event should be emitted immediately, as it will provide a *snapshot* of the current state of the game. For example:

@@ -21,27 +21,29 @@ class Symbol:
 ```
 When a new game-board is drawn, a 2D array of symbol objects are generated. At a minimum, the symbol will have the attributes:
 
-1. Name
+* Name
     * [string] shorthand name, typically 1 or 2 letters
-2. special_functions
+* special_functions
     * Within the `GameStateOverride` class, special functions can be applied to a symbol as soon as the object is created. This is done through the abstract function, for example:
-    ```python
-        def assign_special_sym_function(self):
-            self.special_symbol_functions = {
-                "W": [self.assign_mult_property],
-            }
-        def assign_mult_property(self, symbol):
-            multiplier_value = get_random_outcome(
-                self.get_current_distribution_conditions()["mult_values"][self.gametype]
-            )
-            symbol.assign_attribute({"multiplier": multiplier_value})
-    ```
+
+```python
+    def assign_special_sym_function(self):
+        self.special_symbol_functions = {
+            "W": [self.assign_mult_property],
+        }
+    def assign_mult_property(self, symbol):
+        multiplier_value = get_random_outcome(
+            self.get_current_distribution_conditions()["mult_values"][self.gametype]
+        )
+        symbol.assign_attribute({"multiplier": multiplier_value})
+```
+    
     `assign_special_sym_function()` is called when the `GameState` is initially created. In this example, we are assigning a multiplier value to any new wild ('W') which is created. Any action defined within `self.special_symbol_functions` with the format `{<name>: @callable_func}` will be assigned to the `special_functions` property.
-3. is_special
+* is_special
     * This property is assigned as `False` by default unless the name appears as a value within `config.special_symbols`
-4. special_property
+* special_property
     * Properties appearing in `config.special_functions = {'property': [name]}` are set to `True` by default. 
-5. `assign_paying_bool`
+* assign_paying_bool()
     * This function assigns the properties `is_paying` and `paytable`. If the symbol name appears in `config.paytable` `is_paying` is set to `True` and the relevant paytable values are assigned to `paytable`. Otherwise these values are set to `False` and `None` respectively.
 
 

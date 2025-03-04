@@ -2,22 +2,22 @@
 
 Every betmode will have a corresponding `force_record_<betmode>.json`. This file records the `book-id` corresponding to a custom defined search key. Anytime `self.record()` is called where
 ```python
-    def record(self, description: dict) -> None:
-        self.temp_wins.append(description)
-        self.temp_wins.append(self.book_id)
+def record(self, description: dict) -> None:
+    self.temp_wins.append(description)
+    self.temp_wins.append(self.book_id)
 ```
 The current simulation number will be appended to the description/key if it exists, otherwise a new dictionary entry is made based on the description passed to the `record()` function. For example, we may want to keep track of how many Scatter symbols caused a freegame trigger. Which will be useful for later analysis to investigate the frequency of any custom defined event. In the freespin trigger executable function for example,
 ```python
-    def run_freespin_from_base(self, scatter_key: str = "scatter") -> None:
-        self.record(
-            {
-                "kind": self.count_special_symbols(scatter_key),
-                "symbol": scatter_key,
-                "gametype": self.gametype,
-            }
-        )
-        self.update_freespin_amount()
-        self.run_freespin()
+def run_freespin_from_base(self, scatter_key: str = "scatter") -> None:
+    self.record(
+        {
+            "kind": self.count_special_symbols(scatter_key),
+            "symbol": scatter_key,
+            "gametype": self.gametype,
+        }
+    )
+    self.update_freespin_amount()
+    self.run_freespin()
 ```
 This will ultimately output a `force_record_<betmode>.json` with the entries:
 ```json
