@@ -159,3 +159,5 @@ class GameConfig(Config):
                 ],
             ),
         ]
+
+        # self.optimization_params = []

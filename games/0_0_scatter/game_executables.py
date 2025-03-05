@@ -5,7 +5,7 @@
 from copy import copy
 
 from game_calculations import GameCalculations
-from src.calculations.scatter import get_scatterpay_wins
+from src.calculations.scatter import Scatter
 from game_events import send_mult_info_event
 from src.events.events import set_win_event, set_total_event, fs_trigger_event, update_tumble_win_event
 
@@ -44,7 +44,7 @@ class GameExecutables(GameCalculations):
 
     def get_scatterpays_update_wins(self):
         """Return the board since we are assigning the 'explode' attribute."""
-        self.win_data = get_scatterpay_wins(
+        self.win_data = Scatter.get_scatterpay_wins(
             self.config, self.board, global_multiplier=self.global_multiplier
         )  # Evaluate wins, self.board is modified in-place
         self.record_scatter_wins()

@@ -5,6 +5,8 @@ carrotengine.egg-info/SOURCES.txt
 carrotengine.egg-info/dependency_links.txt
 carrotengine.egg-info/top_level.txt
 games/__init__.py
+optimization_program/__init__.py
+optimization_program/run_script.py
 src/__init__.py
 src/calculations/__init__.py
 src/calculations/board.py
@@ -20,7 +22,7 @@ src/config/betmode.py
 src/config/config.py
 src/config/constants.py
 src/config/distributions.py
-src/config/optimisation_paramaters.py
+src/config/optimization_paramaters.py
 src/config/paths.py
 src/events/__init__.py
 src/events/event_constants.py
@@ -48,3 +50,9 @@ utils/__init__.py
 utils/get_file_hash.py
 utils/analysis/__init__.py
 utils/analysis/distribution_functions.py
+utils/game_analytics/__init__.py
+utils/game_analytics/get_pay_splits.py
+utils/game_analytics/get_symbol_hits.py
+utils/game_analytics/print_all_results.py
+utils/game_analytics/retrieve_game_information.py
+utils/game_analytics/run_analysis.py

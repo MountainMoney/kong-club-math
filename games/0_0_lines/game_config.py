@@ -3,6 +3,7 @@
 from src.config.config import Config
 from src.config.distributions import Distribution
 from src.config.config import BetMode
+from src.config.optimization_paramaters import OptimizationParameters
 
 
 class GameConfig(Config):
@@ -236,7 +237,7 @@ class GameConfig(Config):
                 is_buybonus=False,
                 distributions=[
                     Distribution(
-                        criteria="winCap",
+                        criteria="wincap",
                         quota=0.001,
                         # win_criteria=self.wincap,
                         conditions={
@@ -384,4 +385,52 @@ class GameConfig(Config):
             ),
         ]
 
-        # Optimisation(rtp, avgWin, hit-rate, recordConditions)
+        self.optimization_params = {
+            "base": {
+                "conditions": {
+                    "wincap": OptimizationParameters(rtp=0.01, av_win=self.wincap, search_conditions=self.wincap),
+                    "0": OptimizationParameters(rtp=0, av_win=0, search_conditions=0),
+                    "freegame": OptimizationParameters(rtp=0.37, hr=200, search_conditions={"symbol": "scatter"}),
+                    "basegame": OptimizationParameters(hr=3.5, rtp=0.59),
+                },
+                "scaling": [
+                    {"criteria": "basegame", "scale_factor": 0.75, "win_range": (1, 2), "probability": 1.0},
+                    {"criteria": "basegame", "scale_factor": 2, "win_range": (10, 20), "probability": 1.0},
+                    {"criteria": "freegame", "scale_factor": 0.8, "win_range": (1000, 2000), "probability": 1.0},
+                    {"criteria": "freegame", "scale_factor": 1.2, "win_range": (3000, 4000), "probability": 1.0},
+                ],
+                "parameters": {
+                    "num_show_pigs": 5000,
+                    "num_pigs_per_fence": 10000,
+                    "min_mean_to_median": 2,
+                    "max_mean_to_median": 5,
+                    "pmb_rtp": 1.0,
+                    "simulation_trials": 5000,
+                    "test_spins": [50, 100, 200],
+                    "test_spins_weights": [0.2, 0.5, 0.3],
+                    "score_type": "rtp",
+                },
+            },
+            "bonus": {
+                "conditions": {
+                    "wincap": OptimizationParameters(rtp=0.01, av_win=self.wincap, search_conditions=self.wincap),
+                    "freegame": OptimizationParameters(rtp=0.96, hr=200, search_conditions={"symbol": "scatter"}),
+                },
+                "scaling": [
+                    {"criteria": "freegame", "scale_factor": 0.8, "win_range": (1000, 2000), "probability": 1.0},
+                    {"criteria": "freegame", "scale_factor": 1.2, "win_range": (3000, 4000), "probability": 1.0},
+                ],
+                "parameters": {
+                    "num_show_pigs": 5000,
+                    "num_pigs_per_fence": 10000,
+                    "min_mean_to_median": 2,
+                    "max_mean_to_median": 5,
+                    "pmb_rtp": 1.0,
+                    "simulation_trials": 5000,
+                    "test_spins": [50, 100, 200],
+                    "test_spins_weights": [0.2, 0.5, 0.3],
+                    "score_type": "rtp",
+                },
+            },
+        }
+        self.verify_optimization_input()

@@ -13,7 +13,7 @@ class EventConstants(Enum):
     FINAL_WIN = "finalWin"
     SET_WIN = "setWin"
     SET_TOTAL_WIN = "setTotalWin"
-    WINCAP = "winCap"
+    WINCAP = "wincap"
 
     # Freespin events
     UPDATE_FS = "updateFreeSpin"

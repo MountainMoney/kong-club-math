@@ -1,6 +1,6 @@
 from game_calculations import GameCalculations
 from game_events import updateGridMultiplierEvent
-from src.calculations.cluster import get_cluster_data
+from src.calculations.cluster import Cluster
 
 
 class GameExecutables(GameCalculations):
@@ -34,7 +34,7 @@ class GameExecutables(GameCalculations):
 
     def get_clusters_update_wins(self):
         """Find clusters on board and update win manager."""
-        self.win_data = get_cluster_data(
+        self.win_data = Cluster.get_cluster_data(
             config=self.config, board=self.board, global_multiplier=self.global_multiplier
         )
         self.record_cluster_wins()

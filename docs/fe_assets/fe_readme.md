@@ -100,8 +100,10 @@ Storybook is a powerful and handy tool to test your games. For example:
 - `COMPONENTS/<Symbol>/component`: It tests the <Symbol \/> component with controls e.g. state of the symbol.
 - `COMPONENTS/<Symbol>/symbols`: It tests the <Symbol \/> component with all the symbols and all the states.
 
-<img src="storybook_symbol.png" alt="isolated" width="100%"/>
-<img src="storybook_symbols.png" alt="isolated" width="100%"/>
+![](../fe_assets/storybook_symbol.png)
+![](../fe_assets/storybook_symbols.png)
+<!-- <img src="storybook_symbol.png" alt="isolated" width="100%"/> -->
+<!-- <img src="storybook_symbols.png" alt="isolated" width="100%"/> -->
 
 ###
 

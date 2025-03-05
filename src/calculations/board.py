@@ -4,7 +4,7 @@ import random
 from typing import List
 from src.state.state import GeneralGameState
 from src.calculations.statistics import get_random_outcome
-from src.config.config import Config
+from src.events.events import reveal_event
 
 
 class Board(GeneralGameState):
@@ -191,3 +191,63 @@ class Board(GeneralGameState):
         for reel in range(len(board)):
             board_str.append([x.name for x in board[reel]])
         return board_str
+
+    def draw_board(self, emit_event: bool = True) -> None:
+        """Instead of retrying to draw a board, force the initial revel to have a
+        specific number of scatters, if the betmode criteria specifies this."""
+        if (
+            self.get_current_distribution_conditions()["force_freegame"]
+            and self.gametype == self.config.basegame_type
+        ):
+            num_scatters = get_random_outcome(self.get_current_distribution_conditions()["scatter_triggers"])
+            self.force_special_board("scatter", num_scatters)
+        elif (
+            not (self.get_current_distribution_conditions()["force_freegame"])
+            and self.gametype == self.config.basegame_type
+        ):
+            self.create_board_reelstrips()
+            while self.count_special_symbols("scatter") >= min(
+                self.config.freespin_triggers[self.gametype].keys()
+            ):
+                self.create_board_reelstrips()
+        else:
+            self.create_board_reelstrips()
+        if emit_event:
+            reveal_event(self)
+
+    def force_special_board(self, force_criteria: str, num_force_syms: int) -> None:
+        """Force a board to have a specified number of symbols."""
+        reelstrip_id = get_random_outcome(
+            self.get_current_distribution_conditions()["reel_weights"][self.gametype]
+        )
+        reelstops = self.get_syms_on_reel(reelstrip_id, force_criteria)
+
+        sym_prob = []
+        for x in range(self.config.num_reels):
+            sym_prob.append(len(reelstops[x]) / len(self.config.reels[reelstrip_id][x]))
+        force_stop_positions = {}
+        while len(force_stop_positions) != num_force_syms:
+            possible_reels = [i for i in range(self.config.num_reels) if sym_prob[i] > 0]
+            possible_probs = [p for p in sym_prob if p > 0]
+            chosen_reel = random.choices(possible_reels, possible_probs)[0]
+            chosen_stop = random.choice(reelstops[chosen_reel])
+            sym_prob[chosen_reel] = 0
+            force_stop_positions[int(chosen_reel)] = int(chosen_stop)
+
+        force_stop_positions = dict(sorted(force_stop_positions.items(), key=lambda x: x[0]))
+        self.force_board_from_reelstrips(reelstrip_id, force_stop_positions)
+
+    def get_syms_on_reel(self, reel_id: str, target_symbol: str) -> List[List]:
+        """Return reelstop positions for a specific symbol name."""
+        reel = self.config.reels[reel_id]
+        reelstop_positions = [[] for _ in range(self.config.num_reels)]
+        for r in range(self.config.num_reels):
+            for s in range(len(reel[r])):
+                if reel[r][s] in self.config.special_symbols[target_symbol]:
+                    reelstop_positions[r].append(s)
+
+        return reelstop_positions
+
+    def count_special_symbols(self, special_sym_criteria: str) -> int:
+        "Returns integer number of active symbols of any 'special' kind."
+        return len(self.special_syms_on_board[special_sym_criteria])

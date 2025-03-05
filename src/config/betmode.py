@@ -1,7 +1,5 @@
-from warnings import warn
-from src.calculations.statistics import normalize
 from src.config.constants import *
-from typing import List, Dict
+from typing import List
 
 
 class BetMode:
@@ -28,7 +26,7 @@ class BetMode:
         auto_close_disabled: bool,
         is_feature: bool,
         is_buybonus: bool,
-        distributions: object,
+        distributions: List[object],
     ):
         self._name = name
         self._cost = cost

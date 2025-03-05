@@ -2,7 +2,7 @@
 
 from game_override import GameStateOverride
 from game_events import win_info_prize_event, new_sticky_event
-from src.calculations.lines import get_lines
+from src.calculations.lines import Lines
 from src.events.events import update_freespin_event, reveal_event, set_total_event, set_win_event
 from game_events import new_expanding_wild_event, update_expanding_wild_event, reveal_prize_event
 from src.calculations.statistics import get_random_outcome
@@ -22,7 +22,7 @@ class GameState(GameStateOverride):
             else:
                 self.draw_board(emit_event=True)
 
-                self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
+                self.win_data = Lines.get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
                 self.record_lines_wins()
                 self.win_manager.update_spinwin(self.win_data["totalWin"])
                 self.emit_linewin_events()
@@ -58,7 +58,7 @@ class GameState(GameStateOverride):
                 self.expanding_wilds.append({"reel": wild["reel"], "row": 0, "mult": wild["mult"]})
             self.expanding_wilds = sorted(self.expanding_wilds, key=lambda x: x["reel"])
 
-            self.win_data = get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
+            self.win_data = Lines.get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
             self.record_lines_wins()
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             self.emit_linewin_events()

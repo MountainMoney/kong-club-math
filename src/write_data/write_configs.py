@@ -23,6 +23,7 @@ def generate_configs(gamestate: object, json_padding: bool = True, assign_proper
         assign_properties=assign_properties,
     )
     make_be_config(gamestate)
+    make_math_config(gamestate)
 
 
 def pass_fe_betmode(betmode):
@@ -35,6 +36,71 @@ def pass_fe_betmode(betmode):
     mode_info["max_win"] = betmode.get_wincap()
 
     return {betmode.get_name(): mode_info}
+
+
+def make_math_config(gamestate):
+    jsonInfo = {}
+    jsonInfo["gameID"] = gamestate.config.game_id
+
+    file = open(gamestate.config.config_path + "/math_config.json", "w")
+    rust_dict = {}
+    rust_dict["game_name"] = jsonInfo["gameID"]
+    rust_dict["bet_modes"] = []
+    for bet_mode in gamestate.config.bet_modes:
+        bet_mode_rust = {
+            "bet_mode": bet_mode._name,
+            "cost": bet_mode._cost,
+            "rtp": bet_mode._rtp,
+            "max_win": bet_mode._wincap,
+        }
+        opt_mode = None
+        for mode, mode_obj in gamestate.config.optimization_params.items():
+            if mode == bet_mode._name:
+                opt_mode = mode
+                break
+        if opt_mode is not None:
+
+            data = []
+            for cond, opt_obj in mode_obj["conditions"].items():
+                opt_dict = opt_obj.to_dict()
+                if opt_dict["force_search"] != {}:
+                    search_data = {}
+                    search_data["name"] = str(list(opt_dict["force_search"].keys())[0])
+                    search_data["value"] = str(list(opt_dict["force_search"].values())[0])
+                else:
+                    search_data = []
+                data.append(
+                    {
+                        "criteria": cond,
+                        "rtp": opt_dict["rtp"],
+                        "avg_win": opt_dict["av_win"],
+                        "identity_condition": {
+                            "search": search_data,
+                            "opposite": False,
+                            "win_range_start": opt_dict["search_range"][0],
+                            "win_range_end": opt_dict["search_range"][1],
+                        },
+                    }
+                )
+            bet_mode_rust["opt_conditions"] = data
+
+            bet_mode_rust["scaling"] = []
+            for scale in mode_obj["scaling"]:
+                bet_mode_rust["scaling"].append(
+                    {
+                        "criteria": scale["criteria"],
+                        "scale_factor": scale["scale_factor"],
+                        "identity_condition_win_range": [scale["win_range"][0], scale["win_range"][1]],
+                        "prob": scale["probability"],
+                    }
+                )
+
+            bet_mode_rust["opt_params"] = mode_obj["parameters"]
+
+            rust_dict["bet_modes"].append(bet_mode_rust)
+
+            file.write(json.dumps(rust_dict, indent=4))
+            file.close()
 
 
 def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwargs):
