@@ -1,13 +1,6 @@
 """Construct optimization class from GameConfig.bet_mode specifications."""
 
 
-class BetmodeOptimization:
-    def __init__(self, betmode_name: str, conditions: dict, scaling: list):
-        self.betmode_name = betmode_name
-        self.conditions = conditions
-        self.scaling = scaling
-
-
 class OptimizationParameters:
     """Construct optimization parameter class for each bet mode."""
 
@@ -39,7 +32,7 @@ class OptimizationParameters:
             if rtp != 0:
                 hr = round(av_win / rtp, 5)
             else:
-                hr = None
+                hr = "x"
 
         search_range, force_search = (-1, -1), {}
         if isinstance(search_conditions, (float, int)):

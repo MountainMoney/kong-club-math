@@ -8,4 +8,5 @@ ABS_PATH = ABS_PATH.replace("\\", "/")
 PATH_TO_ENGINE = os.path.join(ABS_PATH, "carrot-math-engine")
 PATH_TO_GAMES = os.path.join(PATH_TO_ENGINE, "games/")
 
+OPTIMIZATION_PATH = "optimization_program/"
 SETUP_PATH = "optimization_program/src/setup.txt"

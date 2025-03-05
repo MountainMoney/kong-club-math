@@ -23,7 +23,8 @@ def generate_configs(gamestate: object, json_padding: bool = True, assign_proper
         assign_properties=assign_properties,
     )
     make_be_config(gamestate)
-    make_math_config(gamestate)
+    make_temp_math_config(gamestate)
+    # make_math_config(gamestate)
 
 
 def pass_fe_betmode(betmode):
@@ -38,11 +39,83 @@ def pass_fe_betmode(betmode):
     return {betmode.get_name(): mode_info}
 
 
+def make_temp_math_config(gamestate):
+    """
+    This is a temporary function who's only purpose is to generate a math_config.json file
+    which is directly compatible with with existing optimization script. Will be reformatted
+    when the new algorithm is implemented.
+    """
+    jsonInfo = {}
+    jsonInfo["gameID"] = gamestate.config.game_id
+    file = open(gamestate.config.config_path + "/math_config.json", "w")
+    rust_dict = {}
+    rust_dict["game_id"] = jsonInfo["gameID"]
+    rust_dict["bet_modes"] = []
+
+    # Separated betmode information
+    opt_mode = None
+    for bet_mode in gamestate.config.bet_modes:
+        for mode, mode_obj in gamestate.config.optimization_params.items():
+            if mode == bet_mode._name:
+                opt_mode = mode
+                break
+
+        if opt_mode is not None:
+            bet_mode_rust = {
+                "bet_mode": bet_mode._name,
+                "cost": bet_mode._cost,
+                "rtp": bet_mode._rtp,
+                "max_win": bet_mode._wincap,
+            }
+            rust_dict["bet_modes"] += [bet_mode_rust]
+
+            rust_dict["fences"] = []
+            rust_fence = {"bet_mode": bet_mode._name, "fences": []}
+            fence_info = {}
+            for fence, fence_obj in mode_obj["conditions"].items():
+                fence_info = {}
+                fence_info["name"] = fence
+                fence_info["avg_win"] = fence_obj.av_win
+                fence_info["hr"] = fence_obj.hr
+                fence_info["rtp"] = fence_obj.rtp
+
+                fence_info["identity_condition"] = {}
+                fence_info["identity_condition"]["search"] = []
+                if fence_obj.params["force_search"] != {}:
+                    fence_info["identity_condition"]["search"].append(
+                        {
+                            "name": str(list(fence_obj.force_search.keys())[0]),
+                            "value": str(list(fence_obj.force_search.values())[0]),
+                        }
+                    )
+                fence_info["identity_condition"]["win_range_start"] = fence_obj.params["search_range"][0]
+                fence_info["identity_condition"]["win_range_end"] = fence_obj.params["search_range"][1]
+                fence_info["opposite"] = False
+
+                rust_fence["fences"] += [fence_info]
+            rust_dict["fences"] += [rust_fence]
+
+        rust_dict["dresses"] = []
+        rust_dress = {"bet_mode": bet_mode._name, "dresses": []}
+        for dress_obj in mode_obj["scaling"]:
+            dress_info = {}
+            dress_info["fence"] = dress_obj["criteria"]
+            dress_info["scale_factor"] = dress_obj["scale_factor"]
+            dress_info["identity_condition_win_range"] = [dress_obj["win_range"][0], dress_obj["win_range"][1]]
+            dress_info["prob"] = dress_obj["probability"]
+
+            rust_dress["dresses"].append(dress_info)
+
+        rust_dict["dresses"] += [rust_dress]
+
+    file.write(json.dumps(rust_dict, indent=4))
+    file.close()
+
+
 def make_math_config(gamestate):
     jsonInfo = {}
     jsonInfo["gameID"] = gamestate.config.game_id
 
-    file = open(gamestate.config.config_path + "/math_config.json", "w")
     rust_dict = {}
     rust_dict["game_name"] = jsonInfo["gameID"]
     rust_dict["bet_modes"] = []
@@ -61,12 +134,13 @@ def make_math_config(gamestate):
         if opt_mode is not None:
 
             data = []
+            search_data = []
             for cond, opt_obj in mode_obj["conditions"].items():
                 opt_dict = opt_obj.to_dict()
                 if opt_dict["force_search"] != {}:
-                    search_data = {}
-                    search_data["name"] = str(list(opt_dict["force_search"].keys())[0])
-                    search_data["value"] = str(list(opt_dict["force_search"].values())[0])
+                    search_data.append({})
+                    search_data[-1]["name"] = str(list(opt_dict["force_search"].keys())[0])
+                    search_data[-1]["value"] = str(list(opt_dict["force_search"].values())[0])
                 else:
                     search_data = []
                 data.append(
@@ -74,6 +148,7 @@ def make_math_config(gamestate):
                         "criteria": cond,
                         "rtp": opt_dict["rtp"],
                         "avg_win": opt_dict["av_win"],
+                        "hr": opt_dict["hr"],
                         "identity_condition": {
                             "search": search_data,
                             "opposite": False,
@@ -99,6 +174,7 @@ def make_math_config(gamestate):
 
             rust_dict["bet_modes"].append(bet_mode_rust)
 
+            file = open(gamestate.config.config_path + "/math_config.json", "w")
             file.write(json.dumps(rust_dict, indent=4))
             file.close()
 

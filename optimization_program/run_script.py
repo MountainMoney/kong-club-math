@@ -1,5 +1,6 @@
 import json
-from src.config.paths import PATH_TO_GAMES, SETUP_PATH
+import subprocess
+from src.config.paths import PATH_TO_GAMES, SETUP_PATH, OPTIMIZATION_PATH
 
 
 class OptimizationExecution:
@@ -8,7 +9,9 @@ class OptimizationExecution:
     @staticmethod
     def load_math_config(filename: str) -> dict:
         """Load optimsation parameter config file."""
-        return json.load(open(filename, "r", encoding="UTF-8"))
+        with open(filename, "r") as f:
+            data = json.load(f)
+        return data
 
     @staticmethod
     def run_opt_single_mode(gamestate, mode, threads):
@@ -40,9 +43,25 @@ class OptimizationExecution:
         setup_file.write("path_to_games;" + PATH_TO_GAMES + "\n")
         setup_file.write("pmb_rtp;" + str(params["pmb_rtp"]) + "\n")
         setup_file.close()
-        # runRustScript()
+        # OptimizationExecution.run_rust_script()
 
     @staticmethod
     def run_all_modes(gamestate, modes_to_run, rust_threads):
         for mode in modes_to_run:
             OptimizationExecution.run_opt_single_mode(gamestate, mode, rust_threads)
+
+    @staticmethod
+    def run_rust_script():
+        print("Running OPTIMIZATION ON SINGLE GAME MODE.")
+        result = subprocess.run(
+            ["cargo", "run", "--release"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            cwd=OPTIMIZATION_PATH,
+        )
+        if result.returncode == 0:
+            print(result.stdout)
+        else:
+            print("Error in optimization program.")
+            print(result.stderr)
