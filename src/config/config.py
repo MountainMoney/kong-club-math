@@ -166,6 +166,12 @@ class Config:
         self.temp_path = str.join("/", [self.library_path, "temp_multi_threaded_files"])
         self.check_folder_exists(self.temp_path)
 
+        self.optimization_path = str.join("/", [self.library_path, "optimization_files"])
+        self.check_folder_exists(self.optimization_path)
+
+        self.optimization_result_path = str.join("/", [self.library_path, "optimization_files", "trial_results"])
+        self.check_folder_exists(self.optimization_result_path)
+
     def check_folder_exists(self, folder_path: str) -> None:
         """Check if target folder exists, and create if it does not."""
         if not (os.path.exists(folder_path)):

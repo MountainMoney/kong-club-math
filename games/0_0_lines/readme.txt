@@ -9,7 +9,7 @@ Basegame:
 Scatter Symbols appear on all reels, a minimum of 3 Scatters are needed to trigger the Freegame
 
 FreeGame:
-A seperate reelset is used for the freegame 
+A separate reelset is used for the freegame 
 Wilds have larger multipliers in the freegame (minimum of 2x) and appear on all reels
 2 Scatters are needed to trigger extra spins, appearing only on reels 2,3,4
 

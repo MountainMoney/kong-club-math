@@ -19,14 +19,14 @@ class OptimizationExecution:
         filename = str.join("/", [gamestate.config.config_path, "math_config.json"])
         opt_config = OptimizationExecution.load_math_config(filename)
 
-        mode_details = None
-        for m in opt_config["bet_modes"]:
-            if m["bet_mode"] == mode:
-                mode_details = m
+        opt_config = gamestate.config.optimization_params
+        params = None
+        for idx, obj in opt_config.items():
+            if idx == mode:
+                params = obj["parameters"]
 
-        assert mode_details is not None, "Could not load optimization parameters."
+        assert params is not None, "Could not load optimization parameters."
 
-        params = mode_details["opt_params"]
         setup_file = open(SETUP_PATH, "w", encoding="UTF-8")
         setup_file.write("game_name;" + gamestate.config.game_id + "\n")
         setup_file.write("bet_type;" + mode + "\n")
@@ -35,15 +35,15 @@ class OptimizationExecution:
         setup_file.write("threads_for_fence_construction;" + str(threads) + "\n")
         setup_file.write("threads_for_show_construction;" + str(threads) + "\n")
         setup_file.write("score_type;" + params["score_type"] + "\n")
-        setup_file.write("test_spins;" + str(params["test_spins"]) + "\n")
-        setup_file.write("test_spins_weights;" + str(params["test_spins_weights"]) + "\n")
+        setup_file.write("test_spins;" + str(params["test_spins"]).replace(" ", "") + "\n")
+        setup_file.write("test_spins_weights;" + str(params["test_spins_weights"]).replace(" ", "") + "\n")
         setup_file.write("simulation_trials;" + str(params["simulation_trials"]) + "\n")
         setup_file.write("graph_indexes;" + str(0) + "\n")
         setup_file.write("run_1000_batch;" + str(False) + "\n")
         setup_file.write("path_to_games;" + PATH_TO_GAMES + "\n")
         setup_file.write("pmb_rtp;" + str(params["pmb_rtp"]) + "\n")
         setup_file.close()
-        # OptimizationExecution.run_rust_script()
+        OptimizationExecution.run_rust_script()
 
     @staticmethod
     def run_all_modes(gamestate, modes_to_run, rust_threads):

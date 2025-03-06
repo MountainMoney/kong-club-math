@@ -45,11 +45,14 @@ def make_temp_math_config(gamestate):
     which is directly compatible with with existing optimization script. Will be reformatted
     when the new algorithm is implemented.
     """
-    jsonInfo = {}
-    jsonInfo["gameID"] = gamestate.config.game_id
     file = open(gamestate.config.config_path + "/math_config.json", "w")
+    jsonInfo = {}
+    jsonInfo["game_id"] = gamestate.config.game_id
+    jsonInfo["bet_modes"] = []
+    jsonInfo["fences"] = []
+    jsonInfo["dresses"] = []
     rust_dict = {}
-    rust_dict["game_id"] = jsonInfo["gameID"]
+    rust_dict["game_id"] = jsonInfo["game_id"]
     rust_dict["bet_modes"] = []
 
     # Separated betmode information
@@ -68,6 +71,7 @@ def make_temp_math_config(gamestate):
                 "max_win": bet_mode._wincap,
             }
             rust_dict["bet_modes"] += [bet_mode_rust]
+            jsonInfo["bet_modes"].append(bet_mode_rust)
 
             rust_dict["fences"] = []
             rust_fence = {"bet_mode": bet_mode._name, "fences": []}
@@ -75,9 +79,10 @@ def make_temp_math_config(gamestate):
             for fence, fence_obj in mode_obj["conditions"].items():
                 fence_info = {}
                 fence_info["name"] = fence
-                fence_info["avg_win"] = fence_obj.av_win
-                fence_info["hr"] = fence_obj.hr
-                fence_info["rtp"] = fence_obj.rtp
+                if fence_obj.av_win is not None:
+                    fence_info["avg_win"] = str(fence_obj.av_win)
+                fence_info["hr"] = str(fence_obj.hr)
+                fence_info["rtp"] = str(fence_obj.rtp)
 
                 fence_info["identity_condition"] = {}
                 fence_info["identity_condition"]["search"] = []
@@ -90,25 +95,27 @@ def make_temp_math_config(gamestate):
                     )
                 fence_info["identity_condition"]["win_range_start"] = fence_obj.params["search_range"][0]
                 fence_info["identity_condition"]["win_range_end"] = fence_obj.params["search_range"][1]
-                fence_info["opposite"] = False
+                fence_info["identity_condition"]["opposite"] = False
 
                 rust_fence["fences"] += [fence_info]
             rust_dict["fences"] += [rust_fence]
+            jsonInfo["fences"].append(rust_fence)
 
         rust_dict["dresses"] = []
         rust_dress = {"bet_mode": bet_mode._name, "dresses": []}
         for dress_obj in mode_obj["scaling"]:
             dress_info = {}
             dress_info["fence"] = dress_obj["criteria"]
-            dress_info["scale_factor"] = dress_obj["scale_factor"]
+            dress_info["scale_factor"] = str(dress_obj["scale_factor"])
             dress_info["identity_condition_win_range"] = [dress_obj["win_range"][0], dress_obj["win_range"][1]]
             dress_info["prob"] = dress_obj["probability"]
 
             rust_dress["dresses"].append(dress_info)
 
         rust_dict["dresses"] += [rust_dress]
+        jsonInfo["dresses"].append(rust_dress)
 
-    file.write(json.dumps(rust_dict, indent=4))
+    file.write(json.dumps(jsonInfo, indent=4))
     file.close()
 
 

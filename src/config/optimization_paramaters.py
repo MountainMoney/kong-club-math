@@ -11,26 +11,23 @@ class OptimizationParameters:
         rtp: float = None,
         av_win: float = None,
         hr: float = None,
+        bet_cost: float = None,
         search_conditions=None,
     ):
-        # assert type(search_conditions) in [
-        #     float,
-        #     int,
-        #     tuple,
-        #     dict,
-        #     None,
-        # ], "Must specify strict payout, range, or force-file search dictionary."
-
+        if rtp is None or rtp == "x":
+            assert all([av_win is not None, hr is not None]), "if RTP is not specified, hit-rate (hr) "
+            rtp = round(av_win / hr, 5)
         none_count = sum([1 for x in [rtp, av_win, hr] if x is None])
-        assert none_count == 1, "1 of 3 values (rtp, av_win, hr) must be 'None'"
+        assert none_count < 3, "Criteria RTP is ill defined."
+        assert bet_cost is not None, "Define a bet-cost for parameter."
 
         if rtp is None:
             rtp = round(av_win / hr, 5)
-        elif av_win is None:
+        elif av_win is None and all([rtp is not None, hr is not None]):
             av_win = round(rtp * hr, 5)
         elif hr is None:
-            if rtp != 0:
-                hr = round(av_win / rtp, 5)
+            if rtp != 0 and av_win is not None:
+                hr = round((av_win / rtp) / bet_cost, 5)
             else:
                 hr = "x"
 

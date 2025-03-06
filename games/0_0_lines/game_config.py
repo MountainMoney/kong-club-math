@@ -30,12 +30,12 @@ class GameConfig(Config):
         self.num_rows = [3] * self.num_reels
         # Board and Symbol Properties
         self.paytable = {
-            (5, "W"): 20,
-            (4, "W"): 10,
-            (3, "W"): 5,
-            (5, "H1"): 20,
-            (4, "H1"): 10,
-            (3, "H1"): 5,
+            (5, "W"): 50,
+            (4, "W"): 20,
+            (3, "W"): 10,
+            (5, "H1"): 50,
+            (4, "H1"): 20,
+            (3, "H1"): 10,
             (5, "H2"): 15,
             (4, "H2"): 5,
             (3, "H2"): 3,
@@ -239,7 +239,7 @@ class GameConfig(Config):
                     Distribution(
                         criteria="wincap",
                         quota=0.001,
-                        # win_criteria=self.wincap,
+                        win_criteria=self.wincap,
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
@@ -270,17 +270,17 @@ class GameConfig(Config):
                                 self.basegame_type: {"BR0": 1},
                                 self.freegame_type: {"FR0": 1},
                             },
-                            "scatter_triggers": {3: 50, 4: 10, 5: 1},
+                            "scatter_triggers": {3: 50, 4: 20, 5: 5},
                             "mult_values": {
                                 self.basegame_type: {1: 1},
                                 self.freegame_type: {
-                                    2: 100,
+                                    2: 60,
                                     3: 80,
                                     4: 50,
                                     5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
+                                    10: 15,
+                                    20: 10,
+                                    50: 5,
                                 },
                             },
                             "force_wincap": False,
@@ -333,7 +333,7 @@ class GameConfig(Config):
                     Distribution(
                         criteria="winCap",
                         quota=0.001,
-                        # win_criteria=self.wincap,
+                        win_criteria=self.wincap,
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
@@ -342,13 +342,13 @@ class GameConfig(Config):
                             "mult_values": {
                                 self.basegame_type: {1: 1},
                                 self.freegame_type: {
-                                    2: 100,
+                                    2: 60,
                                     3: 80,
                                     4: 50,
                                     5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
+                                    10: 15,
+                                    20: 10,
+                                    50: 5,
                                 },
                             },
                             "scatter_triggers": {4: 1, 5: 2},
@@ -364,7 +364,7 @@ class GameConfig(Config):
                                 self.basegame_type: {"BR0": 1},
                                 self.freegame_type: {"FR0": 1},
                             },
-                            "scatter_triggers": {3: 20, 4: 5, 5: 1},
+                            "scatter_triggers": {3: 20, 4: 10, 5: 2},
                             "mult_values": {
                                 self.basegame_type: {1: 1},
                                 self.freegame_type: {
@@ -388,10 +388,14 @@ class GameConfig(Config):
         self.optimization_params = {
             "base": {
                 "conditions": {
-                    "wincap": OptimizationParameters(rtp=0.01, av_win=self.wincap, search_conditions=self.wincap),
-                    "0": OptimizationParameters(rtp=0, av_win=0, search_conditions=0),
-                    "freegame": OptimizationParameters(rtp=0.37, hr=200, search_conditions={"symbol": "scatter"}),
-                    "basegame": OptimizationParameters(hr=3.5, rtp=0.59),
+                    "wincap": OptimizationParameters(
+                        rtp=0.01, av_win=self.wincap, search_conditions=self.wincap, bet_cost=1.0
+                    ),
+                    "0": OptimizationParameters(rtp=0, av_win=0, search_conditions=0, bet_cost=1.0),
+                    "freegame": OptimizationParameters(
+                        rtp=0.37, hr=200, search_conditions={"symbol": "scatter"}, bet_cost=1.0
+                    ),
+                    "basegame": OptimizationParameters(hr=3.5, rtp=0.59, bet_cost=1.0),
                 },
                 "scaling": [
                     {"criteria": "basegame", "scale_factor": 0.75, "win_range": (1, 2), "probability": 1.0},
@@ -402,8 +406,8 @@ class GameConfig(Config):
                 "parameters": {
                     "num_show_pigs": 5000,
                     "num_pigs_per_fence": 10000,
-                    "min_mean_to_median": 2,
-                    "max_mean_to_median": 5,
+                    "min_mean_to_median": 4,
+                    "max_mean_to_median": 8,
                     "pmb_rtp": 1.0,
                     "simulation_trials": 5000,
                     "test_spins": [50, 100, 200],
@@ -413,22 +417,25 @@ class GameConfig(Config):
             },
             "bonus": {
                 "conditions": {
-                    "wincap": OptimizationParameters(rtp=0.01, av_win=self.wincap, search_conditions=self.wincap),
-                    "freegame": OptimizationParameters(rtp=0.96, hr=200, search_conditions={"symbol": "scatter"}),
+                    "wincap": OptimizationParameters(
+                        rtp=0.01, av_win=self.wincap, search_conditions=self.wincap, bet_cost=100
+                    ),
+                    "freegame": OptimizationParameters(rtp=0.96, bet_cost=100),
                 },
                 "scaling": [
+                    {"criteria": "freegame", "scale_factor": 0.001, "win_range": (1, 20), "probability": 1.0},
                     {"criteria": "freegame", "scale_factor": 0.8, "win_range": (1000, 2000), "probability": 1.0},
                     {"criteria": "freegame", "scale_factor": 1.2, "win_range": (3000, 4000), "probability": 1.0},
                 ],
                 "parameters": {
                     "num_show_pigs": 5000,
                     "num_pigs_per_fence": 10000,
-                    "min_mean_to_median": 2,
-                    "max_mean_to_median": 5,
+                    "min_mean_to_median": 4,
+                    "max_mean_to_median": 8,
                     "pmb_rtp": 1.0,
                     "simulation_trials": 5000,
-                    "test_spins": [50, 100, 200],
-                    "test_spins_weights": [0.2, 0.5, 0.3],
+                    "test_spins": [10, 20, 50],
+                    "test_spins_weights": [0.5, 0.3, 0.2],
                     "score_type": "rtp",
                 },
             },

@@ -8,15 +8,15 @@ from optimization_program.run_script import OptimizationExecution
 
 if __name__ == "__main__":
 
-    num_threads = 1
+    num_threads = 10
     rust_threads = 20
     batching_size = 50000
-    compression = False
+    compression = True
     profiling = False
 
     num_sim_args = {
-        "base": int(20),
-        "bonus": int(20),
+        "base": int(1e4),
+        "bonus": int(1e4),
     }
 
     config = GameConfig()

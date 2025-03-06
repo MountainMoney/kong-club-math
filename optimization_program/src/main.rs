@@ -16,7 +16,7 @@ use std::{
 mod exes;
 use exes::{
     load_config_data, load_force_options, read_look_up_table, DressJson, FenceJson,
-    LookUpTableEntry, SearchResult, load_battle_data
+    LookUpTableEntry, SearchResult
 }; // Import the functions
 use std::str::FromStr;
 // use flame;
@@ -173,11 +173,7 @@ fn run_farm(
     let force_options = load_force_options(game_name, bet_type, path_to_games.to_string());
     
     let config_file: exes::ConfigData;
-    if bet_type == "superBonusBattleOpposing"  || bet_type == "bonusBattleOpposing"{
-        config_file = load_battle_data(game_name, path_to_games.to_string());
-    } else {
-        config_file = load_config_data(game_name, path_to_games.to_string());
-    }
+    config_file = load_config_data(game_name, path_to_games.to_string());
     // NEED TO PULL OUT THE INDEXES OF BET MODE AND DRESSES
     let mut bet_mode_index = 0;
     let mut dress_index = 0;
@@ -374,7 +370,7 @@ fn print_information(
         {
             let file_path = path_to_games.clone()
                 + &game_name
-                + "/PigPen/graphData/prob100overSpin/"
+                + "/library/optimization_files/trial_results/"
                 + &bet_type
                 + "_0_"
                 + &(pig_index + 1).to_string()
@@ -439,7 +435,7 @@ fn print_information(
             {
                 let file_path = path_to_games.to_string()
                     + &game_name
-                    + "/Library/LookUpTables/lookUpTable_"
+                    + "/library/lookup_tables/lookUpTable_"
                     + &bet_type
                     + "_0.csv";
 
@@ -456,7 +452,7 @@ fn print_information(
         {
             let file_path = path_to_games.to_string()
                 + &game_name
-                + "/PigPen/"
+                + "/library/optimization_files/"
                 + &bet_type
                 + "_0_"
                 + &(pig_index + 1).to_string()

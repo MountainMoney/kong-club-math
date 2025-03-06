@@ -216,9 +216,10 @@ def output_lookup_and_force_files(
 
     force_results_dict_just_for_rob = []
     for force_combination in force_results_dict:
-        search_dict = {}
+        search_dict = []
         for key in force_combination:
-            search_dict[key[0]] = key[1]
+            search_dict.append({"name": str(key[0]), "value": str(key[1])})
+            # search_dict[key[0]] = key[1]
         force_dict = {
             "search": search_dict,
             "timesTriggered": force_results_dict[force_combination]["timesTriggered"],

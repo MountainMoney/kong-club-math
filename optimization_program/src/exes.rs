@@ -104,6 +104,7 @@ pub(crate) fn load_force_options(
     let file_path = path_to_games + game_name + "/library/forces/force_record_" + bet_type + ".json";
     let json_file_path = Path::new(&file_path);
     let file = File::open(json_file_path).expect("Unable to open force file");
+    println!("json force path: {}", json_file_path.display());
     let search_results: Vec<SearchResult> =
         serde_json::from_reader(file).expect("error while reading or parsing");
     return search_results;
@@ -115,16 +116,6 @@ pub(crate) fn load_config_data(game_name: &str, path_to_games: String) -> Config
     let file = File::open(json_file_path).expect("Unable to open force file");
     let config_data: ConfigData =
         serde_json::from_reader(file).expect("error while reading or parsing");
-    return config_data;
-}
-
-pub(crate) fn load_battle_data(game_name: &str, path_to_games: String) -> ConfigData {
-    let file_path: String = path_to_games + game_name + "/library/configs/battle_config.json";
-    let json_file_path: &Path = Path::new(&file_path);
-    let file: File = File::open(json_file_path).expect("Error opening battle config.");
-    let config_data: ConfigData = 
-        serde_json::from_reader(file).expect("Error in serde battle package");
-
     return config_data;
 }
 
