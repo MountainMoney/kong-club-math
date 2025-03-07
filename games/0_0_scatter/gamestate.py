@@ -1,4 +1,5 @@
 from game_override import GameStateOverride
+from src.calculations.scatter import Scatter
 
 
 class GameState(GameStateOverride):

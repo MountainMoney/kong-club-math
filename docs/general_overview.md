@@ -64,3 +64,10 @@ When finished, deactivate the virtual environment with:
 deactivate
 ```
 
+## Installing Cargo
+
+If the optimization algorithm is being utilized, **Rust** and **Cargo** should be [installed](https://doc.rust-lang.org/cargo/getting-started/installation.html). 
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```

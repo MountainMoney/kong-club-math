@@ -27,12 +27,7 @@ class Distribution:
         self._required_distribution_conditions = required_distribution_conditions
         self._default_distribution_conditions = default_distribution_conditions
         self._win_criteria = win_criteria
-        self._opt_conditions = self.set_all_optimization_criteria()
         self.verify_and_set_conditions(conditions)
-
-    def set_all_optimization_criteria(self, optimization_object: dict = {}):
-        """Set criteria win amounts and conditions."""
-        return {}
 
     def verify_and_set_conditions(self, conditions):
         """Enforce required conditions for distribution setup."""

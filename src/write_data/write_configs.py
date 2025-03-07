@@ -101,25 +101,26 @@ def make_temp_math_config(gamestate):
             rust_dict["fences"] += [rust_fence]
             jsonInfo["fences"].append(rust_fence)
 
-        rust_dict["dresses"] = []
-        rust_dress = {"bet_mode": bet_mode._name, "dresses": []}
-        for dress_obj in mode_obj["scaling"]:
-            dress_info = {}
-            dress_info["fence"] = dress_obj["criteria"]
-            dress_info["scale_factor"] = str(dress_obj["scale_factor"])
-            dress_info["identity_condition_win_range"] = [dress_obj["win_range"][0], dress_obj["win_range"][1]]
-            dress_info["prob"] = dress_obj["probability"]
+            rust_dict["dresses"] = []
+            rust_dress = {"bet_mode": bet_mode._name, "dresses": []}
+            for dress_obj in mode_obj["scaling"]:
+                dress_info = {}
+                dress_info["fence"] = dress_obj["criteria"]
+                dress_info["scale_factor"] = str(dress_obj["scale_factor"])
+                dress_info["identity_condition_win_range"] = [dress_obj["win_range"][0], dress_obj["win_range"][1]]
+                dress_info["prob"] = dress_obj["probability"]
 
-            rust_dress["dresses"].append(dress_info)
+                rust_dress["dresses"].append(dress_info)
 
-        rust_dict["dresses"] += [rust_dress]
-        jsonInfo["dresses"].append(rust_dress)
+            rust_dict["dresses"] += [rust_dress]
+            jsonInfo["dresses"].append(rust_dress)
 
     file.write(json.dumps(jsonInfo, indent=4))
     file.close()
 
 
 def make_math_config(gamestate):
+    """Create configuration file consumed by the optimization algorithm."""
     jsonInfo = {}
     jsonInfo["gameID"] = gamestate.config.game_id
 

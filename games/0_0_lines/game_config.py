@@ -217,7 +217,7 @@ class GameConfig(Config):
             self.freegame_type: min(self.freespin_triggers[self.freegame_type].keys()) - 1,
         }
         # Reels
-        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv"}
+        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv", "WCAP": "FRWCAP.csv"}
         self.reels = {}
         for r, f in reels.items():
             self.reels[r] = self.read_reels_csv(str.join("/", [self.reels_path, f]))
@@ -226,6 +226,7 @@ class GameConfig(Config):
         self.padding_reels[self.freegame_type] = self.reels["FR0"]
         self.padding_symbol_values = {"W": {"multiplier": {2: 100, 3: 50, 4: 50, 5: 50, 10: 30, 20: 20, 50: 5}}}
 
+        # Contains all game-logic simulation conditions
         self.bet_modes = [
             BetMode(
                 name="base",
@@ -243,18 +244,18 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"FR0": 1},
+                                self.freegame_type: {"FR0": 1, "WCAP": 5},
                             },
                             "mult_values": {
                                 self.basegame_type: {1: 1},
                                 self.freegame_type: {
-                                    2: 100,
-                                    3: 80,
+                                    2: 10,
+                                    3: 20,
                                     4: 50,
                                     5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
+                                    10: 50,
+                                    20: 20,
+                                    50: 10,
                                 },
                             },
                             "scatter_triggers": {4: 1, 5: 2},
@@ -337,18 +338,18 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"FR0": 1},
+                                self.freegame_type: {"FR0": 1, "WCAP": 5},
                             },
                             "mult_values": {
                                 self.basegame_type: {1: 1},
                                 self.freegame_type: {
-                                    2: 60,
-                                    3: 80,
+                                    2: 10,
+                                    3: 20,
                                     4: 50,
-                                    5: 20,
-                                    10: 15,
-                                    20: 10,
-                                    50: 5,
+                                    5: 60,
+                                    10: 100,
+                                    20: 90,
+                                    50: 50,
                                 },
                             },
                             "scatter_triggers": {4: 1, 5: 2},
@@ -385,6 +386,8 @@ class GameConfig(Config):
             ),
         ]
 
+        # Configure optimization algorithm parameters
+        #'conditions' must match BetMode distribution criteria
         self.optimization_params = {
             "base": {
                 "conditions": {
@@ -398,8 +401,8 @@ class GameConfig(Config):
                     "basegame": OptimizationParameters(hr=3.5, rtp=0.59, bet_cost=1.0),
                 },
                 "scaling": [
-                    {"criteria": "basegame", "scale_factor": 0.75, "win_range": (1, 2), "probability": 1.0},
-                    {"criteria": "basegame", "scale_factor": 2, "win_range": (10, 20), "probability": 1.0},
+                    {"criteria": "basegame", "scale_factor": 1.2, "win_range": (1, 2), "probability": 1.0},
+                    {"criteria": "basegame", "scale_factor": 1.5, "win_range": (10, 20), "probability": 1.0},
                     {"criteria": "freegame", "scale_factor": 0.8, "win_range": (1000, 2000), "probability": 1.0},
                     {"criteria": "freegame", "scale_factor": 1.2, "win_range": (3000, 4000), "probability": 1.0},
                 ],
@@ -423,7 +426,7 @@ class GameConfig(Config):
                     "freegame": OptimizationParameters(rtp=0.96, bet_cost=100),
                 },
                 "scaling": [
-                    {"criteria": "freegame", "scale_factor": 0.001, "win_range": (1, 20), "probability": 1.0},
+                    {"criteria": "freegame", "scale_factor": 0.9, "win_range": (20, 50), "probability": 1.0},
                     {"criteria": "freegame", "scale_factor": 0.8, "win_range": (1000, 2000), "probability": 1.0},
                     {"criteria": "freegame", "scale_factor": 1.2, "win_range": (3000, 4000), "probability": 1.0},
                 ],

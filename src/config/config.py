@@ -1,10 +1,7 @@
 """Set standard gamestate configuration with default values."""
 
 import os
-import pathlib
 from src.config.betmode import BetMode
-from src.events.event_constants import *
-from src.write_data.force import *
 
 
 class Config:
@@ -123,7 +120,7 @@ class Config:
         """Read csv from reelstrip path."""
         reelstrips = []
         count = 0
-        with open(os.path.abspath(file_path), "r") as file:
+        with open(os.path.abspath(file_path), "r", encoding="UTF-8") as file:
             for line in file:
                 split_line = line.strip().split(",")
                 for reelIndex in range(len(split_line)):
@@ -192,8 +189,6 @@ class Config:
             symbol = sym_details[1]
             for i in range(min_connections, max_connections + 1):
                 paytable[(i, symbol)] = payout
-
-        # Todo: return runtime error
 
         return paytable
 

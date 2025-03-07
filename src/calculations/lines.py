@@ -3,6 +3,11 @@
 from src.calculations.board import Board
 from src.config.config import Config
 from src.wins.multiplier_strategy import apply_mult
+from src.events.events import (
+    win_info_event,
+    set_win_event,
+    set_total_event,
+)
 
 
 class Lines:
@@ -111,3 +116,23 @@ class Lines:
                 return_data["wins"].append(win_dict)
 
         return return_data
+
+    @staticmethod
+    def emit_linewin_events(gamestate) -> None:
+        """Transmit win events asociated with lines wins."""
+        if gamestate.win_manager.spin_win > 0:
+            win_info_event(gamestate)
+            gamestate.evaluate_wincap()
+            set_win_event(gamestate)
+        set_total_event(gamestate)
+
+    @staticmethod
+    def record_lines_wins(gamestate) -> None:
+        """Data for force-file."""
+
+        def record_line(kind: int, symbol: str, mult: int, gametype: str) -> None:
+            """Force file description for line-win."""
+            gamestate.record({"kind": kind, "symbol": symbol, "mult": mult, "gametype": gametype})
+
+        for win in gamestate.win_data["wins"]:
+            record_line(len(win["positions"]), win["symbol"], win["meta"]["multiplier"], gamestate.gametype)

@@ -7,6 +7,7 @@ from src.config.config import Config
 
 
 class Scatter:
+    """Collection of Scatter-pays functions."""
 
     @staticmethod
     def get_central_scatter_position(
@@ -92,3 +93,16 @@ class Scatter:
         return_data["totalWin"] = total_win
 
         return return_data
+
+    @staticmethod
+    def record_scatter_wins(gamestate) -> None:
+        """Force-file description key generator."""
+        for win in gamestate.win_data["wins"]:
+            gamestate.record(
+                {
+                    "win_size": len(win["positions"]),
+                    "symbol": win["symbol"],
+                    "totalMult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
+                    "gametype": gamestate.gametype,
+                }
+            )

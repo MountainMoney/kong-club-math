@@ -23,9 +23,9 @@ class GameState(GameStateOverride):
                 self.draw_board(emit_event=True)
 
                 self.win_data = Lines.get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
-                self.record_lines_wins()
+                Lines.record_lines_wins(self)
                 self.win_manager.update_spinwin(self.win_data["totalWin"])
-                self.emit_linewin_events()
+                Lines.emit_linewin_events(self)
 
                 self.win_manager.update_gametype_wins(self.gametype)
                 if self.check_fs_condition() and self.check_freespin_entry():
@@ -59,9 +59,9 @@ class GameState(GameStateOverride):
             self.expanding_wilds = sorted(self.expanding_wilds, key=lambda x: x["reel"])
 
             self.win_data = Lines.get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
-            self.record_lines_wins()
+            Lines.record_lines_wins(self)
             self.win_manager.update_spinwin(self.win_data["totalWin"])
-            self.emit_linewin_events()
+            Lines.emit_linewin_events(self)
             self.win_manager.update_gametype_wins(self.gametype)
 
         self.end_freespin()

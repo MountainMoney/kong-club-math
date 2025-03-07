@@ -1,6 +1,5 @@
 from collections import defaultdict
-from abc import ABC, abstractmethod
-from math import atan2
+from abc import ABC
 from typing import List, Dict
 from src.calculations.board import Board
 from src.config.config import Config
@@ -8,6 +7,7 @@ from src.wins.multiplier_strategy import apply_mult
 
 
 class Cluster:
+    """Collection of cluster-evaluation functions."""
 
     @staticmethod
     def get_central_cluster_position(winning_positions: List[Dict]) -> tuple:
@@ -184,3 +184,16 @@ class Cluster:
         return_data["totalWin"] += total_win
 
         return return_data
+
+    @staticmethod
+    def record_cluster_wins(gamestate) -> None:
+        """force_record win description keys."""
+        for win in gamestate.win_data["wins"]:
+            gamestate.record(
+                {
+                    "clusterSize": win["clusterSize"],
+                    "symbol": win["symbol"],
+                    "mult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
+                    "gametype": gamestate.gametype,
+                }
+            )

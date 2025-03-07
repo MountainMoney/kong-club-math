@@ -2,7 +2,7 @@ from copy import copy
 from abc import ABC, abstractmethod
 import random
 
-from src.config.config import *
+from src.config.config import BetMode
 from src.write_data.write_data import *
 from src.wins.win_manager import WinManager
 from src.calculations.symbol import SymbolStorage

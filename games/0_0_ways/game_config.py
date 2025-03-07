@@ -66,7 +66,7 @@ class GameConfig(Config):
         }
         self.anticipation_triggers = {self.basegame_type: 2, self.freegame_type: 1}
         # Reels
-        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv"}
+        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv", "FRWCAP": "FRWCAP.csv"}
         self.reels = {}
         for r, f in reels.items():
             self.reels[r] = self.read_reels_csv(str.join("/", [self.reels_path, f]))
@@ -84,16 +84,16 @@ class GameConfig(Config):
                     Distribution(
                         criteria="winCap",
                         quota=0.001,
-                        # win_criteria=self.wincap,
+                        win_criteria=self.wincap,
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"FR0": 1},
+                                self.freegame_type: {"FR0": 1, "FRWCAP": 5},
                             },
                             "force_wincap": True,
                             "force_freegame": True,
                             "scatter_triggers": {3: 100, 4: 20, 5: 5},
-                            "mult_values": {1: 200, 2: 100, 3: 80, 4: 50, 5: 20},
+                            "mult_values": {1: 20, 2: 50, 3: 80, 4: 100, 5: 20},
                         },
                     ),
                     Distribution(
@@ -148,12 +148,12 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"FR0": 1},
+                                self.freegame_type: {"FR0": 1, "FRWCAP": 5},
                             },
                             "force_wincap": False,
                             "force_freegame": True,
                             "scatter_triggers": {3: 100, 4: 20, 5: 5},
-                            "mult_values": {1: 200, 2: 100, 3: 80, 4: 50, 5: 20},
+                            "mult_values": {1: 20, 2: 100, 3: 80, 4: 90, 5: 80},
                         },
                     ),
                 ],

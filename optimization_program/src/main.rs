@@ -1001,7 +1001,7 @@ fn create_ancestors(
     let mut pos_pigs: Vec<Pig> = Vec::with_capacity((pig_heaven.num_pigs as f64).sqrt() as usize);
     let mut neg_pigs: Vec<Pig> = Vec::with_capacity((pig_heaven.num_pigs as f64).sqrt() as usize);
     let mut extra_params: Vec<Dress> = Vec::with_capacity(2);
-    println!("Creating Ancestor Pigs");
+    println!("Creating Initial Random Distributions...");
     let mut go_back_down = false;
     let mut std_weight = 70.0;
 
@@ -1199,7 +1199,7 @@ fn create_ancestors(
         }
     }
 
-    println!("Breeding Pigs for Fence");
+    println!("Combining Criteria Distributions....");
     let mut pigs_for_fence: Vec<Pig> = Vec::new();
     let mut pig_count = 0;
     while pig_count < pos_pigs.len() * neg_pigs.len() {
@@ -1428,7 +1428,7 @@ fn breed_pigs(pos_pig: &Pig, neg_pig: &Pig, pig_heaven: &PigHeaven) -> Pig {
         new_random_seeds,
         new_random_weights,
         new_random_apply_params,
-    ) = pig_sex(pos_pig, neg_pig, pig_heaven);
+    ) = combine_distributions(pos_pig, neg_pig, pig_heaven);
 
     return Pig {
         amps: new_amps,
@@ -1444,7 +1444,7 @@ fn breed_pigs(pos_pig: &Pig, neg_pig: &Pig, pig_heaven: &PigHeaven) -> Pig {
     };
 }
 
-fn pig_sex(
+fn combine_distributions(
     pos_pig: &Pig,
     neg_pig: &Pig,
     pig_heaven: &PigHeaven,
@@ -1608,43 +1608,6 @@ fn run_enhanced_simulation(
 
     let total_trials = trials as f64;
     success.iter().map(|s| s / total_trials).collect()
-}
-
-fn run_simulation_2(
-    wins: &Vec<f64>,
-    weights: &Vec<f64>,
-    spins: u32,
-    trials: u32,
-    bet: f64,
-    test_spins: &Vec<u32>,
-    banks: &mut Array1<f64>,
-    test_spins_weights: &Vec<f64>,
-) -> f64 {
-    let num_test_spins = test_spins.len();
-    let mut success: Vec<f64> = vec![0.0; num_test_spins];
-    let weighted_index = WeightedIndex::new(weights).expect("Invalid weights");
-    let mut rng = thread_rng();
-    for trial in 0..trials {
-        for i in 0..spins {
-            banks[(trial * spins + i) as usize] = wins[weighted_index.sample(&mut rng)];
-        }
-    }
-    for trial in 0..trials {
-        for (spin_index, &test_spin) in test_spins.iter().enumerate() {
-            let bank_slice = &banks.slice(s![
-                (trial as usize) * (spins as usize)..(trial * spins + test_spin) as usize
-            ]);
-            let total_bank: f64 = bank_slice.iter().sum();
-            if (total_bank - (test_spin as f64 * bet)) > 0.0 {
-                success[spin_index] += 1.0;
-            }
-        }
-    }
-    let mut final_score = 0.0;
-    for i in 0..success.len() {
-        final_score += success[i] / (trials as f64) * test_spins_weights[i]
-    }
-    return final_score;
 }
 
 #[derive(Copy)]

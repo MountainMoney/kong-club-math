@@ -23,16 +23,6 @@ class GameStateOverride(GameExecutables):
         self.reset_grid_mults()
         self.reset_grid_bool()
 
-    def update_freespin(self) -> None:
-        """Called before a new reveal during freegame."""
-        self.fs += 1
-        update_freespin_event(self)
-        self.global_multiplier = self.fs
-        update_global_mult_event(self)
-        self.win_manager.reset_spin_win()
-        self.tumblewin_mult = 0
-        self.win_data = {}
-
     def assign_special_sym_function(self):
         self.special_symbol_functions = {
             "W": [self.assign_mult_property],

@@ -4,8 +4,6 @@ from src.events.events import (
     win_info_event,
     freespin_end_event,
     tumble_board_event,
-    set_win_event,
-    set_total_event,
     update_tumble_win_event,
     wincap_event,
     fs_trigger_event,
@@ -22,21 +20,10 @@ class Executables(Conditions, Tumble):
     Generally Executables functions do not return values.
     """
 
-    def emit_wayswin_events(self) -> None:
-        """Transmit win events asociated with ways wins."""
-        if self.win_manager.spin_win > 0:
-            win_info_event(self)
-            self.evaluate_wincap()
-            set_win_event(self)
-        set_total_event(self)
-
-    def emit_linewin_events(self) -> None:
-        """Transmit win events asociated with lines wins."""
-        if self.win_manager.spin_win > 0:
-            win_info_event(self)
-            self.evaluate_wincap()
-            set_win_event(self)
-        set_total_event(self)
+    def tumble_game_board(self):
+        "Remove winning symbols from active board and replace."
+        self.tumble_board()
+        tumble_board_event(self)
 
     def emit_tumble_win_events(self) -> None:
         """Transmit win and new board information upon tumble."""
@@ -44,11 +31,6 @@ class Executables(Conditions, Tumble):
             win_info_event(self)
             update_tumble_win_event(self)
             self.evaluate_wincap()
-
-    def tumble_game_board(self):
-        "Remove winning symbols from active board and replace."
-        self.tumble_board()
-        tumble_board_event(self)
 
     def evaluate_wincap(self) -> None:
         """Indicate spin functions should stop once wincap is reached."""
@@ -106,9 +88,7 @@ class Executables(Conditions, Tumble):
         self.fs += 1
         update_freespin_event(self)
         self.win_manager.reset_spin_win()
-        self.tumblewin_mult = 0
         self.win_data = {}
-        self.new_exp_wilds = []
 
     def end_freespin(self) -> None:
         """Transmit total amount awarded during freegame."""
@@ -123,50 +103,3 @@ class Executables(Conditions, Tumble):
         """Increment multiplier value and emit corresponding event."""
         self.global_multiplier += 1
         update_global_mult_event(self)
-
-    # Recording different win-types
-    def record_ways_wins(self) -> None:
-        """Record Ways type wins"""
-        for win in self.win_data["wins"]:
-            self.record(
-                {
-                    "kind": len(win["positions"]),
-                    "symbol": win["symbol"],
-                    "ways": win["meta"]["ways"],
-                    "gametype": self.gametype,
-                }
-            )
-
-    def record_lines_wins(self) -> None:
-        """Data for force-file."""
-
-        def record_line(kind: int, symbol: str, mult: int, gametype: str) -> None:
-            """Force file description for line-win."""
-            self.record({"kind": kind, "symbol": symbol, "mult": mult, "gametype": gametype})
-
-        for win in self.win_data["wins"]:
-            record_line(len(win["positions"]), win["symbol"], win["meta"]["multiplier"], self.gametype)
-
-    def record_cluster_wins(self) -> None:
-        """force_record win description keys."""
-        for win in self.win_data["wins"]:
-            self.record(
-                {
-                    "clusterSize": win["clusterSize"],
-                    "symbol": win["symbol"],
-                    "mult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
-                    "gametype": self.gametype,
-                }
-            )
-
-    def record_scatter_wins(self) -> None:
-        """Force-file description key generator."""
-        for win in self.win_data["wins"]:
-            self.record(
-                {
-                    "win_size": len(win["positions"]),
-                    "symbol": win["symbol"],
-                    "totalMult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
-                    "gametype": self.gametype,
-                }
-            )

@@ -8,14 +8,14 @@ class OptimizationExecution:
 
     @staticmethod
     def load_math_config(filename: str) -> dict:
-        """Load optimsation parameter config file."""
-        with open(filename, "r") as f:
+        """Load optimization parameter config file."""
+        with open(filename, "r", encoding="UTF-8") as f:
             data = json.load(f)
         return data
 
     @staticmethod
     def run_opt_single_mode(gamestate, mode, threads):
-
+        """Create setup txt file for a single mode and run Rust executable binary."""
         filename = str.join("/", [gamestate.config.config_path, "math_config.json"])
         opt_config = OptimizationExecution.load_math_config(filename)
 
@@ -43,22 +43,25 @@ class OptimizationExecution:
         setup_file.write("path_to_games;" + PATH_TO_GAMES + "\n")
         setup_file.write("pmb_rtp;" + str(params["pmb_rtp"]) + "\n")
         setup_file.close()
+        print(f"Running optimization for mode: {mode}")
         OptimizationExecution.run_rust_script()
 
     @staticmethod
     def run_all_modes(gamestate, modes_to_run, rust_threads):
+        """Loop through all game modes to run"""
         for mode in modes_to_run:
             OptimizationExecution.run_opt_single_mode(gamestate, mode, rust_threads)
 
     @staticmethod
     def run_rust_script():
-        print("Running OPTIMIZATION ON SINGLE GAME MODE.")
+        """Run compiled binary and pip results to terminal."""
         result = subprocess.run(
             ["cargo", "run", "--release"],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             cwd=OPTIMIZATION_PATH,
+            check=True,
         )
         if result.returncode == 0:
             print(result.stdout)
