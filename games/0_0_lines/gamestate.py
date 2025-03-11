@@ -12,10 +12,8 @@ class GameState(GameStateOverride):
             self.reset_book()
             self.draw_board()
 
-            self.win_data = Lines.get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
-            Lines.record_lines_wins(self)
-            self.win_manager.update_spinwin(self.win_data["totalWin"])
-            Lines.emit_linewin_events(self)
+            # Evaluate wins, update wallet, transmit events
+            self.evaluate_lines_board()
 
             self.win_manager.update_gametype_wins(self.gametype)
             if self.check_fs_condition():
@@ -32,10 +30,7 @@ class GameState(GameStateOverride):
             self.update_freespin()
             self.draw_board()
 
-            self.win_data = Lines.get_lines(self.board, self.config, global_multiplier=self.global_multiplier)
-            Lines.record_lines_wins(self)
-            self.win_manager.update_spinwin(self.win_data["totalWin"])
-            Lines.emit_linewin_events(self)
+            self.evaluate_lines_board()
 
             if self.check_fs_condition():
                 self.update_fs_retrigger_amt()

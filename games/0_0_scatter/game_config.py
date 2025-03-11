@@ -222,5 +222,3 @@ class GameConfig(Config):
                 ],
             ),
         ]
-
-        # Optimisation(rtp, avgWin, hit-rate, recordConditions)

@@ -1,7 +1,6 @@
 """Game logic and event emission for standard 'ways' game with a fixed board size."""
 
 from game_override import GameStateOverride
-from src.calculations.ways import Ways
 
 
 class GameState(GameStateOverride):
@@ -15,11 +14,7 @@ class GameState(GameStateOverride):
             self.draw_board(emit_event=True)
 
             # Evaluate base-game board
-            self.win_data = Ways.get_ways_data(self.config, self.board)
-            if self.win_data["totalWin"] > 0:
-                Ways.record_ways_wins(self)
-                self.win_manager.update_spinwin(self.win_data["totalWin"])
-            Ways.emit_wayswin_events(self)
+            self.evaluate_ways_board()
 
             self.win_manager.update_gametype_wins(self.gametype)
             # Check Scatter condition and trigger freegame
@@ -37,11 +32,7 @@ class GameState(GameStateOverride):
             self.update_freespin()
             self.draw_board(emit_event=True)
 
-            self.win_data = Ways.get_ways_data(self.config, self.board)
-            if self.win_data["totalWin"] > 0:
-                Ways.record_ways_wins(self)
-                self.win_manager.update_spinwin(self.win_data["totalWin"])
-            Ways.emit_wayswin_events(self)
+            self.evaluate_ways_board()
 
             if self.check_fs_condition():
                 self.update_fs_retrigger_amt()

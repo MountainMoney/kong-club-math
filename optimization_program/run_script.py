@@ -14,12 +14,12 @@ class OptimizationExecution:
         return data
 
     @staticmethod
-    def run_opt_single_mode(gamestate, mode, threads):
+    def run_opt_single_mode(game_config, mode, threads):
         """Create setup txt file for a single mode and run Rust executable binary."""
-        filename = str.join("/", [gamestate.config.config_path, "math_config.json"])
+        filename = str.join("/", [game_config.config_path, "math_config.json"])
         opt_config = OptimizationExecution.load_math_config(filename)
 
-        opt_config = gamestate.config.optimization_params
+        opt_config = game_config.opt_params
         params = None
         for idx, obj in opt_config.items():
             if idx == mode:
@@ -28,7 +28,7 @@ class OptimizationExecution:
         assert params is not None, "Could not load optimization parameters."
 
         setup_file = open(SETUP_PATH, "w", encoding="UTF-8")
-        setup_file.write("game_name;" + gamestate.config.game_id + "\n")
+        setup_file.write("game_name;" + game_config.game_id + "\n")
         setup_file.write("bet_type;" + mode + "\n")
         setup_file.write("num_show_pigs;" + str(params["num_show_pigs"]) + "\n")
         setup_file.write("num_pigs_per_fence;" + str(params["num_pigs_per_fence"]) + "\n")
@@ -47,10 +47,10 @@ class OptimizationExecution:
         OptimizationExecution.run_rust_script()
 
     @staticmethod
-    def run_all_modes(gamestate, modes_to_run, rust_threads):
+    def run_all_modes(game_config, modes_to_run, rust_threads):
         """Loop through all game modes to run"""
         for mode in modes_to_run:
-            OptimizationExecution.run_opt_single_mode(gamestate, mode, rust_threads)
+            OptimizationExecution.run_opt_single_mode(game_config, mode, rust_threads)
 
     @staticmethod
     def run_rust_script():

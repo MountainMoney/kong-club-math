@@ -48,7 +48,7 @@ class Config:
         self.write_event_list = True
 
         self.bet_modes = []
-        self.optimization_params = {None: None}
+        self.opt_params = {None: None}
 
         # Define win-levels for each game-mode, returned during win information events
         self.win_levels = {
@@ -191,39 +191,3 @@ class Config:
                 paytable[(i, symbol)] = payout
 
         return paytable
-
-    def verify_optimization_input(self):
-        """Check simulation setup is compatible with optimization inputs,"""
-        optimization_mode_names = list(self.optimization_params.keys())
-        for mode_name in optimization_mode_names:
-            if mode_name is not None:
-                # Verify match between criteria and conditions
-                opt_keys = list(self.optimization_params[mode_name].keys())
-                assert all(
-                    ["conditions" in opt_keys, "scaling" in opt_keys, "parameters" in opt_keys]
-                ), "Required keys: {<mode>: 'conditions':{}, 'scaling':{}, 'parameters':{}}"
-
-                criteria_list = self.optimization_params[mode_name]["conditions"].keys()
-                bet = None
-                for bm in self.bet_modes:
-                    if bm._name == mode_name:
-                        bet = bm
-                        break
-                assert bet is not None, "bet_mode name and optimization mode names do not match."
-
-                dist_keys = []
-                for dist in bm._distributions:
-                    dist_keys.append(dist._criteria)
-
-                assert [
-                    x in criteria_list for x in dist_keys
-                ], "Distribution criteria must match 'conditions' keys"
-
-                # Verify optimization segmentation matches target RTP
-                bm_rtp = bm._rtp
-                param_rtp = 0.0
-                param_conditions = self.optimization_params[mode_name]["conditions"].values()
-                for p in param_conditions:
-                    param_rtp += p.rtp
-
-                assert round(bm_rtp, 5) == round(param_rtp, 5), "Optimization RTP does not match betmode RTP."

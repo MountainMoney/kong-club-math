@@ -58,7 +58,7 @@ def make_temp_math_config(gamestate):
     # Separated betmode information
     opt_mode = None
     for bet_mode in gamestate.config.bet_modes:
-        for mode, mode_obj in gamestate.config.optimization_params.items():
+        for mode, mode_obj in gamestate.config.opt_params.items():
             if mode == bet_mode._name:
                 opt_mode = mode
                 break
@@ -79,22 +79,22 @@ def make_temp_math_config(gamestate):
             for fence, fence_obj in mode_obj["conditions"].items():
                 fence_info = {}
                 fence_info["name"] = fence
-                if fence_obj.av_win is not None:
-                    fence_info["avg_win"] = str(fence_obj.av_win)
-                fence_info["hr"] = str(fence_obj.hr)
-                fence_info["rtp"] = str(fence_obj.rtp)
+                if fence_obj["av_win"] is not None:
+                    fence_info["avg_win"] = str(fence_obj["av_win"])
+                fence_info["hr"] = str(fence_obj["hr"])
+                fence_info["rtp"] = str(fence_obj["rtp"])
 
                 fence_info["identity_condition"] = {}
                 fence_info["identity_condition"]["search"] = []
-                if fence_obj.params["force_search"] != {}:
+                if fence_obj["force_search"] != {}:
                     fence_info["identity_condition"]["search"].append(
                         {
-                            "name": str(list(fence_obj.force_search.keys())[0]),
-                            "value": str(list(fence_obj.force_search.values())[0]),
+                            "name": str(list(fence_obj["force_search"].keys())[0]),
+                            "value": str(list(fence_obj["force_search"].values())[0]),
                         }
                     )
-                fence_info["identity_condition"]["win_range_start"] = fence_obj.params["search_range"][0]
-                fence_info["identity_condition"]["win_range_end"] = fence_obj.params["search_range"][1]
+                fence_info["identity_condition"]["win_range_start"] = fence_obj["search_range"][0]
+                fence_info["identity_condition"]["win_range_end"] = fence_obj["search_range"][1]
                 fence_info["identity_condition"]["opposite"] = False
 
                 rust_fence["fences"] += [fence_info]

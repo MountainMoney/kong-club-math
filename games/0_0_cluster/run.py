@@ -2,14 +2,16 @@
 
 from gamestate import GameState
 from game_config import GameConfig
+from game_optimization import OptimizationSetup
 from src.state.run_sims import create_books
 from src.write_data.write_configs import generate_configs
+from optimization_program.run_script import OptimizationExecution
 
 
 if __name__ == "__main__":
 
     num_threads = 10
-    rust_threaeds = 20
+    rust_threads = 20
     batching_size = 5000
     compression = True
     profiling = False
@@ -21,6 +23,7 @@ if __name__ == "__main__":
 
     config = GameConfig()
     gamestate = GameState(config)
+    optimization_setup = OptimizationSetup(config)
 
     create_books(
         gamestate,
@@ -32,3 +35,5 @@ if __name__ == "__main__":
         profiling,
     )
     generate_configs(gamestate)
+    optimization_modes_to_run = ["base", "bonus"]
+    OptimizationExecution().run_all_modes(config, optimization_modes_to_run, rust_threads)

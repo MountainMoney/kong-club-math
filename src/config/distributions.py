@@ -2,7 +2,6 @@
 
 from typing import Union
 import json
-from src.config.optimization_paramaters import OptimizationParameters
 
 
 class Distribution:
