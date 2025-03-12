@@ -79,10 +79,12 @@ def make_temp_math_config(gamestate):
             for fence, fence_obj in mode_obj["conditions"].items():
                 fence_info = {}
                 fence_info["name"] = fence
-                if fence_obj["av_win"] is not None:
+                if fence_obj.get("av_win") is not None:
                     fence_info["avg_win"] = str(fence_obj["av_win"])
-                fence_info["hr"] = str(fence_obj["hr"])
-                fence_info["rtp"] = str(fence_obj["rtp"])
+                if fence_obj.get("hr") is not None:
+                    fence_info["hr"] = str(fence_obj["hr"])
+                if fence_obj.get("rtp") is not None:
+                    fence_info["rtp"] = str(fence_obj["rtp"])
 
                 fence_info["identity_condition"] = {}
                 fence_info["identity_condition"]["search"] = []

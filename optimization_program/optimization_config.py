@@ -65,25 +65,20 @@ class ConstructConditions:
         rtp: float = None,
         av_win: float = None,
         hr: float = None,
-        bet_cost: float = None,
         search_conditions=None,
     ):
         if rtp is None or rtp == "x":
             assert all([av_win is not None, hr is not None]), "if RTP is not specified, hit-rate (hr) "
             rtp = round(av_win / hr, 5)
         none_count = sum([1 for x in [rtp, av_win, hr] if x is None])
-        assert none_count < 3, "Criteria RTP is ill defined."
-        assert bet_cost is not None, "Define a bet-cost for parameter."
+        assert none_count <= 1, "Criteria RTP is ill defined."
 
         if rtp is None:
             rtp = round(av_win / hr, 5)
-        elif av_win is None and all([rtp is not None, hr is not None]):
+        elif av_win is None and all([rtp is not None, hr is not None, hr != "x"]):
             av_win = round(rtp * hr, 5)
         elif hr is None:
-            if rtp != 0 and av_win is not None:
-                hr = round((av_win / rtp) / bet_cost, 5)
-            else:
-                hr = "x"
+            hr = "x"
 
         search_range, force_search = (-1, -1), {}
         if isinstance(search_conditions, (float, int)):
@@ -107,12 +102,15 @@ class ConstructConditions:
     def to_dict(self):
         """JSON readable"""
         data_struct = {
-            "rtp": self.rtp,
-            "hr": self.hr,
-            "av_win": self.av_win,
             "search_range": self.search_range,
             "force_search": self.force_search,
         }
+        if self.rtp is not None:
+            data_struct["rtp"] = self.rtp
+        if self.av_win is not None:
+            data_struct["av_win"] = self.av_win
+        if self.hr is not None:
+            data_struct["hr"] = self.hr
         return data_struct
 
     def return_dict(self):

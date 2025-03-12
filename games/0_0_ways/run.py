@@ -22,15 +22,15 @@ if __name__ == "__main__":
     gamestate = GameState(config)
     optimization_setup = OptimizationSetup(config)
 
-    create_books(
-        gamestate,
-        config,
-        num_sim_args,
-        batching_size,
-        num_threads,
-        compression,
-        profiling,
-    )
+    # create_books(
+    #     gamestate,
+    #     config,
+    #     num_sim_args,
+    #     batching_size,
+    #     num_threads,
+    #     compression,
+    #     profiling,
+    # )
     generate_configs(gamestate, json_padding=True, assign_properties=True)
 
     optimization_modes_to_run = ["base", "bonus"]
