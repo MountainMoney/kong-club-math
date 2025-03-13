@@ -89,7 +89,7 @@ class GameConfig(Config):
             self.basegame_type: min(self.freespin_triggers[self.basegame_type].keys()) - 1,
         }
         # Reels
-        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv", "SSR": "SSR.csv"}
+        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv", "SSR": "SSR.csv", "SSWCAP": "SSWCAP.csv"}
         self.reels = {}
         for r, f in reels.items():
             self.reels[r] = self.read_reels_csv(str.join("/", [self.reels_path, f]))
@@ -227,20 +227,22 @@ class GameConfig(Config):
                         win_criteria=self.wincap,
                         conditions={
                             "reel_weights": {
-                                self.basegame_type: {"SSR": 1},
+                                self.basegame_type: {"SSR": 1, "SSWCAP": 5},
                             },
                             "prize_values": {
-                                1: 500,
-                                2: 100,
+                                1: 10,
+                                2: 20,
                                 3: 50,
-                                5: 30,
-                                10: 20,
-                                25: 10,
-                                50: 5,
-                                100: 2,
+                                5: 50,
+                                10: 50,
+                                25: 80,
+                                50: 30,
+                                100: 20,
+                                500: 5,
+                                10000: 4,
                             },
                             "force_wincap": True,
-                            "force_freegame": True,
+                            "force_freegame": False,
                         },
                     ),
                     Distribution(
@@ -253,13 +255,6 @@ class GameConfig(Config):
                             "force_freegame": False,
                             "prize_values": {
                                 1: 500,
-                                2: 100,
-                                3: 50,
-                                5: 30,
-                                10: 20,
-                                25: 10,
-                                50: 5,
-                                100: 2,
                             },
                         },
                     ),
@@ -279,9 +274,11 @@ class GameConfig(Config):
                                 25: 10,
                                 50: 5,
                                 100: 2,
+                                500: 10,
+                                1000: 5,
                             },
                             "force_wincap": False,
-                            "force_freegame": True,
+                            "force_freegame": False,
                         },
                     ),
                 ],

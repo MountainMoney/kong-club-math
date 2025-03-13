@@ -32,6 +32,7 @@ class GameState(GameStateOverride):
                     self.run_freespin_from_base()
 
                 self.evaluate_finalwin()
+            self.check_repeat()
 
         self.imprint_wins()
 
@@ -74,7 +75,14 @@ class GameState(GameStateOverride):
             self.update_freespin()
             self.create_board_reelstrips()
             if self.criteria == "0":
-                while len(self.special_syms_on_board["prize"]):
+                while len(self.special_syms_on_board["prize"]) > 0:
+                    self.create_board_reelstrips()
+            elif (
+                self.criteria.upper() == "WINCAP"
+                and self.win_manager.running_bet_win < 0.95 * self.config.wincap
+                and self.fs <= 1
+            ):
+                while len(self.special_syms_on_board["prize"]) == 0:
                     self.create_board_reelstrips()
             self.replace_board_with_stickys()
             reveal_prize_event(self)
@@ -98,3 +106,7 @@ class GameState(GameStateOverride):
         set_total_event(self)
 
         self.evaluate_finalwin()
+        # if self.criteria == "winCap":
+        #     self.print_prize_values()
+        #     print(self.win_manager.running_bet_win)
+        #     print("here")

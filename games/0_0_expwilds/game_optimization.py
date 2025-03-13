@@ -4,7 +4,6 @@ from optimization_program.optimization_config import (
     ConstructScaling,
     ConstructParameters,
     ConstructConditions,
-    get_bet_details_map,
     verify_optimization_input,
 )
 
@@ -14,7 +13,6 @@ class OptimizationSetup:
 
     def __init__(self, game_config):
         self.game_config = game_config
-        self.game_details = get_bet_details_map(game_config)
         self.game_config.opt_params = {
             "base": {
                 "conditions": {
@@ -110,7 +108,16 @@ class OptimizationSetup:
                     "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0).return_dict(),
                     "basegame": ConstructConditions(hr=1.9, rtp=0.96).return_dict(),
                 },
-                "scaling": ConstructScaling([]).return_dict(),
+                "scaling": ConstructScaling(
+                    [
+                        {
+                            "criteria": "freegame",
+                            "scale_factor": 3,
+                            "win_range": (200, 500),
+                            "probability": 1.0,
+                        },
+                    ]
+                ).return_dict(),
                 "parameters": ConstructParameters(
                     num_show=5000,
                     num_per_fence=10000,

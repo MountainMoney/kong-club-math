@@ -31,11 +31,17 @@ class GameStateOverride(GameExecutables):
         multiplier_value = get_random_outcome(self.get_current_distribution_conditions()["prize_values"])
         symbol.assign_attribute({"prize": multiplier_value})
 
-    def check_game_repeat(self):
-        """Check repeat conditions before imprinting simulation events."""
-        if self.repeat == False:
+    def check_repeat(self) -> None:
+        """Checks if the spin failed a criteria constraint at any point."""
+        if self.repeat is False:
             win_criteria = self.get_current_betmode_distributions().get_win_criteria()
             if win_criteria is not None and self.final_win != win_criteria:
+                self.repeat = True
+
+            if self.get_current_distribution_conditions()["force_freegame"] and not (self.triggered_freegame):
+                self.repeat = True
+
+            if self.win_manager.running_bet_win == 0.0 and self.criteria != "0":
                 self.repeat = True
 
     def reset_superspin(self):

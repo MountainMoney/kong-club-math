@@ -1,6 +1,7 @@
 """Classes for setting up and verifying inputs for game optimization."""
 
 from typing import List, Tuple, Union
+from warnings import warn
 
 
 class ConstructScaling:
@@ -14,6 +15,8 @@ class ConstructScaling:
                     assert isinstance(scaling[cond], str), "Enter string type for criteria condition"
                 elif cond in ["scale_factor", "probability"]:
                     assert isinstance(scaling[cond], Union[float, int]), "Enter float/int type for value."
+                    if cond == "probability" and scaling[cond] > 1:
+                        warn("probabilities > 1 will have no effect on selection.")
                 elif cond == "win_range":
                     assert isinstance(scaling[cond], tuple), "Enter tuple for range: (min, max)."
                     assert scaling[cond][0] <= scaling[cond][1]
@@ -58,8 +61,6 @@ class ConstructParameters:
 class ConstructConditions:
     """Construct optimization parameter class for each bet mode."""
 
-    # TODO: PUT IN OPPOSITE AND DEFAULT "X" CONDITIONS
-
     def __init__(
         self,
         rtp: float = None,
@@ -68,7 +69,9 @@ class ConstructConditions:
         search_conditions=None,
     ):
         if rtp is None or rtp == "x":
-            assert all([av_win is not None, hr is not None]), "if RTP is not specified, hit-rate (hr) "
+            assert all(
+                [av_win is not None, hr is not None]
+            ), "if RTP is not specified, hit-rate (hr) and average win amount (av_win) must be given. "
             rtp = round(av_win / hr, 5)
         none_count = sum([1 for x in [rtp, av_win, hr] if x is None])
         assert none_count <= 1, "Criteria RTP is ill defined."
@@ -86,6 +89,10 @@ class ConstructConditions:
             force_search = {}
         elif isinstance(search_conditions, tuple):
             assert search_conditions[0] <= search_conditions[1], "Enter (min, max) payout format."
+            assert all(
+                [isinstance(search_conditions[0], (float, int)), isinstance(search_conditions[1], (float, int))]
+            ), "Search condition (min,max) entries must be numbers."
+            assert len(search_conditions) == 2, "Search condition length exceeded, enter (min, max) payout format."
             search_range = search_conditions
             force_search = {}
         elif isinstance(search_conditions, dict):
@@ -149,15 +156,3 @@ def verify_optimization_input(game_config, opt_dict):
             param_rtp += p["rtp"]
 
         assert round(bm_rtp, 5) == round(param_rtp, 5), "Optimization RTP does not match betmode RTP."
-
-
-def get_bet_details_map(game_config):
-    """Ensure betmode cost and criteria is correctly passed to math config for optimization program."""
-    bet_detail_map = {}
-    for bm in game_config.bet_modes:
-        bet_detail_map[bm._name] = {"cost": None, "required_criteria": []}
-
-        bet_detail_map[bm._name]["cost"] = bm._cost
-        for dist in bm._distributions:
-            bet_detail_map[bm._name]["required_criteria"].append(dist._criteria)
-    return bet_detail_map

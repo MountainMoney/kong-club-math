@@ -4,7 +4,6 @@ from optimization_program.optimization_config import (
     ConstructScaling,
     ConstructParameters,
     ConstructConditions,
-    get_bet_details_map,
     verify_optimization_input,
 )
 
@@ -16,7 +15,6 @@ class OptimizationSetup:
 
     def __init__(self, game_config):
         self.game_config = game_config
-        self.game_details = get_bet_details_map(game_config)
         self.game_config.opt_params = {
             "base": {
                 "conditions": {
