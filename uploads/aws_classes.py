@@ -132,14 +132,14 @@ class FileDetails:
 
         return sorted_wins, sortedWeights
 
-    def get_file_paths(self, books=True, configFiles=True, lookupTables=True, forceFiles=True, eventList=False):
-
+    def get_file_paths(self, books=True, config_files=True, lookupTables=True, force_files=True):
+        """Get all file upload paths and check existence."""
         game_to_upload = self.game_to_upload
         game_modes = self.game_modes
 
         gamePath = "/".join(["Games", game_to_upload[:-1], "Library"])
         all_file_paths = {}
-        if configFiles:
+        if config_files:
             try:
                 all_file_paths["config_frontend"] = "/".join(
                     [gamePath, "Configs", "config_fe_" + game_to_upload[:-1] + ".json"]
@@ -162,23 +162,17 @@ class FileDetails:
                 except FileNotFoundError:
                     print("Book Upload Error!")
             if lookupTables:
-                try:
-                    all_file_paths[lut_name] = "/".join(
-                        [gamePath, "lookup_tables", "lookUpTable_" + mode + "_0.csv"]
-                    )
-                except FileNotFoundError:
-                    print("LookupTable Upload Error!")
-            if forceFiles:
-                try:
-                    all_file_paths[force_name] = "/".join([gamePath, "Forces", "force_record_" + mode + ".json"])
-                except FileNotFoundError:
-                    print("Force File Upload Error!")
-
-            if eventList:
-                all_file_paths["eventFile"] = "/".join([gamePath, "configs", "event_config_" + mode + ".json"])
-        # Event list
-        if eventList:
-            all_file_paths["eventFile"] = "/".join([gamePath, "configs", "uniqueEventList.json"])
+                lut_f_name = "/".join([gamePath, "lookup_tables", "lookUpTable_" + mode + "_0.csv"])
+                if os.path.exists(lut_f_name):
+                    all_file_paths[lut_name] = lut_f_name
+                else:
+                    raise FileNotFoundError
+            if force_files:
+                force_f_name = "/".join([gamePath, "forces", "force_record_" + mode + ".json"])
+                if os.path.exists(force_f_name):
+                    all_file_paths[force_name] = force_f_name
+                else:
+                    raise FileNotFoundError
 
         all_file_uploads = all_file_paths.values()
         print("\n***File Paths Found***\n")

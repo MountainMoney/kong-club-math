@@ -27,8 +27,8 @@ if __name__ == "__main__":
     upload_objects = {
         "books": True,
         "lookupTables": True,
-        "forceFiles": True,
-        "configFiles": True,
+        "force_files": True,
+        "config_files": True,
     }
 
     # create_books(

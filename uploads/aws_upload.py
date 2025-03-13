@@ -43,8 +43,8 @@ def upload_to_aws(gamestate, game_modes, upload_obj, override_check=False):
 
     all_files = file_details.get_file_paths(
         books=upload_obj["books"],
-        configFiles=upload_obj["configFiles"],
-        forceFiles=upload_obj["forceFiles"],
+        config_files=upload_obj["config_files"],
+        force_files=upload_obj["force_files"],
         lookupTables=upload_obj["lookupTables"],
     )
     if upload_obj["lookupTables"]:
