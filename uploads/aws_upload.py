@@ -9,8 +9,12 @@ from uploads.aws_classes import AWSCommands, CheckFiles, FileDetails
 
 def upload_to_aws(gamestate, game_modes, upload_obj, override_check=False):
     """Verify file details and upload to S3 bucket."""
-    game_to_upload = gamestate.config.gameId
+    game_to_upload = gamestate.config.game_id
     failed_rtp_check = True
+    session = boto3.Session(
+        aws_access_key_id=ACCESS_KEY,
+        aws_secret_access_key=SECRET_KEY,
+    )
     s3_client = boto3.resource("s3", aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
 
     print("**************************")
@@ -42,7 +46,6 @@ def upload_to_aws(gamestate, game_modes, upload_obj, override_check=False):
         configFiles=upload_obj["configFiles"],
         forceFiles=upload_obj["forceFiles"],
         lookupTables=upload_obj["lookupTables"],
-        winDist=upload_obj["winDistributions"],
     )
     if upload_obj["lookupTables"]:
         failed_rtp_check = file_details.check_rtp(game_modes)

@@ -76,13 +76,6 @@ class ConstructConditions:
         none_count = sum([1 for x in [rtp, av_win, hr] if x is None])
         assert none_count <= 1, "Criteria RTP is ill defined."
 
-        if rtp is None:
-            rtp = round(av_win / hr, 5)
-        elif av_win is None and all([rtp is not None, hr is not None, hr != "x"]):
-            av_win = round(rtp * hr, 5)
-        elif hr is None:
-            hr = "x"
-
         search_range, force_search = (-1, -1), {}
         if isinstance(search_conditions, (float, int)):
             search_range = (search_conditions, search_conditions)

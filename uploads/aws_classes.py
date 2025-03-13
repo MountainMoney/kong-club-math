@@ -19,7 +19,7 @@ class CheckFiles:
         """Verify LUT item count matches book count."""
         full_file = lut_base_path + file
         csv = open(full_file, "r")
-        book_count = len(csv.readlines)
+        book_count = len(csv.readlines())
 
         return book_count
 
@@ -56,28 +56,27 @@ class CheckFiles:
         """Verify config file details."""
         all_check_items = []
         bookshelf = read_json["bookShelfConfig"]
-        lut_base_path = "Games/" + self.game + "/Library/"
+        lut_base_path = "games/" + self.game + "/library/"
         mode_params = {}
         try:
             mode_params["EXPECTED_FORCE_SHA"] = read_json["standardForceFile"]["sha256"]
             mode_params["ACTUAL_FORCE_SHA"] = self.get_lut_sha(
-                lut_base_path + "Forces/", read_json["standardForceFile"]["file"]
+                lut_base_path + "forces/", read_json["standardForceFile"]["file"]
             )
 
             for mode, _ in enumerate(game_modes):
 
                 mode_params["MODE"] = game_modes[mode]
-                mode_params["LUT"] = bookshelf[mode]["tables"][0]["file"]
-                print("SHOULD BE A LUT PATH (if yes, delete this print):", bookshelf[mode]["tables"][0]["file"])
+                mode_params["LUT"] = bookshelf[mode]["tables"]["file"]
 
                 mode_params["EXPECTED_LUT_LENGTH"] = int(bookshelf[mode]["bookLength"])
                 mode_params["ACTUAL_LUT_LENGTH"] = int(
-                    self.get_lut_length(lut_base_path + "LookUpTables/", bookshelf[mode]["tables"][0]["file"])
+                    self.get_lut_length(lut_base_path + "lookup_tables/", bookshelf[mode]["tables"]["file"])
                 )
 
-                mode_params["EXPECTED_SHA"] = bookshelf[mode]["tables"][0]["sha256"]
+                mode_params["EXPECTED_SHA"] = bookshelf[mode]["tables"]["sha256"]
                 mode_params["ACTUAL_SHA"] = self.get_lut_sha(
-                    lut_base_path + "LookUpTables/", bookshelf[mode]["tables"][0]["file"]
+                    lut_base_path + "Lookup_tables/", bookshelf[mode]["tables"]["file"]
                 )
 
                 all_check_items.append(mode_params)
@@ -133,9 +132,7 @@ class FileDetails:
 
         return sorted_wins, sortedWeights
 
-    def get_file_paths(
-        self, books=True, configFiles=True, lookupTables=True, forceFiles=True, eventList=False, winDist=False
-    ):
+    def get_file_paths(self, books=True, configFiles=True, lookupTables=True, forceFiles=True, eventList=False):
 
         game_to_upload = self.game_to_upload
         game_modes = self.game_modes
@@ -160,7 +157,7 @@ class FileDetails:
             if books:
                 try:
                     all_file_paths[books_name] = "/".join(
-                        [gamePath, "book_compressed", "books_" + mode + ".json.zst"]
+                        [gamePath, "books_compressed", "books_" + mode + ".json.zst"]
                     )
                 except FileNotFoundError:
                     print("Book Upload Error!")
@@ -203,7 +200,7 @@ class FileDetails:
         """Ensure config file has required fields for ACP upload."""
 
         config_filepath = "/".join(["games", self.game_to_upload, "library", "configs", "config.json"])
-        required_keywords = ["minDenomination", "providerNumber", "gameID", "rtp", "rtpNumber"]
+        required_keywords = ["minDenomination", "providerNumber", "gameID", "rtp"]
         bookshelf_keywords = ["cost", "rtp", "bookLength"]
         with open(config_filepath, "r") as file:
             jsonObject = json.load(file)
@@ -239,7 +236,7 @@ class FileDetails:
                 wins, weights = self.get_win_weights(lut_file)
                 dotProd = 0.0
                 total_weight = 0.0
-                expected_rtp = config_details["rtpNumber"]
+                expected_rtp = config_details["rtp"]
 
                 for win, weight in zip(wins, weights):
                     dotProd += float(win) * float(weight)
@@ -248,7 +245,7 @@ class FileDetails:
 
                 if expected_rtp < 1 and round(rtp, 4) != round(expected_rtp, 4):
                     failed = True
-                elif expected_rtp > 1 and round(rtp, 2) != round(expected_rtp, 2):
+                elif expected_rtp > 1 and round(rtp * 100, 2) != round(expected_rtp, 2):
                     failed = True
                 if failed:
                     warnings.warn(

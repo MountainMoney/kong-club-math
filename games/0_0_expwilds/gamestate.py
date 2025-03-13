@@ -106,7 +106,3 @@ class GameState(GameStateOverride):
         set_total_event(self)
 
         self.evaluate_finalwin()
-        # if self.criteria == "winCap":
-        #     self.print_prize_values()
-        #     print(self.win_manager.running_bet_win)
-        #     print("here")

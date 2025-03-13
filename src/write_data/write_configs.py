@@ -294,7 +294,7 @@ def make_be_config(gamestate):
         booklength = get_lookup_length(std_table)
         dic = {
             "name": bet.get_name(),
-            "tables": {"file": lut_table, "condition": "totalSpin > -1", "sha256": lut_sha_value, "name": "0"},
+            "tables": {"file": lut_table, "sha256": lut_sha_value},
             "cost": bet.get_cost(),
             "rtp": bet.get_rtp(),
             "std": std_val,
