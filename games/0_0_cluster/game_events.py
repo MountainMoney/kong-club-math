@@ -4,17 +4,8 @@ APPLY_TUMBLE_MULTIPLIER = "applyMultiplierToTumble"
 UPDATE_GRID = "updateGrid"
 
 
-def applyMutToTumbleWinEvent(gamestate):
-    event = {
-        "index": len(gamestate.book["events"]),
-        "type": APPLY_TUMBLE_MULTIPLIER,
-        "amount": int(round(min(gamestate.running_bet_win, gamestate.config.wincap) * 100, 0)),
-        "meta": {"baseAmount": gamestate.tumble_win, "tumbleMultiplier": gamestate.globalMult},
-    }
-    gamestate.book.add_event(event)
-
-
-def updateGridMultiplierEvent(gamestate):
+def update_grid_mult_event(gamestate):
+    """Pass updated position multipliers after a win."""
     event = {
         "index": len(gamestate.book.events),
         "type": UPDATE_GRID,

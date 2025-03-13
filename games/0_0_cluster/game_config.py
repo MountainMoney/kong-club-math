@@ -31,9 +31,9 @@ class GameConfig(Config):
         # Board and Symbol Properties
         t1, t2, t3, t4 = (5, 5), (6, 8), (9, 12), (13, 36)
         pay_group = {
-            (t1, "H1"): 3.0,
-            (t2, "H1"): 7.5,
-            (t3, "H1"): 15.0,
+            (t1, "H1"): 5.0,
+            (t2, "H1"): 12.5,
+            (t3, "H1"): 25.0,
             (t4, "H1"): 60.0,
             (t1, "H2"): 2.0,
             (t2, "H2"): 5.0,
@@ -80,7 +80,7 @@ class GameConfig(Config):
 
         self.maximum_board_mult = 512
 
-        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv"}
+        reels = {"BR0": "BR0.csv", "FR0": "FR0.csv", "WCAP": "WCAP.csv"}
         self.reels = {}
         for r, f in reels.items():
             self.reels[r] = self.read_reels_csv(str.join("/", [self.reels_path, f]))
@@ -98,31 +98,11 @@ class GameConfig(Config):
                     Distribution(
                         criteria="winCap",
                         quota=0.001,
-                        # win_criteria=self.wincap,
+                        win_criteria=self.wincap,
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"FR0": 1},
-                            },
-                            "mult_values": {
-                                self.basegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                },
-                                self.freegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                },
+                                self.freegame_type: {"FR0": 1, "WCAP": 5},
                             },
                             "scatter_triggers": {4: 1, 5: 2},
                             "force_wincap": True,
@@ -138,26 +118,6 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "scatter_triggers": {4: 5, 5: 1},
-                            "mult_values": {
-                                self.basegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                },
-                                self.freegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                },
-                            },
                             "force_wincap": False,
                             "force_freegame": True,
                         },
@@ -168,26 +128,6 @@ class GameConfig(Config):
                         win_criteria=0.0,
                         conditions={
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
-                            "mult_values": {
-                                self.basegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                },
-                                self.freegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                },
-                            },
                             "force_wincap": False,
                             "force_freegame": False,
                         },
@@ -197,17 +137,6 @@ class GameConfig(Config):
                         quota=0.5,
                         conditions={
                             "reel_weights": {self.basegame_type: {"BR0": 1}},
-                            "mult_values": {
-                                self.basegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                }
-                            },
                             "force_wincap": False,
                             "force_freegame": False,
                         },
@@ -216,7 +145,7 @@ class GameConfig(Config):
             ),
             BetMode(
                 name="bonus",
-                cost=500,
+                cost=200,
                 rtp=self.rtp,
                 max_win=self.wincap,
                 auto_close_disabled=False,
@@ -226,30 +155,30 @@ class GameConfig(Config):
                     Distribution(
                         criteria="winCap",
                         quota=0.001,
-                        # win_criteria=self.wincap,
+                        win_criteria=self.wincap,
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"FR0": 1},
+                                self.freegame_type: {"FR0": 1, "WCAP": 5},
                             },
                             "mult_values": {
                                 self.basegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
+                                    2: 10,
+                                    3: 20,
+                                    4: 30,
                                     5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
+                                    10: 20,
+                                    20: 20,
+                                    50: 10,
                                 },
                                 self.freegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
+                                    2: 10,
+                                    3: 20,
+                                    4: 30,
                                     5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
+                                    10: 20,
+                                    20: 20,
+                                    50: 10,
                                 },
                             },
                             "scatter_triggers": {4: 1, 5: 2},
@@ -266,26 +195,6 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "scatter_triggers": {4: 5, 5: 1},
-                            "mult_values": {
-                                self.basegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                },
-                                self.freegame_type: {
-                                    2: 100,
-                                    3: 80,
-                                    4: 50,
-                                    5: 20,
-                                    10: 10,
-                                    20: 5,
-                                    50: 1,
-                                },
-                            },
                             "force_wincap": False,
                             "force_freegame": True,
                         },

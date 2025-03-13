@@ -1,5 +1,5 @@
 from game_override import GameStateOverride
-from game_events import updateGridMultiplierEvent
+from game_events import update_grid_mult_event
 
 
 class GameState(GameStateOverride):
@@ -28,6 +28,7 @@ class GameState(GameStateOverride):
                 self.run_freespin_from_base()
 
             self.evaluate_finalwin()
+            self.check_repeat()
 
         self.imprint_wins()
 
@@ -36,7 +37,7 @@ class GameState(GameStateOverride):
         while self.fs < self.tot_fs:
             self.update_freespin()
             self.draw_board()
-            updateGridMultiplierEvent(self)
+            update_grid_mult_event(self)
             # Apply game-specific actions (i.e special symbol attributes before or after evaluation)
 
             self.get_clusters_update_wins()
