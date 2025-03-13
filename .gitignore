@@ -15,7 +15,8 @@ __pycache__
 **/optimization_files/**
 
 /env
-.*.env
+*.env
 *.DS_Store
 
 **/site/*
+
