@@ -11,10 +11,6 @@ def upload_to_aws(gamestate, game_modes, upload_obj, override_check=False):
     """Verify file details and upload to S3 bucket."""
     game_to_upload = gamestate.config.game_id
     failed_rtp_check = True
-    session = boto3.Session(
-        aws_access_key_id=ACCESS_KEY,
-        aws_secret_access_key=SECRET_KEY,
-    )
     s3_client = boto3.resource("s3", aws_access_key_id=ACCESS_KEY, aws_secret_access_key=SECRET_KEY)
 
     print("**************************")
@@ -45,9 +41,9 @@ def upload_to_aws(gamestate, game_modes, upload_obj, override_check=False):
         books=upload_obj["books"],
         config_files=upload_obj["config_files"],
         force_files=upload_obj["force_files"],
-        lookupTables=upload_obj["lookupTables"],
+        lookupTables=upload_obj["lookup_tables"],
     )
-    if upload_obj["lookupTables"]:
+    if upload_obj["lookup_tables"]:
         failed_rtp_check = file_details.check_rtp(game_modes)
 
         if failed_rtp_check:

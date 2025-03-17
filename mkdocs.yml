@@ -70,12 +70,12 @@ nav:
     - Win Manager: source_section/win_manager.md
     - Outputs: source_section/file_info.md
 
-  - Utilities[NA]: utils_section/utilities.md
+  - Utilities: utils_section/utilities.md
   - Example Games: sample_section/sample_games.md
-  - Uploads [NA]: uploads_section/upload_info.md
-
-  - Tests [NA]: tests_section/test_info.md
+  - Uploads: uploads_section/upload_info.md
   
   - Optimization Algorithm: optimization_section/optimization_algorithm.md
 
+  - Tests [NA]: tests_section/test_info.md
+  
   - Frontend Documentation: fe_assets/fe_readme.md

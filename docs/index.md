@@ -21,11 +21,14 @@ This engine provides a framework for creating and optimizing slot games, and out
         0_0_lines # Basic win-lines example game
         0_0_ways # Basic ways-wins example game
         0_0_scatter # Pay-anywhere cascading example game
-        0_0_expwilds # Example of expanding Wild-reel game, with prize-collection feature game
+        0_0_expwilds # Example of expanding Wild-reel game, and additional prize-collection feature game
 
-    tests/ # [**TBC**] Test cases for various win-types
-    utils/ # [**TBC**] Useful functions to aid with file and game analysis
-    uploads/ # [**TBC**] Data transformation and upload verification
-    optimization/ # [**TBC**] Optimization algorithm
+    utils/ # Useful functions to aid with file and game analysis
+        analysis/ # Construct and analyze basic properties of win distributions
+        game_analytics/ # Use recorded events, paytable and lookup-tables to generate basic hit-rate and simulation properties
+        
+    uploads/ # Data upload process for uploading game-files to S3 bucket
+    optimization_program/ # Optimization algorithm (Rust)
+    tests/ # [**TBC**] Unit tests for win-functions
     docs/ # Markdown files
 

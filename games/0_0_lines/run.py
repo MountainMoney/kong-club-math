@@ -7,6 +7,7 @@ from optimization_program.run_script import OptimizationExecution
 from utils.game_analytics.run_analysis import run
 from src.state.run_sims import create_books
 from src.write_data.write_configs import generate_configs
+from uploads.aws_upload import upload_to_aws
 
 if __name__ == "__main__":
 
@@ -24,9 +25,10 @@ if __name__ == "__main__":
     run_conditions = {
         "run_sims": False,
         "run_optimization": False,
-        "run_analysis": True,
-        "upload_data": False,
+        "run_analysis": False,
+        "upload_data": True,
     }
+    targe_modes = ["base", "bonus"]
 
     config = GameConfig()
     gamestate = GameState(config)
@@ -47,9 +49,21 @@ if __name__ == "__main__":
     generate_configs(gamestate)
 
     if run_conditions["run_optimization"]:
-        optimization_modes_to_run = ["base", "bonus"]
-        OptimizationExecution().run_all_modes(config, optimization_modes_to_run, rust_threads)
+        OptimizationExecution().run_all_modes(config, targe_modes, rust_threads)
 
     if run_conditions["run_analysis"]:
         custom_keys = [{"symbol": "scatter"}]
         run(config.game_id, custom_keys=custom_keys)
+
+    if run_conditions["upload_data"]:
+        upload_items = {
+            "books": True,
+            "lookup_tables": True,
+            "force_files": True,
+            "config_files": True,
+        }
+        upload_to_aws(
+            gamestate,
+            targe_modes,
+            upload_items,
+        )

@@ -1,13 +1,13 @@
 from collections import defaultdict
 
 
-def get_unoptimised_hits(lut_path, all_modes, win_ranges):
-    """Calcualte hit-rates of simulation output lookup table."""
+def get_unoptimized_hits(lut_path, all_modes, win_ranges):
+    """Calculate hit-rates of simulation output lookup table."""
     all_modes_base_dist = defaultdict(lambda: defaultdict(int))
     total_mode_count = {}
     for mode in all_modes:
         base_lut_file = lut_path + "/lookUpTable_" + str(mode) + ".csv"
-        lut = open(base_lut_file, "r")
+        lut = open(base_lut_file, "r", encoding="UTF-8")
         counter = 0
         for line in lut:
             _, _, payout = line.strip().split(",")
@@ -102,7 +102,7 @@ def make_split_win_distribution(lut_file, split_file, fences_file, all_modes, ba
 
 
 def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
-
+    """Calculate hit-rates for game-type specific types."""
     all_modes = list(all_mode_distributions.keys())
     all_mode_probs = {}
     all_mode_hits = {}
@@ -136,12 +136,12 @@ def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
     return all_mode_hits, all_mode_probs, all_mode_rtps
 
 
-def return_all_filepaths(gameID: str, mode: str):
+def return_all_filepaths(game_id: str, mode: str):
     """Return file files required for PAR sheet generation."""
-    lut_path = str.join("/", ["games", gameID, "library", "lookup_tables", f"lookUpTable_{mode}_0.csv"])
-    split_path = str.join("/", ["games", gameID, "library", "lookup_tables", f"lookUpTableSegmented_{mode}.csv"])
+    lut_path = str.join("/", ["games", game_id, "library", "lookup_tables", f"lookUpTable_{mode}_0.csv"])
+    split_path = str.join("/", ["games", game_id, "library", "lookup_tables", f"lookUpTableSegmented_{mode}.csv"])
     fences_path = str.join(
-        "/", ["games", gameID, "library", "lookup_tables", f"lookUpTableIdToCriteria_{mode}.csv"]
+        "/", ["games", game_id, "library", "lookup_tables", f"lookUpTableIdToCriteria_{mode}.csv"]
     )
 
     return lut_path, split_path, fences_path

@@ -7,7 +7,7 @@ from .get_pay_splits import (
     return_all_filepaths,
     make_split_win_distribution,
     return_hit_rates,
-    get_unoptimised_hits,
+    get_unoptimized_hits,
 )
 from .get_symbol_hits import construct_symbol_probabilities, construct_custom_key_probabilities
 
@@ -148,7 +148,7 @@ class GameInformation:
         """Count raw instances of win ranges using initial lookup table."""
         if modes_to_analyse is None:
             modes_to_analyse = self.all_modes
-        self.mode_hit_rates, self.mode_hit_counts = get_unoptimised_hits(
+        self.mode_hit_rates, self.mode_hit_counts = get_unoptimized_hits(
             self.lutPath, self.all_modes, self.win_ranges
         )
 

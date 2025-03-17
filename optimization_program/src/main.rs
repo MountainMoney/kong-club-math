@@ -628,7 +628,7 @@ fn create_show_pigs(
     max_mean_to_median: f64,
     pmb_rtp: f64,
 ) -> Vec<ShowPig> {
-    println!("Creating Show Pigs");
+    println!("Creating Initial Distributions");
     let mut best_score = 0.0;
     let mut rng = rand::thread_rng();
     let mut show_pigs: Vec<ShowPig> = Vec::with_capacity(num_pigs as usize);
@@ -796,10 +796,6 @@ fn sort_wins_by_parameter(
                 // lookup_table.remove(book_id);
             }
         } else {
-            // let parts: Vec<&str> = inner_string
-            // .split_whitespace()
-            // .map(|s| s.trim_matches('\''))
-            // .collect();
             for option in force_options {
                 let mut condition_satisfied = true; // Start assuming the condition is satisfied
                 for (_i, i_c_key) in i_c.search.iter().enumerate() {

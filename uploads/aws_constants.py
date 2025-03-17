@@ -9,4 +9,4 @@ load_dotenv(dotenv_path=dotenv_path)
 ACCESS_KEY = os.getenv("ACCESS_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-BUCKET_NAME = "development-book-update"
+BUCKET_NAME = ""
