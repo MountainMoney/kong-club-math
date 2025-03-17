@@ -347,7 +347,7 @@ fn print_information(
     let num_pigs = 10;
 
     (0..num_pigs).into_par_iter().for_each(|pig_index| {
-        println!("Printing info for Pig {}", pig_index + 1);
+        println!("Printing info for Distribution {}", pig_index + 1);
         let mut lookup_table: HashMap<u32, LookUpTableEntry> =
             match read_look_up_table(&game_name, &bet_type, path_to_games.to_string()) {
                 Ok(table) => table,

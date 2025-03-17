@@ -36,8 +36,8 @@ def makeForceJson(gamestate: object):
 
     if os.path.isfile(force_file_path) and os.path.getsize(force_file_path) > 0:
         try:
-            with open(force_file_path, "r", encoding="utf-8") as forcefile:
-                force_data = json.load(forcefile)
+            with open(force_file_path, "r", encoding="utf-8") as force_file:
+                force_data = json.load(force_file)
         except json.JSONDecodeError:
             print("Error decoding JSON: The file may be corrupted or empty.")
             force_data = {}
@@ -63,8 +63,8 @@ def makeForceJson(gamestate: object):
                 else:
                     print("Expected a list, found:", type(data))
 
-    with open(force_file_path, "w", encoding="utf-8") as forcefile:
-        json.dump(force_data, forcefile, indent=4)
+    with open(force_file_path, "w", encoding="utf-8") as force_file:
+        json.dump(force_data, force_file, indent=4)
 
 
 def get_force_options(force_results: dict):

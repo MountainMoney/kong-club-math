@@ -1,8 +1,8 @@
 site_name: Carrot Math Engine
 site_url: https://github.com/twist-gaming/carrot-math-engine
 theme:
-  favicon: assets/favicon.ico
-  logo: assets/carrot.png
+  favicon: assets/small_carrot.svg
+  logo: assets/big_carrot.svg
   name: material
   palette:
     # Dark Mode

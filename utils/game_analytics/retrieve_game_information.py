@@ -1,40 +1,53 @@
 import json
-from get_pay_splits import *
-from get_symbol_hits import *
 import importlib
-import os, sys
+import sys
+import os
+
+from .get_pay_splits import (
+    return_all_filepaths,
+    make_split_win_distribution,
+    return_hit_rates,
+    get_unoptimised_hits,
+)
+from .get_symbol_hits import construct_symbol_probabilities, construct_custom_key_probabilities
 
 
-def get_config_class(gameID):
-    sys.path.append("./")
-    module_path = f"Games.{gameID}.GameConfig"
+def get_config_class(game_id):
+    """Load game configuration class."""
+    sys.path.append("././")
+    module_path = f"games.{game_id}.game_config"
     module = importlib.import_module(module_path)
-    class_name = "GameConfig"
-    config_class = getattr(module, class_name)
+    config_class = getattr(module, "GameConfig")
 
     return config_class()
 
 
 class GameInformation:
-    def __init__(self, gameID, analysis_ranges=None, modes_to_analyse=None, custom_keys=None):
-        self.gameID = gameID
-        self.modes_to_analyse = modes_to_analyse
-        self.configPath = str.join("/", ["games", self.gameID, "library", "lonfigs", "config.json"])
-        self.mathConfigPath = str.join("/", ["Games", self.gameID, "Library", "Configs", "math_config.json"])
-        self.libraryPath = str.join("/", ["Games", self.gameID, "Library"])
-        self.lutPath = str.join("/", ["Games", self.gameID, "Library", "lookUpTables"])
+    """Import game configuration details."""
 
-        if custom_keys == None:
+    def __init__(self, game_id: str, analysis_ranges=None, modes_to_analyse=None, custom_keys=None):
+        self.game_id = game_id
+        self.load_config()
+        self.modes_to_analyse = modes_to_analyse
+        self.config_path = os.path.join(self.config.config_path, "config.json")
+        self.math_config_path = os.path.join(self.config.config_path, "math_config.json")
+        self.libraryPath = self.config.library_path
+        self.lutPath = self.config.lookup_path
+
+        if custom_keys is None:
             self.custom_keys = [{}]
         else:
+            assert isinstance(custom_keys, list), "Search keys must be a list of dictionaries."
             self.custom_keys = custom_keys
 
-        if analysis_ranges != None:
+        if analysis_ranges is not None:
             self.win_ranges = analysis_ranges
         else:
             self.win_ranges = [
-                (0, 1),
-                (1, 5),
+                (0, 0.1),
+                (0.1, 1),
+                (1, 2),
+                (2, 5),
                 (5, 10),
                 (10, 20),
                 (20, 50),
@@ -47,27 +60,26 @@ class GameInformation:
                 (2000, 3000),
                 (3000, 5000),
                 (5000, 10000),
-                (10000, 15000),
-                (15000, 20000),
-                (20000, 20001),
+                (10000, int(1e9)),
             ]
-        self.load_config()
 
-        if modes_to_analyse != None:
+        if modes_to_analyse is not None:
+            self.modes_to_analyse = modes_to_analyse
+        else:
             self.modes_to_analyse = self.all_modes
 
-        self.get_fence_information()
+        self.get_criteria_info()
 
-        # Change to optional inputs
         self.get_mode_split_hit_rates()
         self.get_symbol_hit_rates(self.modes_to_analyse)
-        self.get_custom_hit_rates(modes_to_analyse=self.all_modes, custom_search_keys=self.custom_keys)
+        self.get_custom_hit_rates(modes_to_analyse=self.modes_to_analyse, custom_search_keys=self.custom_keys)
         self.get_range_hit_counts()
-        print("Info Load Successful.")
+        print("Successfully loaded PAR-sheet information.")
 
     def load_config(self):
-        config_class = get_config_class(self.gameID)
-        with open(self.configPath, "r") as f:
+        "Load game config details."
+        config_class = get_config_class(self.game_id)
+        with open(config_class.config_path + "/config.json", "r", encoding="UTF-8") as f:
             config_object = json.load(f)
 
         all_modes = []
@@ -80,10 +92,11 @@ class GameInformation:
         self.all_modes = all_modes
         self.cost_mapping = cost_mapping
 
-    def get_fence_information(self):
+    def get_criteria_info(self):
+        "Separate PAR sheet information based on game-types."
         game_type_mapping = {}
         mode_fence_info = {}
-        math_config = open(self.mathConfigPath, "r")
+        math_config = open(self.math_config_path, "r", encoding="UTF-8")
         math_config_object = json.load(math_config)
         for mode in self.all_modes:
             game_type_mapping[mode] = []
@@ -109,16 +122,17 @@ class GameInformation:
         self.game_type_fences = game_type_mapping
         self.mode_fence_info = mode_fence_info
 
-    def get_mode_split_hit_rates(self, modes_to_analyse=None):
-        if modes_to_analyse == None:
+    def get_mode_split_hit_rates(self, modes_to_analyse=None) -> None:
+        """Separate win information depending on gametype."""
+        if modes_to_analyse is None:
             modes_to_analyse = self.all_modes
         mode_hit_rate_info = {}
         for mode in modes_to_analyse:
             mode_hit_rate_info[mode] = {}
-            lut_path, split_path, fences_path = return_all_filepaths(self.gameID, mode)
+            lut_path, split_path, fences_path = return_all_filepaths(self.game_id, mode)
             sub_modes = list(self.mode_fence_info[mode].keys())
             mode_sorted_distributions, total_mode_weight = make_split_win_distribution(
-                lut_path, split_path, fences_path, sub_modes, "baseGame"
+                lut_path, split_path, fences_path, sub_modes, "basegame"
             )
             sub_mode_hits, sub_mode_probs, sub_mode_rtp_allocation = return_hit_rates(
                 mode_sorted_distributions, total_mode_weight, self.win_ranges
@@ -130,23 +144,24 @@ class GameInformation:
 
         self.mode_hit_rate_info = mode_hit_rate_info
 
-    def get_range_hit_counts(self, modes_to_analyse=None):
-        if modes_to_analyse == None:
+    def get_range_hit_counts(self, modes_to_analyse=None) -> None:
+        """Count raw instances of win ranges using initial lookup table."""
+        if modes_to_analyse is None:
             modes_to_analyse = self.all_modes
         self.mode_hit_rates, self.mode_hit_counts = get_unoptimised_hits(
             self.lutPath, self.all_modes, self.win_ranges
         )
 
     def get_symbol_hit_rates(self, modes_to_analyse: list) -> None:
+        """Extract symbols from config file and get statistics using optimized lookup tables."""
         self.hr_summary, self.av_win_summary, self.sim_count_summary = construct_symbol_probabilities(
-            self.config, self.all_modes
+            self.config, modes_to_analyse
         )
 
     def get_custom_hit_rates(self, modes_to_analyse: list, custom_search_keys: list[dict]) -> None:
-        assert modes_to_analyse != None, "specify which mode/s to assess"
-        assert custom_search_keys != None
-        self.custum_hr_summary, self.custom_av_win_summary, self.custom_sim_count_summary = (
-            construct_custom_key_probabilities(
-                self.config, modes_to_analyse, cumstom_serach_keys=custom_search_keys
-            )
+        """Compute hit rates of user defined search conditions."""
+        assert modes_to_analyse is not None, "specify which mode/s to assess"
+        assert custom_search_keys is not None
+        self.custom_hr_summary, self.custom_av_win_summary, self.custom_sim_count_summary = (
+            construct_custom_key_probabilities(self.config, modes_to_analyse, custom_search=custom_search_keys)
         )

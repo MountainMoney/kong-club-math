@@ -82,7 +82,7 @@ class GameConfig(Config):
                 is_buybonus=False,
                 distributions=[
                     Distribution(
-                        criteria="winCap",
+                        criteria="wincap",
                         quota=0.001,
                         win_criteria=self.wincap,
                         conditions={

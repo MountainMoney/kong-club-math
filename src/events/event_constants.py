@@ -5,6 +5,7 @@ from enum import Enum
 
 class EventConstants(Enum):
     "Define all standard event 'type' keys."
+
     # Reveal events
     REVEAL = "reveal"
 

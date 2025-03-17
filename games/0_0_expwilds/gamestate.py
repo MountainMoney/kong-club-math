@@ -78,7 +78,7 @@ class GameState(GameStateOverride):
                 while len(self.special_syms_on_board["prize"]) > 0:
                     self.create_board_reelstrips()
             elif (
-                self.criteria.upper() == "WINCAP"
+                self.criteria.upper() == "wincap"
                 and self.win_manager.running_bet_win < 0.95 * self.config.wincap
                 and self.fs <= 1
             ):

@@ -1,18 +1,17 @@
-def get_unoptimised_hits(lut_path, all_modes, win_ranges):
+from collections import defaultdict
 
-    all_modes_base_dist = {}
+
+def get_unoptimised_hits(lut_path, all_modes, win_ranges):
+    """Calcualte hit-rates of simulation output lookup table."""
+    all_modes_base_dist = defaultdict(lambda: defaultdict(int))
     total_mode_count = {}
     for mode in all_modes:
         base_lut_file = lut_path + "/lookUpTable_" + str(mode) + ".csv"
-        all_modes_base_dist[mode] = {}
         lut = open(base_lut_file, "r")
         counter = 0
         for line in lut:
             _, _, payout = line.strip().split(",")
-            try:
-                all_modes_base_dist[mode][float(payout)] += 1
-            except:
-                all_modes_base_dist[mode][float(payout)] = 1
+            all_modes_base_dist[mode][float(payout)] += 1
             counter += 1
 
         total_mode_count[mode] = counter
@@ -38,21 +37,18 @@ def get_unoptimised_hits(lut_path, all_modes, win_ranges):
                 all_modes_hit_rates[mode][wr] = round(
                     1 / (all_modes_range_hits[mode][wr] / total_mode_count[mode]), 3
                 )
-            except:
+            except ZeroDivisionError:
                 all_modes_hit_rates[mode][wr] = 0
     return all_modes_hit_rates, all_modes_range_hits
 
 
-def make_split_win_distribution(lut_file, split_file, fences_file, all_modes, base_mode_name="baseGame"):
-
-    combined_distributions = {}
+def make_split_win_distribution(lut_file, split_file, fences_file, all_modes, base_mode_name="basegame"):
+    """Separate probability information for different game-types."""
+    combined_distributions = defaultdict(lambda: defaultdict(float))
     all_modes.append("cumulative")
-    for mode in all_modes:
-        combined_distributions[mode] = {}
-
-    split = open(split_file, "r")
-    lut = open(lut_file, "r")
-    fences = open(fences_file, "r")
+    split = open(split_file, "r", encoding="UTF-8")
+    lut = open(lut_file, "r", encoding="UTF-8")
+    fences = open(fences_file, "r", encoding="UTF-8")
 
     all_base, all_free = [], []
     for line in split:
@@ -74,33 +70,21 @@ def make_split_win_distribution(lut_file, split_file, fences_file, all_modes, ba
 
         all_fences.append(str(idv_fence))
 
-    for idx in range(len(all_weights)):
+    for idx, _ in enumerate(all_weights):
         if base_mode_name in all_modes:
-            try:
-                combined_distributions[base_mode_name][all_base[idx]] += all_weights[idx]
-            except:
-                combined_distributions[base_mode_name][all_base[idx]] = all_weights[idx]
+            combined_distributions[base_mode_name][all_base[idx]] += all_weights[idx]
 
         if all_fences[idx] != base_mode_name and all_fences[idx] != "wincap":
-            try:
-                combined_distributions[all_fences[idx]][all_free[idx]] += all_weights[idx]
-            except:
-                combined_distributions[all_fences[idx]][all_free[idx]] = all_weights[idx]
+            combined_distributions[all_fences[idx]][all_free[idx]] += all_weights[idx]
         else:
             for mode in all_modes:
                 if mode != base_mode_name and mode != "cumulative":
-                    try:
-                        combined_distributions[mode][all_free[idx]] += all_weights[idx]
-                    except:
-                        combined_distributions[mode][all_free[idx]] = all_weights[idx]
+                    combined_distributions[mode][all_free[idx]] += all_weights[idx]
             if (all_free[idx] != 0) and (all_fences[idx] == base_mode_name):
                 raise ValueError("Non-Zero FreeGame win in baseGame Fence.")
 
         # Construct cumulative hit-rate data
-        try:
-            combined_distributions["cumulative"][all_base[idx] + all_free[idx]] += all_weights[idx]
-        except:
-            combined_distributions["cumulative"][all_base[idx] + all_free[idx]] = all_weights[idx]
+        combined_distributions["cumulative"][all_base[idx] + all_free[idx]] += all_weights[idx]
 
     # Sort all dictionaries by payout
     all_sorted_payouts = {}
@@ -143,7 +127,7 @@ def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
         for win_range in win_ranges:
             try:
                 all_mode_hits[mode][win_range] = round((1 / (all_mode_probs[mode][win_range])), 3)
-            except:
+            except ZeroDivisionError:
                 all_mode_hits[mode][win_range] = "NaN"
 
             mean_range_pay = round((win_range[0] + win_range[1]) / 2, 2)
@@ -153,8 +137,11 @@ def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
 
 
 def return_all_filepaths(gameID: str, mode: str):
-    lut_path = str.join("/", ["Games", gameID, "Library", "LookUpTables", f"lookUpTable_{mode}_0.csv"])
-    split_path = str.join("/", ["Games", gameID, "Library", "LookUpTables", f"lookUpTableSegmented_{mode}.csv"])
-    fences_path = str.join("/", ["Games", gameID, "Library", "LookUpTables", f"lookUpTableIdToFence_{mode}.csv"])
+    """Return file files required for PAR sheet generation."""
+    lut_path = str.join("/", ["games", gameID, "library", "lookup_tables", f"lookUpTable_{mode}_0.csv"])
+    split_path = str.join("/", ["games", gameID, "library", "lookup_tables", f"lookUpTableSegmented_{mode}.csv"])
+    fences_path = str.join(
+        "/", ["games", gameID, "library", "lookup_tables", f"lookUpTableIdToCriteria_{mode}.csv"]
+    )
 
     return lut_path, split_path, fences_path

@@ -1,109 +1,125 @@
+"""Analyze symbol hit-rates"""
+
 import json
 import os
 
 
 class HitRateCalculations:
-    """Get"""
+    """Calculate hit-rates of symbol and search key combinations."""
 
-    def __init__(self, gameID, mode, mode_cost):
-        self.gameID = gameID
+    def __init__(self, game_id, mode, mode_cost):
+        self.game_id = game_id
         self.mode = mode
         self.cost = mode_cost
-        self.initialiseFiles()
+        self.initialize_file()
 
-    def initialiseFiles(self):
-        forceFile = str.join(
-            "/", ["Games", self.gameID, "Library", "Forces", "force_for_rob_" + self.mode + ".json"]
+    def initialize_file(self) -> None:
+        """Initialize force files and lookup tables."""
+        force_file = str.join(
+            "/", ["games", self.game_id, "library", "forces", "force_record_" + self.mode + ".json"]
         )
-        lutFile = str.join(
-            "/", ["Games", self.gameID, "Library", "LookUpTables", "lookUpTable_" + self.mode + "_0.csv"]
+        lut_file = str.join(
+            "/", ["games", self.game_id, "library", "Lookup_tables", "lookUpTable_" + self.mode + "_0.csv"]
         )
-        with open(forceFile) as f:
-            fileDict = json.load(f)
-            allKeys = [d.keys() for d in fileDict]
+        with open(force_file, "r", encoding="UTF-8") as f:
+            file_dict = json.load(f)
+            all_keys = [d.keys() for d in file_dict]
         f.close()
 
-        lutIds = []
+        lut_ids = []
         weights = []
         payouts = []
-        with open(lutFile) as f:
+        with open(lut_file, "r", encoding="UTF-8") as f:
             for line in f:
-                lutIds.append(int(line.strip().split(",")[0]))
+                lut_ids.append(int(line.strip().split(",")[0]))
                 weights.append(int(line.strip().split(",")[1]))
                 payouts.append(float(line.strip().split(",")[2]))
         f.close()
 
         self.weights = weights
-        self.totalWeight = sum(self.weights)
+        self.total_weight = sum(self.weights)
         self.payouts = payouts
-        self.forceDict = fileDict
-        self.allKeys = allKeys
+        self.force_dict = file_dict
+        self.all_keys = all_keys
 
-    def getHitRates(self, specificIds: list):
-        cumulativeWeight = 0
-        for id in specificIds:
-            cumulativeWeight += self.weights[id - 1]
+    def get_hit_rates(self, unique_ids: list) -> float:
+        """Get hit-rates using inverse probabilities from optimized lookup tables."""
+        cumulative_weight = 0
+        for idx in unique_ids:
+            cumulative_weight += self.weights[idx - 1]
 
-        prob = cumulativeWeight / self.totalWeight
+        prob = cumulative_weight / self.total_weight
         try:
             return 1 / prob
-        except:
+        except ZeroDivisionError:
             return 0
 
-    def getAverageWin(self, specificIds: list):
-        searchKeysTotalWeight = 0
+    def get_av_wins(self, unique_ids: list) -> float:
+        """Return average win amount for a specified list of simulation ids."""
+        search_key_tot_weight = 0
         # find out the total payout and weights from the force keys subset of the lookup table
-        for id in specificIds:
-            searchKeysTotalWeight += self.weights[id - 1]
-        averageWin = 0
+        for id in unique_ids:
+            search_key_tot_weight += self.weights[id - 1]
+        average_win = 0
         # multiply each win in the subset of lookup table by the ratio of its weight to normalize the avg payout
-        for id in specificIds:
-            normalizedPayout = self.payouts[id - 1] * (self.weights[id - 1] / searchKeysTotalWeight)
-            averageWin += normalizedPayout
+        for id in unique_ids:
+            norm_payout = self.payouts[id - 1] * (self.weights[id - 1] / search_key_tot_weight)
+            average_win += norm_payout
         try:
-            return averageWin
-        except:
+            return average_win
+        except ZeroDivisionError:
             return 0
 
-    def getSimCount(self, searchKey: dict):
+    def get_sim_count(self, search_key: dict) -> int:
+        """Get raw sim count with partial or complete matches to force file keys."""
         search_key_count = 0
-        for key in self.forceDict:
-            if all(key["search"].get(x) == y for x, y in searchKey.items()):
+        for key in self.force_dict:
+            transform_dict = {}
+            for i in key["search"]:
+                transform_dict[i["name"]] = i["value"]
+            if all(transform_dict.get(x) == y for x, y in search_key.items()):
                 search_key_count += key["timesTriggered"]
         return search_key_count
 
-    def searchCondition(gameType: str, hasWild: bool, kind: int, symbol: str, wildMult: int):
-        dict = {"gameType": gameType, "hasWild": hasWild, "kind": kind, "symbol": symbol, "wildMult": wildMult}
-        return dict
+    def return_valid_ids(self, search_key) -> list:
+        """Extract all ids with a partial match to search conditions."""
+        valid_ids = []
+        for item in self.force_dict:
+            transform_dict = {}
+            for i in item["search"]:
+                transform_dict[i["name"]] = str(i["value"])
 
-    def returnValidIds(self, searchKey):
-        allValidIds = []
-        for item in self.forceDict:
-            if all(item["search"].get(k) == v for k, v in searchKey.items()):
+            if all(transform_dict.get(k) == v for k, v in search_key.items()):
                 validIDs = item["bookIds"]
-                allValidIds.extend(validIDs)
+                valid_ids.extend(validIDs)
 
-        return allValidIds
-
-
-def construct_symbol_keys(config):
-    searchKeys = []
-    for symTuple in list(config.payTable.keys()):
-        searchKeys.append({"kind": symTuple[0], "symbol": symTuple[1]})
-
-    return searchKeys
+        return valid_ids
 
 
-def analyse_serach_keys(config, modes_to_analyse: list, search_keys: list[dict]):
+def construct_symbol_keys(config) -> list:
+    """Return symbol keys from paytable."""
+    search_keys = []
+    for symTuple in list(config.paytable.keys()):
+        search_keys.append({"kind": str(symTuple[0]), "symbol": str(symTuple[1])})
+
+    return search_keys
+
+
+def analyse_search_keys(config, modes_to_analyse: list, search_keys: list[dict]) -> type:
+    """Extract win information from search keys."""
     hr_summary, av_win_summary, sim_count_summary = {}, {}, {}
     for mode in modes_to_analyse:
-        GameObject = HitRateCalculations(config.gameId, mode, mode_cost=config.costMapping[mode])
+        for bm in config.bet_modes:
+            if bm._name == mode:
+                cost = bm._cost
+                break
+        GameObject = HitRateCalculations(config.game_id, mode, mode_cost=cost)
         hr_summary[mode], av_win_summary[mode], sim_count_summary[mode] = {}, {}, {}
         for search_key in search_keys:
-            valid_key_ids = GameObject.returnValidIds(search_key)
-            hr = GameObject.getHitRates(valid_key_ids)
-            avg_win = GameObject.getAverageWin(valid_key_ids)
-            key_instances = GameObject.getSimCount(search_key)
+            valid_key_ids = GameObject.return_valid_ids(search_key)
+            hr = GameObject.get_hit_rates(valid_key_ids)
+            avg_win = GameObject.get_av_wins(valid_key_ids)
+            key_instances = GameObject.get_sim_count(search_key)
             hr_summary[mode][str(search_key)] = hr
             av_win_summary[mode][str(search_key)] = avg_win
             sim_count_summary[mode][str(search_key)] = key_instances
@@ -111,37 +127,35 @@ def analyse_serach_keys(config, modes_to_analyse: list, search_keys: list[dict])
     return hr_summary, av_win_summary, sim_count_summary
 
 
-def construct_symbol_probabilities(config, modes_to_analyse: list):
-    print("TO DO: Put RTP allocation metrics in.")
-    # Check force files exist
-    checkFile = []
+def construct_symbol_probabilities(config, modes_to_analyse: list) -> type:
+    """Find hit-rates of all symbol combinations."""
+    check_file = []
     for mode in modes_to_analyse:
         force_file = str.join(
-            "/", ["Games", config.gameId, "Library", "Forces", "force_for_rob_" + mode + ".json"]
+            "/", ["games", config.game_id, "library", "forces", "force_record_" + mode + ".json"]
         )
-        checkFile.append(os.path.isfile(force_file))
-    if not all(checkFile):
+        check_file.append(os.path.isfile(force_file))
+    if not all(check_file):
         raise RuntimeError("Force File Does Not Exist.")
 
     symbol_search_keys = construct_symbol_keys(config)
-    hr_summary, av_win_summary, sim_count_summary = analyse_serach_keys(
+    hr_summary, av_win_summary, sim_count_summary = analyse_search_keys(
         config, modes_to_analyse, symbol_search_keys
     )
     return hr_summary, av_win_summary, sim_count_summary
 
 
-def construct_custom_key_probabilities(config, modes_to_analyse, cumstom_serach_keys):
-    # Check force files exist
-    checkFile = []
+def construct_custom_key_probabilities(config, modes_to_analyse, custom_search) -> type:
+    """Analyze win information from user defined search keys."""
+    check_file = []
     for mode in modes_to_analyse:
         force_file = str.join(
-            "/", ["Games", config.gameId, "Library", "Forces", "force_for_rob_" + mode + ".json"]
+            "/", ["games", config.game_id, "library", "forces", "force_record_" + mode + ".json"]
         )
-        checkFile.append(os.path.isfile(force_file))
-    if not all(checkFile):
+        check_file.append(os.path.isfile(force_file))
+    if not all(check_file):
         raise RuntimeError("Force File Does Not Exist.")
 
-    hr_summary, av_win_summary, sim_count_summary = analyse_serach_keys(
-        config, modes_to_analyse, cumstom_serach_keys
-    )
+    hr_summary, av_win_summary, sim_count_summary = analyse_search_keys(config, modes_to_analyse, custom_search)
+
     return hr_summary, av_win_summary, sim_count_summary

@@ -100,7 +100,7 @@ class Scatter:
         for win in gamestate.win_data["wins"]:
             gamestate.record(
                 {
-                    "win_size": len(win["positions"]),
+                    "kind": len(win["positions"]),
                     "symbol": win["symbol"],
                     "totalMult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
                     "gametype": gamestate.gametype,

@@ -274,7 +274,7 @@ def make_be_config(gamestate):
     be_info["betDenomination"] = int(config.min_denomination * 100 * 100)
     be_info["minDenomination"] = int(config.min_denomination * 100)
     be_info["providerNumber"] = int(config.provider_number)
-    be_info["standardForceFile"] = {
+    be_info["standardforce_file"] = {
         "file": "force.json",
         "sha256": get_hash(str.join("/", [config.force_path, "force.json"])),
     }
@@ -317,7 +317,7 @@ def make_be_config(gamestate):
         force_sha = get_hash(force_loc)
 
         dic["booksFile"] = {"file": data_file, "sha256": data_sha}
-        dic["forceFile"] = {"file": force_file, "sha256": force_sha}
+        dic["force_file"] = {"file": force_file, "sha256": force_sha}
         be_info["bookShelfConfig"].append(dic)
 
     file = open(config.config_path + "/config.json", "w", encoding="UTF-8")

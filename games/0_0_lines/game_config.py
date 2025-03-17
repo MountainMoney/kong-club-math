@@ -3,7 +3,6 @@
 from src.config.config import Config
 from src.config.distributions import Distribution
 from src.config.config import BetMode
-from src.config.optimization_paramaters import OptimizationParameters
 
 
 class GameConfig(Config):
@@ -332,7 +331,7 @@ class GameConfig(Config):
                 is_buybonus=True,
                 distributions=[
                     Distribution(
-                        criteria="winCap",
+                        criteria="wincap",
                         quota=0.001,
                         win_criteria=self.wincap,
                         conditions={

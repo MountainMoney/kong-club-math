@@ -191,7 +191,7 @@ class Cluster:
         for win in gamestate.win_data["wins"]:
             gamestate.record(
                 {
-                    "clusterSize": win["clusterSize"],
+                    "kind": win["clusterSize"],
                     "symbol": win["symbol"],
                     "mult": int(win["meta"]["globalMult"] + win["meta"]["clusterMult"]),
                     "gametype": gamestate.gametype,

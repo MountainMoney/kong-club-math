@@ -9,7 +9,7 @@ import threading
 from botocore.exceptions import NoCredentialsError
 
 
-class CheckFiles:
+class check_files:
     """Compare file hash values."""
 
     def __init__(self, game: str):
@@ -59,9 +59,9 @@ class CheckFiles:
         lut_base_path = "games/" + self.game + "/library/"
         mode_params = {}
         try:
-            mode_params["EXPECTED_FORCE_SHA"] = read_json["standardForceFile"]["sha256"]
+            mode_params["EXPECTED_FORCE_SHA"] = read_json["standardforce_file"]["sha256"]
             mode_params["ACTUAL_FORCE_SHA"] = self.get_lut_sha(
-                lut_base_path + "forces/", read_json["standardForceFile"]["file"]
+                lut_base_path + "forces/", read_json["standardforce_file"]["file"]
             )
 
             for mode, _ in enumerate(game_modes):
@@ -153,7 +153,7 @@ class FileDetails:
         for mode in game_modes:
             books_name = mode + "_books"
             lut_name = mode + "_LUT"
-            force_name = mode + "_forceFile"
+            force_name = mode + "_force_file"
             if books:
                 try:
                     all_file_paths[books_name] = "/".join(

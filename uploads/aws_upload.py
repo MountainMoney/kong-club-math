@@ -4,7 +4,7 @@ import time
 import warnings
 import boto3
 from uploads.aws_constants import ACCESS_KEY, SECRET_KEY, BUCKET_NAME
-from uploads.aws_classes import AWSCommands, CheckFiles, FileDetails
+from uploads.aws_classes import AWSCommands, check_files, FileDetails
 
 
 def upload_to_aws(gamestate, game_modes, upload_obj, override_check=False):
@@ -25,7 +25,7 @@ def upload_to_aws(gamestate, game_modes, upload_obj, override_check=False):
 
     # Read config and compare names, file hash and book length
     if not override_check:
-        test_game = CheckFiles(game_to_upload)
+        test_game = check_files(game_to_upload)
         json_data, game_modes = test_game.file_checker()  # type:ignore
         all_file_details = test_game.get_file_characteristics(json_data, game_modes)
         failed_count = test_game.compare_file_values(all_file_details)
