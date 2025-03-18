@@ -140,35 +140,32 @@ class Config:
     def construct_paths(self, game_id: str) -> None:
         """Assign all output file paths"""
         assert len(game_id.split("_")) == 3, "provider_gameNumber_rtp"
+
         self.library_path = str.join("/", ["games", self.game_id, "library"])
-        self.check_folder_exists(self.library_path)
-
         self.book_path = str.join("/", [self.library_path, "books"])
-        self.check_folder_exists(self.book_path)
-
         self.compressed_path = str.join("/", [self.library_path, "books_compressed"])
-        self.check_folder_exists(self.compressed_path)
-
         self.lookup_path = str.join("/", [self.library_path, "lookup_tables"])
-        self.check_folder_exists(self.lookup_path)
-
         self.config_path = str.join("/", [self.library_path, "configs"])
-        self.check_folder_exists(self.config_path)
-
         self.force_path = str.join("/", [self.library_path, "forces"])
-        self.check_folder_exists(self.force_path)
-
         self.reels_path = str.join("/", ["games", self.game_id, "reels"])
-        self.check_folder_exists(self.reels_path)
-
         self.temp_path = str.join("/", [self.library_path, "temp_multi_threaded_files"])
-        self.check_folder_exists(self.temp_path)
-
         self.optimization_path = str.join("/", [self.library_path, "optimization_files"])
-        self.check_folder_exists(self.optimization_path)
-
         self.optimization_result_path = str.join("/", [self.library_path, "optimization_files", "trial_results"])
-        self.check_folder_exists(self.optimization_result_path)
+
+        all_paths = [
+            "library_path",
+            "book_path",
+            "compressed_path",
+            "lookup_path",
+            "config_path",
+            "force_path",
+            "reels_path",
+            "temp_path",
+            "optimization_path",
+            "optimization_result_path",
+        ]
+        for p in all_paths:
+            self.check_folder_exists(getattr(self, p))
 
     def check_folder_exists(self, folder_path: str) -> None:
         """Check if target folder exists, and create if it does not."""

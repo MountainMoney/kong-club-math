@@ -36,9 +36,6 @@ markdown_extensions:
 
 nav:
   - Carrot SDK: home.md
-  - Frontend Framework:
-    - FE SDK: fe_assets/fe_readme.md
-
   - Math Framework:
     - Home: index.md
     - Engine Setup: general_overview.md
@@ -83,3 +80,5 @@ nav:
 
     - Tests [NA]: tests_section/test_info.md
     
+  - Frontend Framework:
+    - FE SDK: fe_assets/fe_readme.md

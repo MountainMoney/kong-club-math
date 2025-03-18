@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import warnings
+from collections import defaultdict
 from utils.get_file_hash import get_hash
 from utils.analysis.distribution_functions import get_distribution_std, get_lookup_length
 
@@ -24,7 +25,30 @@ def generate_configs(gamestate: object, json_padding: bool = True, assign_proper
     )
     make_be_config(gamestate)
     make_temp_math_config(gamestate)
+    make_manifest(gamestate.config)
     # make_math_config(gamestate)
+
+
+def make_manifest(config: object):
+    """
+    RGS config file list verification
+    This file is used to locate all published math files from AWS. Custom directory structures can be uplaoded
+    through the ACP, though the new directory structure must be reflected in the manifest.json file.
+    """
+    manifest_object = defaultdict(list)
+    with open(config.config_path + "/manifest.json", "w", encoding="UTF-8") as f:
+        with open(config.config_path + "/config.json", "r", encoding="UTF-8") as f2:
+            config_json = json.load(f2)
+
+        for bm in config_json["bookShelfConfig"]:
+            mode_obj = defaultdict(str)
+            mode_obj["name"] = bm["name"]
+            mode_obj["books"] = "/" + bm["booksFile"]["file"]
+            mode_obj["weights"] = "/" + bm["tables"]["file"]
+
+            manifest_object["files"].append(mode_obj)
+
+        f.write(json.dumps(manifest_object, indent=4))
 
 
 def pass_fe_betmode(betmode):
@@ -45,7 +69,7 @@ def make_temp_math_config(gamestate):
     which is directly compatible with with existing optimization script. Will be reformatted
     when the new algorithm is implemented.
     """
-    file = open(gamestate.config.config_path + "/math_config.json", "w")
+    file = open(gamestate.config.config_path + "/math_config.json", "w", encoding="UTF-8")
     jsonInfo = {}
     jsonInfo["game_id"] = gamestate.config.game_id
     jsonInfo["bet_modes"] = []
