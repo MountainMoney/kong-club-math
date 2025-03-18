@@ -318,6 +318,7 @@ def write_json(
 ):
     """Convert the list of dictionaries to a JSON-encoded string and compress it in chunks."""
     if compress:
+        # Avoids creating a list which has to be read into memory. RGS searches for newline chars to indicate book separation.
         with open(str.join("/", [gamestate.config.library_path, name + ".zst"]), "wb") as f:
             for item in library:
                 f.write(zstandard.compress(json.dumps(item).encode("UTF-8")) + b"\n")
