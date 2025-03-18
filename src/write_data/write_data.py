@@ -1,15 +1,12 @@
 """Handles writing all game game files"""
 
+from collections import defaultdict
+from warnings import warn
+import os
 import hashlib
 import json
 import ast
 import zstandard
-from collections import defaultdict
-from warnings import warn
-import os
-
-from src.calculations.statistics import *
-from src.config.paths import *
 
 
 def get_sha_256(file_to_hash: str):
@@ -23,20 +20,20 @@ def get_sha_256(file_to_hash: str):
                     break
                 sha256_file.update(data)
         sha256_hexRep = sha256_file.hexdigest()
-    except:
+    except FileNotFoundError:
         warn(f"{file_to_hash} is empty.\nCould not create hash")
         sha256_hexRep = ""
     return sha256_hexRep
 
 
-def makeForceJson(gamestate: object):
+def make_force_json(gamestate: object):
     """Construct fore-file from recorded description keys."""
     folder_path = gamestate.config.force_path
     force_file_path = str.join("/", [folder_path, "force.json"])
 
     if os.path.isfile(force_file_path) and os.path.getsize(force_file_path) > 0:
         try:
-            with open(force_file_path, "r", encoding="utf-8") as force_file:
+            with open(force_file_path, "r", encoding="UTF-8") as force_file:
                 force_data = json.load(force_file)
         except json.JSONDecodeError:
             print("Error decoding JSON: The file may be corrupted or empty.")
@@ -47,7 +44,7 @@ def makeForceJson(gamestate: object):
     for filename in os.listdir(folder_path):
         file_path = os.path.join(folder_path, filename)
         if os.path.isfile(file_path) and filename.endswith(".json") and filename.startswith("force_record_"):
-            with open(file_path, mode="r", encoding="utf-8") as file:
+            with open(file_path, mode="r", encoding="UTF-8") as file:
                 data = json.load(file)
 
                 modename = filename[len("force_record_") : -len(".json")]
@@ -63,7 +60,7 @@ def makeForceJson(gamestate: object):
                 else:
                     print("Expected a list, found:", type(data))
 
-    with open(force_file_path, "w", encoding="utf-8") as force_file:
+    with open(force_file_path, "w", encoding="UTF-8") as force_file:
         json.dump(force_data, force_file, indent=4)
 
 
@@ -78,7 +75,7 @@ def get_force_options(force_results: dict):
 
 def make_lookup_tables(gamestate: object, name: str):
     """Write lookup tables for all simulations."""
-    file = open(str.join("/", [gamestate.config.temp_path, name]), "w")
+    file = open(str.join("/", [gamestate.config.temp_path, name]), "w", encoding="UTF-8")
     sims = list(gamestate.library.keys())
     sims.sort()
     for sim in sims:
@@ -90,7 +87,7 @@ def make_lookup_tables(gamestate: object, name: str):
 
 def make_lookup_to_criteria(gamestate: object, name: str):
     """Record distribution criteria for a given simulation."""
-    file = open(str.join("/", [gamestate.config.temp_path, name]), "w")
+    file = open(str.join("/", [gamestate.config.temp_path, name]), "w", encoding="UTF-8")
     sims = list(gamestate.library.keys())
     sims.sort()
     for sim in sims:
@@ -100,7 +97,7 @@ def make_lookup_to_criteria(gamestate: object, name: str):
 
 def make_lookup_pay_split(gamestate: object, name: str):
     """Record win values from basegame and freegame types."""
-    file = open(str.join("/", [gamestate.config.temp_path, name]), "w")
+    file = open(str.join("/", [gamestate.config.temp_path, name]), "w", encoding="UTF-8")
     sims = list(gamestate.library.keys())
     sims.sort()
     for sim in sims:
@@ -131,6 +128,7 @@ def write_library_events(gamestate: object, library: list, gametype: str):
     with open(
         str.join("/", [gamestate.config.config_path, "event_config_" + gametype + ".json"]),
         "w",
+        encoding="UTF-8",
     ) as f:
         f.write(json_object)
 
@@ -145,7 +143,7 @@ def output_lookup_and_force_files(
     compress: bool = True,
 ):
     """Combine temporary lookup tables and force files into a single output."""
-    print("Saving books for", game_id, "in", betmode)
+    print("Saving books for ", game_id, "in", betmode)
     num_repeats = max(int(round(num_sims / threads / batching_size, 0)), 1)
     file_list = []
     for repeat_index in range(num_repeats):
@@ -185,6 +183,7 @@ def output_lookup_and_force_files(
         with open(
             str.join("/", [gamestate.config.book_path, "books_" + betmode + ".json"]),
             "w",
+            encoding="UTF-8",
         ) as outfile:
             for filename in file_list:
                 with open(filename, "r") as infile:
@@ -206,9 +205,9 @@ def output_lookup_and_force_files(
             )
 
     for filename in file_list:
-        force_chunk = ast.literal_eval(json.load(open(filename, "r")))
+        force_chunk = ast.literal_eval(json.load(open(filename, "r", encoding="UTF-8")))
         for key in force_chunk:
-            if force_results_dict.get(key) != None:
+            if force_results_dict.get(key) is not None:
                 force_results_dict[key]["timesTriggered"] += force_chunk[key]["timesTriggered"]
                 force_results_dict[key]["bookIds"] += force_chunk[key]["bookIds"]
             else:
@@ -228,8 +227,7 @@ def output_lookup_and_force_files(
         force_results_dict_just_for_rob.append(force_dict)
     json_object_for_rob = json.dumps(force_results_dict_just_for_rob, indent=4)
     file = open(
-        str.join("/", [gamestate.config.force_path, "force_record_" + betmode + ".json"]),
-        "w",
+        str.join("/", [gamestate.config.force_path, "force_record_" + betmode + ".json"]), "w", encoding="UTF-8"
     )
     file.write(json_object_for_rob)
     file.close()
@@ -239,11 +237,11 @@ def output_lookup_and_force_files(
     try:
         with open(json_file_path, "r") as file:
             data = json.load(file)
-    except:
+    except FileNotFoundError:
         data = {}
     data[gamestate.get_current_betmode().get_name()] = forceResultKeys
     json_object = json.dumps(data, indent=4)
-    file = open(str.join("/", [gamestate.config.force_path, "force.json"]), "w")
+    file = open(str.join("/", [gamestate.config.force_path, "force.json"]), "w", encoding="UTF-8")
     file.write(json_object)
     file.close()
     weights_plus_wins_file_list = []
@@ -280,11 +278,10 @@ def output_lookup_and_force_files(
                 )
             ]
     with open(
-        str.join("/", [gamestate.config.lookup_path, "lookUpTable_" + betmode + ".csv"]),
-        "w",
+        str.join("/", [gamestate.config.lookup_path, "lookUpTable_" + betmode + ".csv"]), "w", encoding="UTF-8"
     ) as outfile:
         for filename in weights_plus_wins_file_list:
-            with open(filename, "r") as infile:
+            with open(filename, "r", encoding="UTF-8") as infile:
                 outfile.write(infile.read())
     with open(
         str.join(
@@ -292,9 +289,10 @@ def output_lookup_and_force_files(
             [gamestate.config.lookup_path, "lookUpTableSegmented_" + betmode + ".csv"],
         ),
         "w",
+        encoding="UTF-8",
     ) as outfile:
         for filename in segmented_lut_file_list:
-            with open(filename, "r") as infile:
+            with open(filename, "r", encoding="UTF-8") as infile:
                 outfile.write(infile.read())
     with open(
         str.join(
@@ -305,9 +303,10 @@ def output_lookup_and_force_files(
             ],
         ),
         "w",
+        encoding="UTF-8",
     ) as outfile:
         for filename in id_to_criteria_file_list:
-            with open(filename, "r") as infile:
+            with open(filename, "r", encoding="UTF-8") as infile:
                 outfile.write(infile.read())
 
 
@@ -315,29 +314,21 @@ def write_json(
     gamestate: object,
     library: dict,
     name: str,
-    frist_file_write: bool,
-    last_file_write: bool,
     compress: bool,
 ):
     """Convert the list of dictionaries to a JSON-encoded string and compress it in chunks."""
-    chunk = json.dumps(library)
-    if not (frist_file_write):
-        chunk = chunk[1:]
-    if not (last_file_write):
-        chunk = chunk[:-1] + ","
     if compress:
-        file = open(str.join("/", [gamestate.config.library_path, name + ".zst"]), "wb")
-        compressed_chunk = zstandard.compress(chunk.encode("utf-8"))
-        file.write(compressed_chunk)
+        with open(str.join("/", [gamestate.config.library_path, name + ".zst"]), "wb") as f:
+            for item in library:
+                f.write(zstandard.compress(json.dumps(item).encode("UTF-8")) + b"\n")
     else:
-        file = open(str.join("/", [gamestate.config.library_path, name]), "w")
-        file.write(chunk)
-    file.close()
+        with open(str.join("/", [gamestate.config.library_path, name]), "w", encoding="UTF-8") as f:
+            f.write(json.dumps(library))
 
 
 def print_recorded_wins(gamestate: object, name: str = ""):
     """Temporary file generation for wins/recorded results."""
     json_object = json.dumps(str(gamestate.recorded_events), indent=4)
-    file = open(str.join("/", [gamestate.config.temp_path, "force_" + name + ".json"]), "w")
+    file = open(str.join("/", [gamestate.config.temp_path, "force_" + name + ".json"]), "w", encoding="UTF-8")
     file.write(json_object)
     file.close()

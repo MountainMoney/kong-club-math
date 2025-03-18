@@ -8,7 +8,7 @@ from src.events.events import reveal_event
 
 
 class Board(GeneralGameState):
-    """Handles generation of a gameboard and symbols"""
+    """Handles generation of a game board and symbols"""
 
     def create_board_reelstrips(self) -> None:
         """Randomly selects stopping positions from a reelstrip."""

@@ -1,4 +1,4 @@
-"""Main file for generating results for sample expanding wilds and prize game."""
+"""Main file for generating results for sample ways-pay game."""
 
 from gamestate import GameState
 from game_config import GameConfig
@@ -7,6 +7,7 @@ from optimization_program.run_script import OptimizationExecution
 from utils.game_analytics.run_analysis import run
 from src.state.run_sims import create_books
 from src.write_data.write_configs import generate_configs
+from uploads.aws_upload import upload_to_aws
 
 if __name__ == "__main__":
 
@@ -16,7 +17,11 @@ if __name__ == "__main__":
     compression = True
     profiling = False
 
-    num_sim_args = {"base": int(1e4), "bonus": int(1e4), "superspin": int(1e4)}
+    num_sim_args = {
+        "base": int(1e4),
+        "bonus": int(1e4),
+        "superspin": int(1e4),
+    }
 
     run_conditions = {
         "run_sims": True,
@@ -24,6 +29,7 @@ if __name__ == "__main__":
         "run_analysis": True,
         "upload_data": False,
     }
+    target_modes = ["base", "bonus", "superspin"]
 
     config = GameConfig()
     gamestate = GameState(config)
@@ -44,9 +50,21 @@ if __name__ == "__main__":
     generate_configs(gamestate)
 
     if run_conditions["run_optimization"]:
-        optimization_modes_to_run = ["base", "bonus"]
-        OptimizationExecution().run_all_modes(config, optimization_modes_to_run, rust_threads)
+        OptimizationExecution().run_all_modes(config, target_modes, rust_threads)
 
     if run_conditions["run_analysis"]:
         custom_keys = [{"symbol": "scatter"}]
         run(config.game_id, custom_keys=custom_keys)
+
+    if run_conditions["upload_data"]:
+        upload_items = {
+            "books": True,
+            "lookup_tables": True,
+            "force_files": True,
+            "config_files": True,
+        }
+        upload_to_aws(
+            gamestate,
+            target_modes,
+            upload_items,
+        )

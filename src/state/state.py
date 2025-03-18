@@ -1,12 +1,20 @@
 from copy import copy
 from abc import ABC, abstractmethod
+from warnings import warn
 import random
 
 from src.config.config import BetMode
-from src.write_data.write_data import *
 from src.wins.win_manager import WinManager
 from src.calculations.symbol import SymbolStorage
 from src.state.books import Book
+from src.write_data.write_data import (
+    print_recorded_wins,
+    make_lookup_tables,
+    write_json,
+    make_lookup_to_criteria,
+    make_lookup_pay_split,
+    write_library_events,
+)
 
 
 class GeneralGameState(ABC):
@@ -104,14 +112,14 @@ class GeneralGameState(ABC):
         for c in dist:
             if c._criteria == self.criteria:
                 return c
-        raise RuntimeError("could not locate criteria distribtuion")
+        raise RuntimeError("Could not locate criteria distribution.")
 
     def get_current_distribution_conditions(self) -> dict:
         """Return requirements for criteria setup/acceptance."""
         for d in self.get_betmode(self.betmode).get_distributions():
             if d._criteria == self.criteria:
                 return d._conditions
-        return RuntimeError("could not locate betmode conditions")
+        return RuntimeError("Could not locate betmode conditions")
 
     def record(self, description: dict) -> None:
         """
@@ -123,13 +131,14 @@ class GeneralGameState(ABC):
         self.temp_wins.append(self.book_id)
 
     def check_force_keys(self, description) -> None:
-        """Check and append unique force-key paramaters."""
+        """Check and append unique force-key parameters."""
         current_mode_force_keys = self.get_current_betmode().get_force_keys()  # type:ignore
         for keyValue in description:
             if keyValue[0] not in current_mode_force_keys:
                 self.get_current_betmode().add_force_key(keyValue[0])  # type:ignore
 
     def combine(self, modes, betmode_name) -> None:
+        """Retrieve unique force record keys."""
         for modeConfig in modes:
             for betmode in modeConfig:
                 if betmode.get_name() == betmode_name:
@@ -235,9 +244,6 @@ class GeneralGameState(ABC):
             f"[baseGame: {round(self.win_manager.cumulative_base_wins/(num_sims*mode_cost), 3)}, freeGame: {round(self.win_manager.cumulative_free_wins/(num_sims*mode_cost), 3)}]",
             flush=True,
         )
-        last_file_write = thread_index == total_threads - 1 and repeat_count == total_repeats - 1
-        frist_file_write = thread_index == 0 and repeat_count == 0
-
         write_json(
             self,
             list(self.library.values()),
@@ -248,8 +254,6 @@ class GeneralGameState(ABC):
             + "_"
             + str(repeat_count)
             + ".json",
-            frist_file_write,
-            last_file_write,
             compress,
         )
         print_recorded_wins(self, betmode + "_" + str(thread_index) + "_" + str(repeat_count))

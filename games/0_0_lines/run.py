@@ -14,21 +14,21 @@ if __name__ == "__main__":
     num_threads = 1
     rust_threads = 20
     batching_size = 50000
-    compression = True
+    compression = False
     profiling = False
 
     num_sim_args = {
-        "base": int(1e4),
-        "bonus": int(1e4),
+        "base": int(10),
+        "bonus": int(10),
     }
 
     run_conditions = {
-        "run_sims": False,
+        "run_sims": True,
         "run_optimization": False,
         "run_analysis": False,
-        "upload_data": True,
+        "upload_data": False,
     }
-    targe_modes = ["base", "bonus"]
+    target_modes = ["base", "bonus"]
 
     config = GameConfig()
     gamestate = GameState(config)
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     generate_configs(gamestate)
 
     if run_conditions["run_optimization"]:
-        OptimizationExecution().run_all_modes(config, targe_modes, rust_threads)
+        OptimizationExecution().run_all_modes(config, target_modes, rust_threads)
 
     if run_conditions["run_analysis"]:
         custom_keys = [{"symbol": "scatter"}]
@@ -64,6 +64,6 @@ if __name__ == "__main__":
         }
         upload_to_aws(
             gamestate,
-            targe_modes,
+            target_modes,
             upload_items,
         )
