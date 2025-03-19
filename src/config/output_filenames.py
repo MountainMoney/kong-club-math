@@ -180,7 +180,7 @@ class OutputFiles:
             return str.join(
                 "/",
                 [
-                    self.compressed_path,
+                    self.book_path,
                     "books_" + betmode + ".json",
                 ],
             )

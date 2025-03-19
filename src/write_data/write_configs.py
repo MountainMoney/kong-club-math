@@ -312,7 +312,7 @@ def make_be_config(gamestate):
         lut_table = gamestate.output_files.lookups[bet.get_name()]["paths"]["optimized_lookup"]
         if not (os.path.exists(lut_table)):
             print(f"File does not exist: {lut_table}, \n Generating lut_0 file.")
-            base_table = gamestate.outuput_files.lookups[bet.get_name()]
+            base_table = gamestate.output_files.lookups[bet.get_name()]["paths"]["base_lookup"]
             copy_and_rename_csv(base_table)
 
         lut_sha_value = get_hash(lut_table)
