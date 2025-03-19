@@ -75,7 +75,7 @@ def get_force_options(force_results: dict):
 
 def make_lookup_tables(gamestate: object, name: str):
     """Write lookup tables for all simulations."""
-    file = open(str.join("/", [gamestate.config.temp_path, name]), "w", encoding="UTF-8")
+    file = open(name, "w", encoding="UTF-8")
     sims = list(gamestate.library.keys())
     sims.sort()
     for sim in sims:
@@ -87,7 +87,7 @@ def make_lookup_tables(gamestate: object, name: str):
 
 def make_lookup_to_criteria(gamestate: object, name: str):
     """Record distribution criteria for a given simulation."""
-    file = open(str.join("/", [gamestate.config.temp_path, name]), "w", encoding="UTF-8")
+    file = open(name, "w", encoding="UTF-8")
     sims = list(gamestate.library.keys())
     sims.sort()
     for sim in sims:
@@ -97,7 +97,7 @@ def make_lookup_to_criteria(gamestate: object, name: str):
 
 def make_lookup_pay_split(gamestate: object, name: str):
     """Record win values from basegame and freegame types."""
-    file = open(str.join("/", [gamestate.config.temp_path, name]), "w", encoding="UTF-8")
+    file = open(name, "w", encoding="UTF-8")
     sims = list(gamestate.library.keys())
     sims.sort()
     for sim in sims:
@@ -126,7 +126,7 @@ def write_library_events(gamestate: object, library: list, gametype: str):
                 event_items[lib_event] = dict_details
     json_object = json.dumps(event_items, indent=4)
     with open(
-        str.join("/", [gamestate.config.config_path, "event_config_" + gametype + ".json"]),
+        str.join("/", [gamestate.output_files.config_path, "event_config_" + gametype + ".json"]),
         "w",
         encoding="UTF-8",
     ) as f:
@@ -149,31 +149,12 @@ def output_lookup_and_force_files(
     for repeat_index in range(num_repeats):
         for thread in range(threads):
             file_list.append(
-                str.join(
-                    "/",
-                    [
-                        gamestate.config.temp_path,
-                        "books_"
-                        + betmode
-                        + "_"
-                        + str(thread)
-                        + "_"
-                        + str(repeat_index)
-                        + ".json"
-                        + ".zst" * compress,
-                    ],
-                )
+                gamestate.output_files.get_temp_multi_thread_name(betmode, thread, repeat_index, compress)
             )
 
     if compress:
         with open(
-            str.join(
-                "/",
-                [
-                    gamestate.config.compressed_path,
-                    "books_" + betmode + ".json.zst",
-                ],
-            ),
+            gamestate.output_files.get_final_book_name(betmode, True),
             "wb",
         ) as outfile:
             for filename in file_list:
@@ -181,12 +162,12 @@ def output_lookup_and_force_files(
                     outfile.write(infile.read())
     else:
         with open(
-            str.join("/", [gamestate.config.book_path, "books_" + betmode + ".json"]),
+            gamestate.output_files.get_final_book_name(betmode, False),
             "w",
             encoding="UTF-8",
         ) as outfile:
             for filename in file_list:
-                with open(filename, "r") as infile:
+                with open(filename, "r", encoding="UTF-8") as infile:
                     outfile.write(infile.read())
 
     print("Saving force files for", game_id, "in", betmode)
@@ -195,13 +176,7 @@ def output_lookup_and_force_files(
     for repeat_index in range(num_repeats):
         for thread in range(threads):
             file_list.append(
-                str.join(
-                    "/",
-                    [
-                        gamestate.config.temp_path,
-                        "force_" + betmode + "_" + str(thread) + "_" + str(repeat_index) + ".json",
-                    ],
-                )
+                gamestate.output_files.get_temp_force_name(betmode, thread, repeat_index),
             )
 
     for filename in file_list:
@@ -218,30 +193,32 @@ def output_lookup_and_force_files(
         search_dict = []
         for key in force_combination:
             search_dict.append({"name": str(key[0]), "value": str(key[1])})
-            # search_dict[key[0]] = key[1]
         force_dict = {
             "search": search_dict,
             "timesTriggered": force_results_dict[force_combination]["timesTriggered"],
             "bookIds": force_results_dict[force_combination]["bookIds"],
         }
         force_results_dict_just_for_rob.append(force_dict)
+
     json_object_for_rob = json.dumps(force_results_dict_just_for_rob, indent=4)
     file = open(
-        str.join("/", [gamestate.config.force_path, "force_record_" + betmode + ".json"]), "w", encoding="UTF-8"
+        str.join("/", [gamestate.output_files.force_path, "force_record_" + betmode + ".json"]),
+        "w",
+        encoding="UTF-8",
     )
     file.write(json_object_for_rob)
     file.close()
 
     forceResultKeys = get_force_options(force_results_dict)
-    json_file_path = str.join("/", [gamestate.config.force_path, "force.json"])
+    json_file_path = str.join("/", [gamestate.output_files.force_path, "force.json"])
     try:
-        with open(json_file_path, "r") as file:
+        with open(json_file_path, "r", encoding="UTF-8") as file:
             data = json.load(file)
     except FileNotFoundError:
         data = {}
     data[gamestate.get_current_betmode().get_name()] = forceResultKeys
     json_object = json.dumps(data, indent=4)
-    file = open(str.join("/", [gamestate.config.force_path, "force.json"]), "w", encoding="UTF-8")
+    file = open(str.join("/", [gamestate.output_files.force_path, "force.json"]), "w", encoding="UTF-8")
     file.write(json_object)
     file.close()
     weights_plus_wins_file_list = []
@@ -251,57 +228,35 @@ def output_lookup_and_force_files(
     for repeat_index in range(num_repeats):
         for thread in range(threads):
             weights_plus_wins_file_list += [
-                str.join(
-                    "/",
-                    [
-                        gamestate.config.temp_path,
-                        "lookUpTable_" + betmode + "_" + str(thread) + "_" + str(repeat_index),
-                    ],
-                )
+                gamestate.output_files.get_temp_lookup_name(betmode, thread, repeat_index)
             ]
             id_to_criteria_file_list += [
-                str.join(
-                    "/",
-                    [
-                        gamestate.config.temp_path,
-                        "lookUpTableIdToCriteria_" + betmode + "_" + str(thread) + "_" + str(repeat_index),
-                    ],
-                )
+                gamestate.output_files.get_temp_criteria_name(betmode, thread, repeat_index)
             ]
             segmented_lut_file_list += [
-                str.join(
-                    "/",
-                    [
-                        gamestate.config.temp_path,
-                        "lookUpTableSegmented_" + betmode + "_" + str(thread) + "_" + str(repeat_index),
-                    ],
-                )
+                gamestate.output_files.get_temp_segmented_name(betmode, thread, repeat_index)
             ]
+
     with open(
-        str.join("/", [gamestate.config.lookup_path, "lookUpTable_" + betmode + ".csv"]), "w", encoding="UTF-8"
+        gamestate.output_files.get_final_lookup_name(betmode),
+        "w",
+        encoding="UTF-8",
     ) as outfile:
         for filename in weights_plus_wins_file_list:
             with open(filename, "r", encoding="UTF-8") as infile:
                 outfile.write(infile.read())
+
     with open(
-        str.join(
-            "/",
-            [gamestate.config.lookup_path, "lookUpTableSegmented_" + betmode + ".csv"],
-        ),
+        gamestate.output_files.get_final_segmented_name(betmode),
         "w",
         encoding="UTF-8",
     ) as outfile:
         for filename in segmented_lut_file_list:
             with open(filename, "r", encoding="UTF-8") as infile:
                 outfile.write(infile.read())
+
     with open(
-        str.join(
-            "/",
-            [
-                gamestate.config.lookup_path,
-                "lookUpTableIdToCriteria_" + betmode + ".csv",
-            ],
-        ),
+        gamestate.output_files.get_final_criteria_name(betmode),
         "w",
         encoding="UTF-8",
     ) as outfile:
@@ -310,26 +265,20 @@ def output_lookup_and_force_files(
                 outfile.write(infile.read())
 
 
-def write_json(
-    gamestate: object,
-    library: dict,
-    name: str,
-    compress: bool,
-):
+def write_json(gamestate, filename: str):
     """Convert the list of dictionaries to a JSON-encoded string and compress it in chunks."""
-    if compress:
-        # Avoids creating a list which has to be read into memory. RGS searches for newline chars to indicate book separation.
-        with open(str.join("/", [gamestate.config.library_path, name + ".zst"]), "wb") as f:
-            for item in library:
+    if filename.split(".")[-1] == "zst":
+        with open(filename, "wb") as f:
+            for item in list(gamestate.library.values()):
                 f.write(zstandard.compress(json.dumps(item).encode("UTF-8")) + b"\n")
     else:
-        with open(str.join("/", [gamestate.config.library_path, name]), "w", encoding="UTF-8") as f:
-            f.write(json.dumps(library))
+        with open(filename, "w", encoding="UTF-8") as f:
+            f.write(json.dumps(list(gamestate.library.values())))
 
 
 def print_recorded_wins(gamestate: object, name: str = ""):
     """Temporary file generation for wins/recorded results."""
     json_object = json.dumps(str(gamestate.recorded_events), indent=4)
-    file = open(str.join("/", [gamestate.config.temp_path, "force_" + name + ".json"]), "w", encoding="UTF-8")
+    file = open(name, "w", encoding="UTF-8")
     file.write(json_object)
     file.close()

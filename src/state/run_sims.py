@@ -58,7 +58,7 @@ def create_books(
                 num_sims=num_sim_args[betmode_name],
                 compress=compress,
             )  # , write_event_list=config.write_event_list)
-    shutil.rmtree(config.temp_path)
+    shutil.rmtree(gamestate.output_files.temp_path)
     print("\nFinished creating books in", time.time() - startTime, "seconds.\n")
 
 

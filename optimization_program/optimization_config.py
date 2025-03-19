@@ -130,7 +130,7 @@ def verify_optimization_input(game_config, opt_dict):
         criteria_list = opt_dict[mode_name]["conditions"].keys()
         bet = None
         for bm in game_config.bet_modes:
-            if bm._name == mode_name:
+            if bm.get_name() == mode_name:
                 bet = bm
                 break
         assert bet is not None, "bet_mode name and optimization mode names do not match."
@@ -142,7 +142,7 @@ def verify_optimization_input(game_config, opt_dict):
         assert [x in criteria_list for x in dist_keys], "Distribution criteria must match 'conditions' keys"
 
         # Verify optimization segmentation matches target RTP
-        bm_rtp = bm._rtp
+        bm_rtp = bm.get_rtp()
         param_rtp = 0.0
         param_conditions = opt_dict[mode_name]["conditions"].values()
         for p in param_conditions:

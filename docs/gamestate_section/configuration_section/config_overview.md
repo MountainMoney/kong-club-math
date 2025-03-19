@@ -19,18 +19,6 @@ Several parts of the engine such as win amount verification, special symbol trig
  ```
 Typically special rules apply when the player enters a freegame. The configuration file allows the user to specify the key corresponding to each gametype. By default this is set to `basegame` and `freegame` respectively. All simulations will start in the basegame mode unless otherwise specified, and the transition to the freegame state is handled in the default `reset_fs_spin()` function, which is called as soon as the `run_freespin()` function is entered. 
 
-#### Path construction 
-
-When simulation results are saved, there are several files which are saved upon completing the simulation, along with the path to reel-strips the existence of the following output files are verified, and created if they do not exist. These paths can be checked by accessing self.config.< path_label >
-
-* library_path: `games/game_id/library/`
-* books_path/books_compressed_path: `games/game_id/library/books/`
-* lookup_path: `games/game_id/library/lookup_tables/`
-* config_path: `games/game_id/library/configs/`
-* force_path: `games/game_id/library/forces`
-* temp_path: `games/game_id/library/temp_multi_threaded_files/`
-* reels_path: `games/game_id/reels/`
-
 #### Reels 
 
 Most games will use distinct reelstrips for different gametypes. It is commonplace for game-modes to have multiple possible reels per mode. One method of adjusting the overall RTP of a game is to have a multiple reelstrips with varying RTP, which can be selected from a weighted draw when calling `self.create_board_from_reelstrips()`. Reelstrips are stored as a dictionary in the `self.config.reels` object. The reelstrip key and csv file name should be specified:

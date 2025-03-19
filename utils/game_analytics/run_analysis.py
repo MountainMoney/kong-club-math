@@ -17,16 +17,16 @@ def run(game: str, custom_keys: List[Dict] = None):
     PrintXLSX(game_obj)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    game_to_analyze = "0_0_lines"
-    user_keys = [
-        {"symbol": "scatter"},
-        {"symbol": "scatter", "kind": 3},
-        {"symbol": "scatter", "kind": 4},
-        {"symbol": "scatter", "kind": 5},
-    ]
-    game_object = GameInformation(game_id=game_to_analyze, custom_keys=user_keys)
-    PrintJSON(game_object)
-    PrintXLSX(game_object)
-    print("Printed All Data Successfully.")
+#     game_to_analyze = "0_0_lines"
+#     user_keys = [
+#         {"symbol": "scatter"},
+#         {"symbol": "scatter", "kind": 3},
+#         {"symbol": "scatter", "kind": 4},
+#         {"symbol": "scatter", "kind": 5},
+#     ]
+#     game_object = GameInformation(game_id=game_to_analyze, custom_keys=user_keys)
+#     PrintJSON(game_object)
+#     PrintXLSX(game_object)
+#     print("Printed All Data Successfully.")

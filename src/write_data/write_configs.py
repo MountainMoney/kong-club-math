@@ -25,19 +25,19 @@ def generate_configs(gamestate: object, json_padding: bool = True, assign_proper
     )
     make_be_config(gamestate)
     make_temp_math_config(gamestate)
-    make_manifest(gamestate.config)
+    make_manifest(gamestate)
     # make_math_config(gamestate)
 
 
-def make_manifest(config: object):
+def make_manifest(gamestate: object):
     """
     RGS config file list verification
     This file is used to locate all published math files from AWS. Custom directory structures can be uplaoded
     through the ACP, though the new directory structure must be reflected in the manifest.json file.
     """
     manifest_object = defaultdict(list)
-    with open(config.config_path + "/manifest.json", "w", encoding="UTF-8") as f:
-        with open(config.config_path + "/config.json", "r", encoding="UTF-8") as f2:
+    with open(gamestate.output_files.configs["paths"]["manifest"], "w", encoding="UTF-8") as f:
+        with open(gamestate.output_files.configs["paths"]["be_config"], "r", encoding="UTF-8") as f2:
             config_json = json.load(f2)
 
         for bm in config_json["bookShelfConfig"]:
@@ -69,7 +69,7 @@ def make_temp_math_config(gamestate):
     which is directly compatible with with existing optimization script. Will be reformatted
     when the new algorithm is implemented.
     """
-    file = open(gamestate.config.config_path + "/math_config.json", "w", encoding="UTF-8")
+    file = open(gamestate.output_files.configs["paths"]["math_config"], "w", encoding="UTF-8")
     jsonInfo = {}
     jsonInfo["game_id"] = gamestate.config.game_id
     jsonInfo["bet_modes"] = []
@@ -83,22 +83,22 @@ def make_temp_math_config(gamestate):
     opt_mode = None
     for bet_mode in gamestate.config.bet_modes:
         for mode, mode_obj in gamestate.config.opt_params.items():
-            if mode == bet_mode._name:
+            if mode == bet_mode.get_name():
                 opt_mode = mode
                 break
 
         if opt_mode is not None:
             bet_mode_rust = {
-                "bet_mode": bet_mode._name,
-                "cost": bet_mode._cost,
-                "rtp": bet_mode._rtp,
-                "max_win": bet_mode._wincap,
+                "bet_mode": bet_mode.get_name(),
+                "cost": bet_mode.get_cost(),
+                "rtp": bet_mode.get_rtp(),
+                "max_win": bet_mode.get_wincap(),
             }
             rust_dict["bet_modes"] += [bet_mode_rust]
             jsonInfo["bet_modes"].append(bet_mode_rust)
 
             rust_dict["fences"] = []
-            rust_fence = {"bet_mode": bet_mode._name, "fences": []}
+            rust_fence = {"bet_mode": bet_mode.get_name(), "fences": []}
             fence_info = {}
             for fence, fence_obj in mode_obj["conditions"].items():
                 fence_info = {}
@@ -128,7 +128,7 @@ def make_temp_math_config(gamestate):
             jsonInfo["fences"].append(rust_fence)
 
             rust_dict["dresses"] = []
-            rust_dress = {"bet_mode": bet_mode._name, "dresses": []}
+            rust_dress = {"bet_mode": bet_mode.get_name(), "dresses": []}
             for dress_obj in mode_obj["scaling"]:
                 dress_info = {}
                 dress_info["fence"] = dress_obj["criteria"]
@@ -155,14 +155,14 @@ def make_math_config(gamestate):
     rust_dict["bet_modes"] = []
     for bet_mode in gamestate.config.bet_modes:
         bet_mode_rust = {
-            "bet_mode": bet_mode._name,
-            "cost": bet_mode._cost,
-            "rtp": bet_mode._rtp,
-            "max_win": bet_mode._wincap,
+            "bet_mode": bet_mode.get_name(),
+            "cost": bet_mode.get_cost(),
+            "rtp": bet_mode.get_rtp(),
+            "max_win": bet_mode.get_wincap(),
         }
         opt_mode = None
         for mode, mode_obj in gamestate.config.optimization_params.items():
-            if mode == bet_mode._name:
+            if mode == bet_mode.get_name():
                 opt_mode = mode
                 break
         if opt_mode is not None:
@@ -270,7 +270,9 @@ def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwarg
     elif not json_padding:
         json_info["paddingReels"] = gamestate.config.paddingReels
 
-    f_name = str.join("/", [gamestate.config.config_path, "config_fe_" + str(gamestate.config.game_id) + ".json"])
+    f_name = str.join(
+        "/", [gamestate.output_files.config_path, "config_fe_" + str(gamestate.config.game_id) + ".json"]
+    )
     fe_json = open(f_name, "w", encoding="UTF-8")
     fe_json.write(json.dumps(json_info, indent=4))
     fe_json.close()
@@ -280,15 +282,16 @@ def make_be_config(gamestate):
     """ "Generate config.json for RGS to retrieve game details and hash-values."""
     config = gamestate.config
 
-    fe_config_name = "config_fe_" + str(config.game_id) + ".json"
-    fe_config_sha = get_hash(config.config_path + "/" + fe_config_name)
+    fe_config_sha = get_hash(gamestate.output_files.configs["paths"]["fe_config"])
     available_bm = gamestate.config.bet_modes
 
     # General game data
     be_info = {}
-    be_info["frontendConfig"] = {"file": fe_config_name, "sha256": fe_config_sha}
     be_info["workingName"] = config.working_name
-    be_info["frontendConfig"] = {"file": fe_config_name, "sha256": fe_config_sha}
+    be_info["frontendConfig"] = {
+        "file": gamestate.output_files.configs["names"]["fe_config"],
+        "sha256": fe_config_sha,
+    }
     be_info["workingName"] = str(config.working_name)
     be_info["gameID"] = config.game_id
     if config.rtp < 1:
@@ -300,22 +303,21 @@ def make_be_config(gamestate):
     be_info["providerNumber"] = int(config.provider_number)
     be_info["standardforce_file"] = {
         "file": "force.json",
-        "sha256": get_hash(str.join("/", [config.force_path, "force.json"])),
+        "sha256": get_hash(str.join("/", [gamestate.output_files.force_path, "force.json"])),
     }
 
     # Betmode specific data
     be_info["bookShelfConfig"] = []
     for bet in available_bm:
-        lut_table = str.join("_", ["lookUpTable", bet.get_name(), "0.csv"])
-        std_table = str.join("/", [config.lookup_path, "lookUpTable_" + bet.get_name() + "_0.csv"])
-        if not (os.path.exists(std_table)):
-            print(f"File does not exist: {std_table}, \n Generating lut_0 file.")
-            base_table = str.join("/", [config.lookup_path, "lookUpTable_" + bet.get_name() + ".csv"])
+        lut_table = gamestate.output_files.lookups[bet.get_name()]["paths"]["optimized_lookup"]
+        if not (os.path.exists(lut_table)):
+            print(f"File does not exist: {lut_table}, \n Generating lut_0 file.")
+            base_table = gamestate.outuput_files.lookups[bet.get_name()]
             copy_and_rename_csv(base_table)
 
-        lut_sha_value = get_hash(std_table)
-        std_val = round(get_distribution_std(std_table) / bet.get_cost(), 2)
-        booklength = get_lookup_length(std_table)
+        lut_sha_value = get_hash(lut_table)
+        std_val = round(get_distribution_std(lut_table) / bet.get_cost(), 2)
+        booklength = get_lookup_length(lut_table)
         dic = {
             "name": bet.get_name(),
             "tables": {"file": lut_table, "sha256": lut_sha_value},
@@ -328,22 +330,26 @@ def make_be_config(gamestate):
             "buyBonus": bet.get_buybonus(),
             "maxWin": bet.get_wincap(),
         }
-        data_file = str.join("_", ["books", bet.get_name() + ".json.zst"])
-        data_loc = str.join("/", [config.compressed_path, data_file])
+        data_loc = gamestate.output_files.books[bet.get_name()]["paths"]["books_compressed"]
         try:
             data_sha = get_hash(data_loc)
         except FileNotFoundError:
             data_sha = ""
             warnings.warn("Compressed books file not found. Hash is empty.")
 
-        force_file = str.join("_", ["force_record", bet.get_name() + ".json"])
-        force_loc = str.join("/", [config.force_path, force_file])
+        force_loc = gamestate.output_files.force[bet.get_name()]["paths"]["force_record"]
         force_sha = get_hash(force_loc)
 
-        dic["booksFile"] = {"file": data_file, "sha256": data_sha}
-        dic["force_file"] = {"file": force_file, "sha256": force_sha}
+        dic["booksFile"] = {
+            "file": gamestate.output_files.books[bet.get_name()]["names"]["books_compressed"],
+            "sha256": data_sha,
+        }
+        dic["force_file"] = {
+            "file": gamestate.output_files.force[bet.get_name()]["names"]["force_record"],
+            "sha256": force_sha,
+        }
         be_info["bookShelfConfig"].append(dic)
 
-    file = open(config.config_path + "/config.json", "w", encoding="UTF-8")
+    file = open(gamestate.output_files.configs["paths"]["be_config"], "w", encoding="UTF-8")
     file.write(json.dumps(be_info, indent=4))
     file.close()

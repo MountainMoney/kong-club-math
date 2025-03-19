@@ -110,7 +110,7 @@ def analyse_search_keys(config, modes_to_analyse: list, search_keys: list[dict])
     hr_summary, av_win_summary, sim_count_summary = {}, {}, {}
     for mode in modes_to_analyse:
         for bm in config.bet_modes:
-            if bm._name == mode:
+            if bm.get_name() == mode:
                 cost = bm._cost
                 break
         GameObject = HitRateCalculations(config.game_id, mode, mode_cost=cost)

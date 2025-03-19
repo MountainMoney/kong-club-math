@@ -25,14 +25,16 @@ def get_config_class(game_id):
 class GameInformation:
     """Import game configuration details."""
 
-    def __init__(self, game_id: str, analysis_ranges=None, modes_to_analyse=None, custom_keys=None):
-        self.game_id = game_id
-        self.load_config()
+    def __init__(self, gamestate: object, analysis_ranges=None, modes_to_analyse=None, custom_keys=None):
+        self.game_id = gamestate.config.game_id
         self.modes_to_analyse = modes_to_analyse
-        self.config_path = os.path.join(self.config.config_path, "config.json")
-        self.math_config_path = os.path.join(self.config.config_path, "math_config.json")
-        self.libraryPath = self.config.library_path
-        self.lutPath = self.config.lookup_path
+        self.config_path = gamestate.output_files.configs["paths"]["be_config"]
+        # self.config_path = os.path.join(self.config.config_path, "config.json")
+        self.math_config_path = gamestate.output_files.configs["paths"]["math_config"]
+        # self.math_config_path = os.path.join(self.config.config_path, "math_config.json")
+        self.load_config()
+        self.libraryPath = gamestate.output_files.library_path
+        self.lutPath = gamestate.output_files.lookup_path
 
         if custom_keys is None:
             self.custom_keys = [{}]
@@ -79,7 +81,7 @@ class GameInformation:
     def load_config(self):
         "Load game config details."
         config_class = get_config_class(self.game_id)
-        with open(config_class.config_path + "/config.json", "r", encoding="UTF-8") as f:
+        with open(self.config_path, "r", encoding="UTF-8") as f:
             config_object = json.load(f)
 
         all_modes = []

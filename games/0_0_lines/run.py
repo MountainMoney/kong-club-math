@@ -13,22 +13,22 @@ if __name__ == "__main__":
 
     num_threads = 10
     rust_threads = 20
-    batching_size = 50000
+    batching_size = 5000
     compression = True
     profiling = False
 
     num_sim_args = {
-        "base": int(1e4),
-        "bonus": int(1e4),
+        "base": int(1e5),
+        "bonus": int(1e5),
     }
 
     run_conditions = {
-        "run_sims": True,
+        "run_sims": False,
         "run_optimization": False,
-        "run_analysis": False,
+        "run_analysis": True,
         "upload_data": False,
     }
-    target_modes = ["base", "bonus"]
+    target_modes = list(num_sim_args.keys())
 
     config = GameConfig()
     gamestate = GameState(config)
@@ -53,7 +53,7 @@ if __name__ == "__main__":
 
     if run_conditions["run_analysis"]:
         custom_keys = [{"symbol": "scatter"}]
-        run(config.game_id, custom_keys=custom_keys)
+        run(gamestate, custom_keys=custom_keys)
 
     if run_conditions["upload_data"]:
         upload_items = {

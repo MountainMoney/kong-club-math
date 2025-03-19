@@ -6,6 +6,7 @@ import random
 from src.config.config import BetMode
 from src.wins.win_manager import WinManager
 from src.calculations.symbol import SymbolStorage
+from src.config.output_filenames import OutputFiles
 from src.state.books import Book
 from src.write_data.write_data import (
     print_recorded_wins,
@@ -22,11 +23,12 @@ class GeneralGameState(ABC):
 
     def __init__(self, config):
         self.config = config
+        self.output_files = OutputFiles(self.config)
+        self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
         self.library = {}
         self.recorded_events = {}
         self.special_symbol_functions = {}
         self.temp_wins = []
-        self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
         self.create_symbol_map()
         self.assign_special_sym_function()
         self.sim = 0
@@ -236,6 +238,7 @@ class GeneralGameState(ABC):
             self.criteria = sim_to_criteria[sim]
             self.run_spin(sim)
         mode_cost = self.get_current_betmode().get_cost()
+
         print(
             "Thread " + str(thread_index),
             "finished with",
@@ -244,31 +247,20 @@ class GeneralGameState(ABC):
             f"[baseGame: {round(self.win_manager.cumulative_base_wins/(num_sims*mode_cost), 3)}, freeGame: {round(self.win_manager.cumulative_free_wins/(num_sims*mode_cost), 3)}]",
             flush=True,
         )
+
         write_json(
             self,
-            list(self.library.values()),
-            "temp_multi_threaded_files/books_"
-            + betmode
-            + "_"
-            + str(thread_index)
-            + "_"
-            + str(repeat_count)
-            + ".json",
-            compress,
+            self.output_files.get_temp_multi_thread_name(
+                betmode, thread_index, repeat_count, (compress) * True + (not compress) * False
+            ),
         )
-        print_recorded_wins(self, betmode + "_" + str(thread_index) + "_" + str(repeat_count))
-        make_lookup_tables(
-            self,
-            "lookUpTable_" + betmode + "_" + str(thread_index) + "_" + str(repeat_count),
-        )
+        print_recorded_wins(self, self.output_files.get_temp_force_name(betmode, thread_index, repeat_count))
+        make_lookup_tables(self, self.output_files.get_temp_lookup_name(betmode, thread_index, repeat_count))
         make_lookup_to_criteria(
-            self,
-            "lookUpTableIdToCriteria_" + betmode + "_" + str(thread_index) + "_" + str(repeat_count),
+            self, self.output_files.get_temp_criteria_name(betmode, thread_index, repeat_count)
         )
-        make_lookup_pay_split(
-            self,
-            "lookUpTableSegmented" + "_" + str(betmode) + "_" + str(thread_index) + "_" + str(repeat_count),
-        )
+        make_lookup_pay_split(self, self.output_files.get_temp_segmented_name(betmode, thread_index, repeat_count))
+
         if write_event_list:
             write_library_events(self, list(self.library.values()), betmode)
         betmode_copy_list.append(self.config.bet_modes)

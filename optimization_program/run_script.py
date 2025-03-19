@@ -16,7 +16,7 @@ class OptimizationExecution:
     @staticmethod
     def run_opt_single_mode(game_config, mode, threads):
         """Create setup txt file for a single mode and run Rust executable binary."""
-        filename = str.join("/", [game_config.config_path, "math_config.json"])
+        filename = str.join("/", ["games", game_config.game_id, "library", "configs", "math_config.json"])
         opt_config = OptimizationExecution.load_math_config(filename)
 
         opt_config = game_config.opt_params
