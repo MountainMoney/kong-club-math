@@ -6,6 +6,7 @@ carrotengine.egg-info/dependency_links.txt
 carrotengine.egg-info/top_level.txt
 games/__init__.py
 optimization_program/__init__.py
+optimization_program/optimization_config.py
 optimization_program/run_script.py
 src/__init__.py
 src/calculations/__init__.py
@@ -23,6 +24,7 @@ src/config/config.py
 src/config/constants.py
 src/config/distributions.py
 src/config/optimization_paramaters.py
+src/config/output_filenames.py
 src/config/paths.py
 src/events/__init__.py
 src/events/event_constants.py
@@ -48,6 +50,7 @@ uploads/aws_constants.py
 uploads/aws_upload.py
 utils/__init__.py
 utils/get_file_hash.py
+utils/swap_lookups.py
 utils/analysis/__init__.py
 utils/analysis/distribution_functions.py
 utils/game_analytics/__init__.py

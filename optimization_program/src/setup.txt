@@ -10,5 +10,5 @@ test_spins_weights;[0.6,0.2,0.2]
 simulation_trials;5000
 graph_indexes;0
 run_1000_batch;False
-path_to_games;/Users/DeclanArmstrong/GitRepos/carrot-math-engine/games/
+path_to_games;/Users/DeclanArmstrong/GitRepos/math-sdk/games/
 pmb_rtp;1.0

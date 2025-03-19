@@ -18,13 +18,13 @@ if __name__ == "__main__":
     profiling = False
 
     num_sim_args = {
-        "base": int(1e5),
-        "bonus": int(1e5),
+        "base": int(1e4),
+        "bonus": int(1e4),
     }
 
     run_conditions = {
-        "run_sims": False,
-        "run_optimization": False,
+        "run_sims": True,
+        "run_optimization": True,
         "run_analysis": True,
         "upload_data": False,
     }
