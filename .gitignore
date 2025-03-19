@@ -11,7 +11,7 @@ __pycache__
 **temp_multi_threaded_files
 
 
-**/target/=*
+**/target/*
 **/debug/*
 **release/*
 **/optimization_files/**

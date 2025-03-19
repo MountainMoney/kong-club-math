@@ -120,7 +120,7 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "mult_values": {
-                                self.freegame_type: {2: 100, 3: 50, 4: 40, 5: 30, 10: 10, 20: 5, 50: 1}
+                                self.freegame_type: {2: 200, 3: 80, 4: 40, 5: 30, 10: 10, 20: 5, 50: 1}
                             },
                             "landing_wilds": {0: 100, 1: 20, 2: 5, 3: 2},
                             "scatter_triggers": {4: 1, 5: 2},
@@ -137,7 +137,7 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "mult_values": {
-                                self.freegame_type: {2: 100, 3: 50, 4: 40, 5: 30, 10: 10, 20: 5, 50: 1}
+                                self.freegame_type: {2: 300, 3: 100, 4: 30, 5: 20, 10: 5, 20: 5, 50: 1}
                             },
                             "landing_wilds": {0: 200, 1: 15, 2: 5, 3: 1},
                             "scatter_triggers": {4: 1, 5: 2},
@@ -185,7 +185,7 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "mult_values": {
-                                self.freegame_type: {2: 100, 3: 50, 4: 40, 5: 30, 10: 10, 20: 5, 50: 1}
+                                self.freegame_type: {2: 100, 3: 50, 4: 40, 5: 30, 10: 5, 20: 5, 50: 1}
                             },
                             "landing_wilds": {0: 100, 1: 15, 2: 10, 3: 2},
                             "scatter_triggers": {4: 1, 5: 2},
@@ -202,7 +202,7 @@ class GameConfig(Config):
                                 self.freegame_type: {"FR0": 1},
                             },
                             "mult_values": {
-                                self.freegame_type: {2: 200, 3: 50, 4: 40, 5: 30, 10: 10, 20: 5, 50: 1}
+                                self.freegame_type: {2: 500, 3: 100, 4: 80, 5: 60, 10: 5, 20: 2, 50: 1}
                             },
                             "scatter_triggers": {4: 1, 5: 2},
                             "landing_wilds": {0: 200, 1: 20, 2: 5, 3: 1},
@@ -266,16 +266,16 @@ class GameConfig(Config):
                                 self.basegame_type: {"SSR": 1},
                             },
                             "prize_values": {
-                                1: 500,
-                                2: 100,
+                                1: 700,
+                                2: 200,
                                 3: 50,
                                 5: 30,
                                 10: 20,
                                 25: 10,
                                 50: 5,
-                                100: 2,
-                                500: 10,
-                                1000: 5,
+                                100: 5,
+                                500: 2,
+                                1000: 1,
                             },
                             "force_wincap": False,
                             "force_freegame": False,

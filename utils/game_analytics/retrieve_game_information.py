@@ -29,9 +29,7 @@ class GameInformation:
         self.game_id = gamestate.config.game_id
         self.modes_to_analyse = modes_to_analyse
         self.config_path = gamestate.output_files.configs["paths"]["be_config"]
-        # self.config_path = os.path.join(self.config.config_path, "config.json")
         self.math_config_path = gamestate.output_files.configs["paths"]["math_config"]
-        # self.math_config_path = os.path.join(self.config.config_path, "math_config.json")
         self.load_config()
         self.libraryPath = gamestate.output_files.library_path
         self.lutPath = gamestate.output_files.lookup_path

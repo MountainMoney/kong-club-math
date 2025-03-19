@@ -11,8 +11,8 @@ from optimization_program.optimization_config import (
 class OptimizationSetup:
     """"""
 
-    def __init__(self, gamestate):
-        self.game_config = gamestate.config
+    def __init__(self, game_config):
+        self.game_config = game_config
         self.game_config.opt_params = {
             "base": {
                 "conditions": {

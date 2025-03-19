@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
     if run_conditions["run_analysis"]:
         custom_keys = [{"symbol": "scatter"}]
-        run(config.game_id, custom_keys=custom_keys)
+        run(gamestate, custom_keys=custom_keys)
 
     if run_conditions["upload_data"]:
         upload_items = {
