@@ -85,16 +85,6 @@ def make_lookup_tables(gamestate: object, name: str):
     file.close()
 
 
-def make_lookup_to_criteria(gamestate: object, name: str):
-    """Record distribution criteria for a given simulation."""
-    file = open(name, "w", encoding="UTF-8")
-    sims = list(gamestate.library.keys())
-    sims.sort()
-    for sim in sims:
-        file.write(str(gamestate.library[sim]["id"]) + "," + str(gamestate.library[sim]["criteria"]) + "\n")
-    file.close()
-
-
 def make_lookup_pay_split(gamestate: object, name: str):
     """Record win values from basegame and freegame types."""
     file = open(name, "w", encoding="UTF-8")
@@ -103,6 +93,8 @@ def make_lookup_pay_split(gamestate: object, name: str):
     for sim in sims:
         file.write(
             str(gamestate.library[sim]["id"])
+            + ","
+            + str(gamestate.library[sim]["criteria"])
             + ","
             + str(round(gamestate.library[sim]["baseGameWins"], 2))
             + ","
@@ -222,16 +214,12 @@ def output_lookup_and_force_files(
     file.write(json_object)
     file.close()
     weights_plus_wins_file_list = []
-    id_to_criteria_file_list = []
     segmented_lut_file_list = []
     print("Saving LUTs for", game_id, "in", betmode)
     for repeat_index in range(num_repeats):
         for thread in range(threads):
             weights_plus_wins_file_list += [
                 gamestate.output_files.get_temp_lookup_name(betmode, thread, repeat_index)
-            ]
-            id_to_criteria_file_list += [
-                gamestate.output_files.get_temp_criteria_name(betmode, thread, repeat_index)
             ]
             segmented_lut_file_list += [
                 gamestate.output_files.get_temp_segmented_name(betmode, thread, repeat_index)
@@ -252,15 +240,6 @@ def output_lookup_and_force_files(
         encoding="UTF-8",
     ) as outfile:
         for filename in segmented_lut_file_list:
-            with open(filename, "r", encoding="UTF-8") as infile:
-                outfile.write(infile.read())
-
-    with open(
-        gamestate.output_files.get_final_criteria_name(betmode),
-        "w",
-        encoding="UTF-8",
-    ) as outfile:
-        for filename in id_to_criteria_file_list:
             with open(filename, "r", encoding="UTF-8") as infile:
                 outfile.write(infile.read())
 

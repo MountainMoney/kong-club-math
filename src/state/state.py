@@ -12,7 +12,6 @@ from src.write_data.write_data import (
     print_recorded_wins,
     make_lookup_tables,
     write_json,
-    make_lookup_to_criteria,
     make_lookup_pay_split,
     write_library_events,
 )
@@ -256,9 +255,6 @@ class GeneralGameState(ABC):
         )
         print_recorded_wins(self, self.output_files.get_temp_force_name(betmode, thread_index, repeat_count))
         make_lookup_tables(self, self.output_files.get_temp_lookup_name(betmode, thread_index, repeat_count))
-        make_lookup_to_criteria(
-            self, self.output_files.get_temp_criteria_name(betmode, thread_index, repeat_count)
-        )
         make_lookup_pay_split(self, self.output_files.get_temp_segmented_name(betmode, thread_index, repeat_count))
 
         if write_event_list:

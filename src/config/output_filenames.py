@@ -99,13 +99,11 @@ class OutputFiles:
                 "names": {
                     "base_lookup": f"lookUpTable_{mode.get_name()}.csv",
                     "optimized_lookup": f"lookUpTable_{mode.get_name()}_0.csv",
-                    "criteria_id": f"lookUpTableIdToCriteria_{mode.get_name()}.csv",
                     "segmented_id": f"lookUpTableSegmented_{mode.get_name()}.csv",
                 },
                 "paths": {
                     "base_lookup": self.lookup_path + f"/lookUpTable_{mode.get_name()}.csv",
                     "optimized_lookup": self.lookup_path + f"/lookUpTable_{mode.get_name()}_0.csv",
-                    "criteria_id": self.lookup_path + f"/lookUpTableIdToCriteria_{mode.get_name()}.csv",
                     "segmented_id": self.lookup_path + f"/lookUpTableSegmented_{mode.get_name()}.csv",
                 },
             }
@@ -134,16 +132,6 @@ class OutputFiles:
         """Naming convention for temp lookup files."""
         return str.join(
             "/", [self.temp_path, str.join("_", ["lookUpTable", betmode, str(thread_index), str(repeat_count)])]
-        )
-
-    def get_temp_criteria_name(self, betmode: str, thread_index: int, repeat_count: int):
-        """Naming convention for temp lookup files."""
-        return str.join(
-            "/",
-            [
-                self.temp_path,
-                str.join("_", ["lookUpTableIdToCriteria", betmode, str(thread_index), str(repeat_count)]),
-            ],
         )
 
     def get_temp_segmented_name(self, betmode: str, thread_index: int, repeat_count: int):
@@ -193,7 +181,3 @@ class OutputFiles:
     def get_final_segmented_name(self, betmode: str):
         """Final csv segmented wins lookup table name."""
         return str.join("/", [self.lookup_path, "lookUpTableSegmented_" + betmode + ".csv"])
-
-    def get_final_criteria_name(self, betmode: str):
-        """Final csv showing simulation number to criteria mapping."""
-        return str.join("/", [self.lookup_path, "lookUpTableIdToCriteria_" + betmode + ".csv"])

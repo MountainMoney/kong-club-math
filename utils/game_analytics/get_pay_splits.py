@@ -42,33 +42,27 @@ def get_unoptimized_hits(lut_path, all_modes, win_ranges):
     return all_modes_hit_rates, all_modes_range_hits
 
 
-def make_split_win_distribution(lut_file, split_file, fences_file, all_modes, base_mode_name="basegame"):
+def make_split_win_distribution(lut_file, split_file, all_modes, base_mode_name="basegame"):
     """Separate probability information for different game-types."""
     combined_distributions = defaultdict(lambda: defaultdict(float))
     all_modes.append("cumulative")
     split = open(split_file, "r", encoding="UTF-8")
     lut = open(lut_file, "r", encoding="UTF-8")
-    fences = open(fences_file, "r", encoding="UTF-8")
 
-    all_base, all_free = [], []
+    all_base, all_free, all_fences = [], [], []
     for line in split:
-        idx, base_win, free_win = line.strip().split(",")
+        idx, idv_fence, base_win, free_win = line.strip().split(",")
         all_base.append(float(base_win))
         all_free.append(float(free_win))
+        if str(idv_fence) == "0":
+            idv_fence = base_mode_name
+        all_fences.append(str(idv_fence))
 
     all_weights = []
     for line in lut:
         _, weight, _ = line.strip().split(",")
         all_weights.append(int(weight))
     total_lut_weight = int(sum(all_weights))
-
-    all_fences = []
-    for line in fences:
-        idv_fence = line.strip().split(",")[1]
-        if str(idv_fence) == "0":
-            idv_fence = base_mode_name
-
-        all_fences.append(str(idv_fence))
 
     for idx, _ in enumerate(all_weights):
         if base_mode_name in all_modes:
@@ -140,8 +134,5 @@ def return_all_filepaths(game_id: str, mode: str):
     """Return file files required for PAR sheet generation."""
     lut_path = str.join("/", ["games", game_id, "library", "lookup_tables", f"lookUpTable_{mode}_0.csv"])
     split_path = str.join("/", ["games", game_id, "library", "lookup_tables", f"lookUpTableSegmented_{mode}.csv"])
-    fences_path = str.join(
-        "/", ["games", game_id, "library", "lookup_tables", f"lookUpTableIdToCriteria_{mode}.csv"]
-    )
 
-    return lut_path, split_path, fences_path
+    return lut_path, split_path
