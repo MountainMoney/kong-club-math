@@ -18,14 +18,12 @@ class OptimizationSetup:
         self.game_config.opt_params = {
             "base": {
                 "conditions": {
-                    "wincap": ConstructConditions(
-                        rtp=0.01, av_win=5000, search_conditions=5000, bet_cost=1.0
-                    ).return_dict(),
-                    "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0, bet_cost=1.0).return_dict(),
+                    "wincap": ConstructConditions(rtp=0.01, av_win=5000, search_conditions=5000).return_dict(),
+                    "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0).return_dict(),
                     "freegame": ConstructConditions(
-                        rtp=0.37, hr=200, search_conditions={"symbol": "scatter"}, bet_cost=1.0
+                        rtp=0.37, hr=200, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
-                    "basegame": ConstructConditions(hr=3.5, rtp=0.59, bet_cost=1.0).return_dict(),
+                    "basegame": ConstructConditions(hr=3.5, rtp=0.59).return_dict(),
                 },
                 "scaling": ConstructScaling(
                     [

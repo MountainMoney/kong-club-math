@@ -2,15 +2,15 @@
 
 This is an example of a simple lines-game-win
 
-Wilds have multipliers in the freeGame and have the effect of multiplying a given line win the addition multiplier values attached to Wild symbols, 
+Wilds have multipliers in the freeGame and have the effect of multiplying a given line win by the addition multiplier of values attached to Wild symbols, 
 only when the multiplier value is > 1.
 
 Basegame:
 Scatter Symbols appear on all reels, a minimum of 3 Scatters are needed to trigger the Freegame
 
 FreeGame:
-A separate reelset is used for the freegame 
-Wilds have larger multipliers in the freegame (minimum of 2x) and appear on all reels
+A separate reelstrip is used for the freegame 
+Wilds have larger multipliers (minimum of 2x) and appear on all reels
 2 Scatters are needed to trigger extra spins, appearing only on reels 2,3,4
 
 

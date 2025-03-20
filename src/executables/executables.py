@@ -85,8 +85,8 @@ class Executables(Conditions, Tumble):
 
     def update_freespin(self) -> None:
         """Called before a new reveal during freegame."""
-        self.fs += 1
         update_freespin_event(self)
+        self.fs += 1
         self.win_manager.reset_spin_win()
         self.win_data = {}
 

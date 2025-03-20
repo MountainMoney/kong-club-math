@@ -14,11 +14,11 @@ if __name__ == "__main__":
     num_threads = 10
     rust_threads = 20
     batching_size = 50000
-    compression = True
+    compression = False
     profiling = False
 
     num_sim_args = {
-        "base": int(1e4),
+        "base": int(1e2),
     }
 
     run_conditions = {

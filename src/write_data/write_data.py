@@ -6,7 +6,7 @@ import os
 import hashlib
 import json
 import ast
-import zstandard
+import zstandard as zstd
 
 
 def get_sha_256(file_to_hash: str):
@@ -268,12 +268,15 @@ def output_lookup_and_force_files(
 def write_json(gamestate, filename: str):
     """Convert the list of dictionaries to a JSON-encoded string and compress it in chunks."""
     if filename.split(".")[-1] == "zst":
+        combined_data = "\n".join(json.dumps(item) for item in list(gamestate.library.values()))
+        compressor = zstd.ZstdCompressor()
+        compressed_data = compressor.compress(combined_data.encode("UTF-8"))
         with open(filename, "wb") as f:
-            for item in list(gamestate.library.values()):
-                f.write(zstandard.compress(json.dumps(item).encode("UTF-8")) + b"\n")
+            f.write(compressed_data)
     else:
         with open(filename, "w", encoding="UTF-8") as f:
-            f.write(json.dumps(list(gamestate.library.values())))
+            for item in list(gamestate.library.values()):
+                f.write(json.dumps(item) + "\n")
 
 
 def print_recorded_wins(gamestate: object, name: str = ""):
