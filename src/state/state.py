@@ -247,11 +247,13 @@ class GeneralGameState(ABC):
             flush=True,
         )
 
+        last_file_write = thread_index == total_threads - 1 and repeat_count == total_repeats - 1
         write_json(
             self,
             self.output_files.get_temp_multi_thread_name(
                 betmode, thread_index, repeat_count, (compress) * True + (not compress) * False
             ),
+            last_file_write,
         )
         print_recorded_wins(self, self.output_files.get_temp_force_name(betmode, thread_index, repeat_count))
         make_lookup_tables(self, self.output_files.get_temp_lookup_name(betmode, thread_index, repeat_count))

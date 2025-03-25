@@ -10,9 +10,10 @@ def decompress(input_path: str):
     def json_validate(json_blob):
         """Validate each uncompressed result to ensure valid json format."""
         try:
-            _ = json.load(json_blob)
+            _ = json.loads(json_blob)
         except json.decoder.JSONDecodeError:
             print("Invalid JSON!")
+            raise RuntimeError("Invalid JSON")
 
     decompressor = zstd.ZstdDecompressor()
     with open(input_path, "rb") as f:

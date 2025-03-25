@@ -7,6 +7,7 @@ import hashlib
 import json
 import ast
 import zstandard as zstd
+import jsonlines
 
 
 def get_sha_256(file_to_hash: str):
@@ -151,7 +152,8 @@ def output_lookup_and_force_files(
         ) as outfile:
             for filename in file_list:
                 with open(filename, "rb") as infile:
-                    outfile.write(infile.read())
+                    while chunk := infile.read(4096):  # Read in chunks
+                        outfile.write(chunk)
     else:
         with open(
             gamestate.output_files.get_final_book_name(betmode, False),
@@ -244,10 +246,15 @@ def output_lookup_and_force_files(
                 outfile.write(infile.read())
 
 
-def write_json(gamestate, filename: str):
+def write_json(gamestate, filename: str, last_file_write: bool):
     """Convert the list of dictionaries to a JSON-encoded string and compress it in chunks."""
-    if filename.split(".")[-1] == "zst":
-        combined_data = "\n".join(json.dumps(item) for item in list(gamestate.library.values()))
+    json_objects = [json.dumps(item) for item in gamestate.library.values()]
+
+    if filename.endswith(".zst"):
+        combined_data = "\n".join(json_objects)
+        if not last_file_write:
+            combined_data += "\n"
+
         compressor = zstd.ZstdCompressor()
         compressed_data = compressor.compress(combined_data.encode("UTF-8"))
         with open(filename, "wb") as f:
@@ -255,7 +262,7 @@ def write_json(gamestate, filename: str):
     else:
         with open(filename, "w", encoding="UTF-8") as f:
             for item in list(gamestate.library.values()):
-                f.write(json.dumps(item) + "\n")
+                f.write(json.dumps(item))
 
 
 def print_recorded_wins(gamestate: object, name: str = ""):
