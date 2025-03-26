@@ -7,7 +7,6 @@ import hashlib
 import json
 import ast
 import zstandard as zstd
-import jsonlines
 
 
 def get_sha_256(file_to_hash: str):
@@ -146,14 +145,24 @@ def output_lookup_and_force_files(
             )
 
     if compress:
-        with open(
-            gamestate.output_files.get_final_book_name(betmode, True),
-            "wb",
-        ) as outfile:
-            for filename in file_list:
-                with open(filename, "rb") as infile:
-                    while chunk := infile.read(4096):  # Read in chunks
-                        outfile.write(chunk)
+        # Write a temporary file
+        with open(gamestate.output_files.book_path + "/temp_book_output.json", "w", encoding="UTF-8") as outfile:
+            for idx, fname in enumerate(file_list):
+                with open(fname, "rb") as infile:
+                    decompressed = zstd.ZstdDecompressor().decompress(infile.read())
+                    outfile.write(decompressed.decode("UTF-8"))
+                    if idx < len(file_list) - 1:
+                        outfile.write("\n")
+
+        final_out = gamestate.output_files.get_final_book_name(betmode, True)
+        with open(gamestate.output_files.book_path + "/temp_book_output.json", "rb") as f_in, open(
+            final_out, "wb"
+        ) as f_out:
+            f_out.write(zstd.ZstdCompressor().compress(f_in.read()))
+
+        os.remove(
+            gamestate.output_files.book_path + "/temp_book_output.json",
+        )
     else:
         with open(
             gamestate.output_files.get_final_book_name(betmode, False),
@@ -246,23 +255,19 @@ def output_lookup_and_force_files(
                 outfile.write(infile.read())
 
 
-def write_json(gamestate, filename: str, last_file_write: bool):
+def write_json(gamestate, filename: str):
     """Convert the list of dictionaries to a JSON-encoded string and compress it in chunks."""
     json_objects = [json.dumps(item) for item in gamestate.library.values()]
+    combined_data = "\n".join(json_objects)
 
     if filename.endswith(".zst"):
-        combined_data = "\n".join(json_objects)
-        if not last_file_write:
-            combined_data += "\n"
-
         compressor = zstd.ZstdCompressor()
         compressed_data = compressor.compress(combined_data.encode("UTF-8"))
         with open(filename, "wb") as f:
             f.write(compressed_data)
     else:
         with open(filename, "w", encoding="UTF-8") as f:
-            for item in list(gamestate.library.values()):
-                f.write(json.dumps(item))
+            f.write(combined_data)
 
 
 def print_recorded_wins(gamestate: object, name: str = ""):
