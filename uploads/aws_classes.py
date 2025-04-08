@@ -59,24 +59,26 @@ class check_files:
         lut_base_path = "games/" + self.game + "/library/"
         mode_params = {}
         try:
-            mode_params["EXPECTED_FORCE_SHA"] = read_json["standardforce_file"]["sha256"]
+            mode_params["EXPECTED_FORCE_SHA"] = read_json["standardForceFile"]["sha256"]
             mode_params["ACTUAL_FORCE_SHA"] = self.get_lut_sha(
-                lut_base_path + "forces/", read_json["standardforce_file"]["file"]
+                lut_base_path + "forces/", read_json["standardForceFile"]["file"]
             )
 
             for mode, _ in enumerate(game_modes):
 
                 mode_params["MODE"] = game_modes[mode]
-                mode_params["LUT"] = bookshelf[mode]["tables"]["file"]
+                mode_params["LUT"] = bookshelf[mode]["tables"][0]["file"]
 
                 mode_params["EXPECTED_LUT_LENGTH"] = int(bookshelf[mode]["bookLength"])
                 mode_params["ACTUAL_LUT_LENGTH"] = int(
-                    self.get_lut_length(lut_base_path + "lookup_tables/", bookshelf[mode]["tables"]["file"])
+                    self.get_lut_length(
+                        lut_base_path + "lookup_tables/", bookshelf[mode]["tables"][0]["file"].split("/")[-1]
+                    )
                 )
 
-                mode_params["EXPECTED_SHA"] = bookshelf[mode]["tables"]["sha256"]
+                mode_params["EXPECTED_SHA"] = bookshelf[mode]["tables"][0]["sha256"]
                 mode_params["ACTUAL_SHA"] = self.get_lut_sha(
-                    lut_base_path + "Lookup_tables/", bookshelf[mode]["tables"]["file"]
+                    lut_base_path + "Lookup_tables/", bookshelf[mode]["tables"][0]["file"].split("/")[-1]
                 )
 
                 all_check_items.append(mode_params)

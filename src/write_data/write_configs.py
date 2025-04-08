@@ -44,7 +44,7 @@ def make_manifest(gamestate: object):
             mode_obj = defaultdict(str)
             mode_obj["name"] = bm["name"]
             mode_obj["books"] = "/" + bm["booksFile"]["file"]
-            mode_obj["weights"] = "/" + bm["tables"]["file"]
+            mode_obj["weights"] = "/" + bm["tables"][0]["file"]
 
             manifest_object["files"].append(mode_obj)
 
@@ -302,7 +302,7 @@ def make_be_config(gamestate):
     be_info["betDenomination"] = int(config.min_denomination * 100 * 100)
     be_info["minDenomination"] = int(config.min_denomination * 100)
     be_info["providerNumber"] = int(config.provider_number)
-    be_info["standardforce_file"] = {
+    be_info["standardForceFile"] = {
         "file": "force.json",
         "sha256": get_hash(str.join("/", [gamestate.output_files.force_path, "force.json"])),
     }
@@ -321,7 +321,7 @@ def make_be_config(gamestate):
         booklength = get_lookup_length(lut_table)
         dic = {
             "name": bet.get_name(),
-            "tables": {"file": lut_table, "sha256": lut_sha_value},
+            "tables": [{"file": lut_table, "sha256": lut_sha_value}],
             "cost": bet.get_cost(),
             "rtp": bet.get_rtp(),
             "std": std_val,
@@ -345,7 +345,7 @@ def make_be_config(gamestate):
             "file": gamestate.output_files.books[bet.get_name()]["names"]["books_compressed"],
             "sha256": data_sha,
         }
-        dic["force_file"] = {
+        dic["forceFile"] = {
             "file": gamestate.output_files.force[bet.get_name()]["names"]["force_record"],
             "sha256": force_sha,
         }
