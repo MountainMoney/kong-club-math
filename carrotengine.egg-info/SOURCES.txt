@@ -49,6 +49,7 @@ uploads/aws_classes.py
 uploads/aws_constants.py
 uploads/aws_upload.py
 utils/__init__.py
+utils/decompress_zstd.py
 utils/get_file_hash.py
 utils/swap_lookups.py
 utils/analysis/__init__.py
