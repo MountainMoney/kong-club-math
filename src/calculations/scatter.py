@@ -2,7 +2,7 @@
 
 from typing import List, Dict
 from collections import defaultdict
-from src.calculations.board import Board
+from src.calculations.symbol import Symbol
 from src.config.config import Config
 
 
@@ -34,7 +34,7 @@ class Scatter:
     @staticmethod
     def get_scatterpay_wins(
         config: Config,
-        board: Board,
+        board: list[list[Symbol]],
         wild_key: str = "wild",
         multiplier_key: str = "multiplier",
         global_multiplier: int = 1,

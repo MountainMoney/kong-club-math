@@ -2,6 +2,7 @@ from collections import defaultdict
 from abc import ABC
 from typing import List, Dict
 from src.calculations.board import Board
+from src.calculations.symbol import Symbol
 from src.config.config import Config
 from src.wins.multiplier_strategy import apply_mult
 
@@ -24,7 +25,7 @@ class Cluster:
         return (reel_to_overlay, row_to_overlay)
 
     @staticmethod
-    def get_neighbours(board: Board, reel: int, row: int, local_checked: list) -> list:
+    def get_neighbours(board: list[list[Symbol]], reel: int, row: int, local_checked: list) -> list:
         """All neighbouring symbols within board range."""
         neighbours = []
         if reel > 0:
@@ -46,7 +47,7 @@ class Cluster:
         return neighbours
 
     @staticmethod
-    def in_cluster(board: Board, reel: int, row: int, og_symbol: str, wild_key: str = "wild") -> bool:
+    def in_cluster(board: list[list[Symbol]], reel: int, row: int, og_symbol: str, wild_key: str = "wild") -> bool:
         """Checks if a symbol (including wilds) match cluster type."""
         if board[reel][row].check_attribute(wild_key) or og_symbol == board[reel][row].name:
             return True
@@ -80,7 +81,7 @@ class Cluster:
                 )
 
     @staticmethod
-    def get_clusters(board: Board, wild_key: str = "wild") -> dict:
+    def get_clusters(board: list[list[Symbol]], wild_key: str = "wild") -> dict:
         """Return all symbol clusters of size >= 1."""
         already_checked = []
         clusters = defaultdict(list)
@@ -108,7 +109,7 @@ class Cluster:
     @staticmethod
     def evaluate_clusters(
         config: Config,
-        board: Board,
+        board: list[list[Symbol]],
         clusters: dict,
         global_multiplier: int = 1,
         multiplier_key: str = "multiplier",
@@ -161,7 +162,7 @@ class Cluster:
     @staticmethod
     def get_cluster_data(
         config: Config,
-        board: Board,
+        board: list[list[Symbol]],
         global_multiplier: int,
         multiplier_key: str = "multiplier",
         wild_key: str = "wild",

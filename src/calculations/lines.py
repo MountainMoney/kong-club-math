@@ -1,6 +1,6 @@
 """Evaluates and records winds for lines games."""
 
-from src.calculations.board import Board
+from src.calculations.symbol import Symbol
 from src.config.config import Config
 from src.wins.multiplier_strategy import apply_mult
 from src.events.events import (
@@ -26,7 +26,7 @@ class Lines:
 
     @staticmethod
     def get_lines(
-        board: Board,
+        board: list[list[Symbol]],
         config: Config,
         wild_key: str = "wild",
         wild_sym: str = "W",

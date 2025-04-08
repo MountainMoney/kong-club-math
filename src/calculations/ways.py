@@ -1,7 +1,7 @@
 """Ways wins executables/calculations."""
 
 from collections import defaultdict
-from src.calculations.board import Board
+from src.calculations.symbol import Symbol
 from src.config.config import Config
 from src.wins.multiplier_strategy import apply_mult
 from src.events.events import (
@@ -15,7 +15,9 @@ class Ways:
     """Collection of Ways-wins functions"""
 
     @staticmethod
-    def get_ways_data(config: Config, board: Board, wild_key: str = "wild", multiplier_key="multiplier"):
+    def get_ways_data(
+        config: Config, board: list[list[Symbol]], wild_key: str = "wild", multiplier_key="multiplier"
+    ):
         """Ways calculation with possibility for global multiplier application."""
         return_data = {
             "totalWin": 0,
