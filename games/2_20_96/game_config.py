@@ -158,7 +158,7 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"WCAP": 1},
+                                self.freegame_type: {"FR0": 100, "WCAP": 1},
                             },
                             "wr_mult_values": {2: 200, 3: 100, 4: 50, 5: 30, 10: 10},
                             "wc_mult_values": {2: 150, 3: 75, 4: 35, 5: 25, 10: 10, 20: 5},
@@ -241,7 +241,7 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"WCAP": 1},
+                                self.freegame_type: {"FR0": 50, "WCAP": 1},
                             },
                             "wr_mult_values": {2: 200, 3: 100, 4: 50, 5: 30, 10: 10},
                             "wc_mult_values": {2: 150, 3: 75, 4: 35, 5: 25, 10: 10, 20: 5},
@@ -444,7 +444,7 @@ class GameConfig(Config):
                         conditions={
                             "reel_weights": {
                                 self.basegame_type: {"BR0": 1},
-                                self.freegame_type: {"WCAP": 1},
+                                self.freegame_type: {"FR0": 50, "WCAP": 1},
                             },
                             "wr_mult_values": {2: 200, 3: 100, 4: 50, 5: 30, 10: 10},
                             "wc_mult_values": {2: 150, 3: 75, 4: 35, 5: 25, 10: 10, 20: 5},

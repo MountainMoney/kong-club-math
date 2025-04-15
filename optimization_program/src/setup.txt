@@ -1,5 +1,5 @@
-game_name;0_0_lines
-bet_type;base
+game_name;2_20_96
+bet_type;ante
 num_show_pigs;5000
 num_pigs_per_fence;10000
 threads_for_fence_construction;20

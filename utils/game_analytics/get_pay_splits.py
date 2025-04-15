@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+import os
 
 def get_unoptimized_hits(lut_path, all_modes, win_ranges):
     """Calculate hit-rates of simulation output lookup table."""
@@ -132,7 +132,7 @@ def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
 
 def return_all_filepaths(game_id: str, mode: str):
     """Return file files required for PAR sheet generation."""
-    lut_path = str.join("/", ["games", game_id, "library", "lookup_tables", f"lookUpTable_{mode}_0.csv"])
-    split_path = str.join("/", ["games", game_id, "library", "lookup_tables", f"lookUpTableSegmented_{mode}.csv"])
+    lut_path = os.path.join("library", "lookup_tables", f"lookUpTable_{mode}_0.csv")
+    split_path = os.path.join("library", "lookup_tables", f"lookUpTableSegmented_{mode}.csv")
 
     return lut_path, split_path
