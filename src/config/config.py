@@ -140,8 +140,8 @@ class Config:
     def construct_paths(self, game_id: str) -> None:
         """Assign all output file paths"""
         assert len(game_id.split("_")) == 3, "provider_gameNumber_rtp"
-        self.reels_path = str.join("/", ["games", self.game_id, "reels"])
-        self.library_path = str.join("/", ["games", self.game_id, "library"])
+        self.reels_path = "reels"
+        self.library_path = "library"
 
     def check_folder_exists(self, folder_path: str) -> None:
         """Check if target folder exists, and create if it does not."""

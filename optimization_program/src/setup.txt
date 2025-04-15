@@ -10,5 +10,5 @@ test_spins_weights;[0.3,0.4,0.3]
 simulation_trials;5000
 graph_indexes;0
 run_1000_batch;False
-path_to_games;/Users/DeclanArmstrong/GitRepos/math-sdk/games/
+path_to_games;/home/kalo/workspace/carrot/math-sdk/games
 pmb_rtp;1.0
