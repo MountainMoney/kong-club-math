@@ -1,5 +1,5 @@
 site_name: Carrot Software Development Kit (SDK)
-site_url: https://github.com/twist-gaming/carrot-math-engine
+site_url: https://carrot-engineering.github.io/math-sdk/
 theme:
   favicon: assets/small_carrot.svg
   logo: assets/big_carrot.svg
