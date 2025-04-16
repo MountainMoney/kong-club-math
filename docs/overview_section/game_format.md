@@ -90,7 +90,7 @@ Each `BetMode` should likewise be set explicitly, defining the cost, rtp maximum
 
 ## Gamestate file
 
-When any simulation is run, the entry point will be the `run_spin()` function, which lives in the `GameState` class. `GameExecuatables` and `GameCalculations` are child classes of `GameState` and also deal with game specific logic.
+When any simulation is run, the entry point will be the `run_spin()` function, which lives in the `GameState` class. `GameExecutables` and `GameCalculations` are child classes of `GameState` and also deal with game specific logic.
 
 The generic structure would follow the format:
 ```python

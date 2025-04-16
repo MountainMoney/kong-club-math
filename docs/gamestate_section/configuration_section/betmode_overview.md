@@ -1,5 +1,5 @@
 All valid bet-modes are defined in the array `self.bet_modes = [ ...]` 
-The `BetMode` class is an important configuration for when setting up game the behaviour of a game. A full description of all features is defined [here](../../source_section/config_info.md)
+The `BetMode` class is an important configuration for when setting up game the behavior of a game. A full description of all features is defined [here](../../source_section/config_info.md)
 
 This class is used to set maximum win amounts, RTP, bet cost, and distribution conditions. Additional noteworthy tags are:
 

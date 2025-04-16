@@ -2,7 +2,7 @@
 
 Events are the JSON objects returned from the RGS `play/` API and make up the vast majority of data with a game's *library*. Events contain all information required by the front-end to display the current state of the game. Anything not contained within or implied by the events cannot be shown to the player. For a typical game this includes, but is not limited to
 
-* Active gameboard symbols
+* Active game-board symbols
 * Freespin counters
 * Win counters
 * Symbol win information

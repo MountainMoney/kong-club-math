@@ -11,7 +11,7 @@ Scatter-pays (pay-anywhere) games award wins based on the total number of like-s
 Ranges defined in `min_combination` and `max_combination` are inclusive, so for example if the `8-kind` payout for symbol `H1` pays `10x`, this would be written as: `((8,8),H1): 10`.
 
 
-Often (though not always) Scatter pays games are also cascading/tumbling. Within the [scatter sample game](../sample_section/sample_games.md) for example, while there are still winning combinations, the board is tumbled, wins are evaluated for the new board, the wallet manager is updated and relevent events are emitted:
+Often (though not always) Scatter pays games are also cascading/tumbling. Within the [scatter sample game](../sample_section/sample_games.md) for example, while there are still winning combinations, the board is tumbled, wins are evaluated for the new board, the wallet manager is updated and relevant events are emitted:
 ```python
     while self.win_data["totalWin"] > 0 and not (self.wincap_triggered):
         self.tumble_game_board()

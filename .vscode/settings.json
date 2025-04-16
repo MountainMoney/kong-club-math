@@ -1,5 +1,10 @@
 {
     "yaml.schemas": {
         "https://json.schemastore.org/mkdocs-1.6.json": "file:///Users/DeclanArmstrong/GitRepos/carrot-math-engine/mkdocs.yml"
-    }
+    },
+    "cSpell.words": [
+        "reelset",
+        "reelstop",
+        "Reelstrips"
+    ]
 }

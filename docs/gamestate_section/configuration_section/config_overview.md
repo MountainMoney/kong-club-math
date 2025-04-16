@@ -5,7 +5,7 @@ The GameState object requires certain parameters to be specified, and should be 
 
 General aspects of the game setup which should be considered when creating a `game_config.py` are:
 
-#### Gametypes
+#### Game-types
 
 Several parts of the engine such as win amount verification, special symbol triggers/attributes and win-levels require the engine to know if the current state of the game is in the *basegame* or *freegame*. For example it is common to perform a weighted draw of some value:
  ```python
@@ -21,7 +21,7 @@ Typically special rules apply when the player enters a freegame. The configurati
 
 #### Reels 
 
-Most games will use distinct reelstrips for different gametypes. It is commonplace for game-modes to have multiple possible reels per mode. One method of adjusting the overall RTP of a game is to have a multiple reelstrips with varying RTP, which can be selected from a weighted draw when calling `self.create_board_from_reelstrips()`. Reelstrips are stored as a dictionary in the `self.config.reels` object. The reelstrip key and csv file name should be specified:
+Most games will use distinct reelstrips for different game-types. It is commonplace for game-modes to have multiple possible reels per mode. One method of adjusting the overall RTP of a game is to have a multiple reelstrips with varying RTP, which can be selected from a weighted draw when calling `self.create_board_from_reelstrips()`. Reelstrips are stored as a dictionary in the `self.config.reels` object. The reelstrip key and csv file name should be specified:
 ```python
         reels = {"BR0": "BR0.csv", "FR0": "FR0.csv"}
         self.reels = {}
@@ -70,4 +70,4 @@ Where `kind` is the number of winning symbols. For cascading games, or other cir
 
 #### Special symbols 
 
-Special symbol attributes are assigned based on names appearing in `self.special_symbols = {attribute[str]: [name[str], ...]}`. Multiple symbols can share attributes and multiple attributes can be applied to the same symbol. Most games will at least have a `wild` and `scatter` attribute. Once the symbol is initialised, the value of the attribute is accessed through `symbol.attribute` or symbol.get_attribute(attribute) [see Symbols for more information]('gamestate_section/syms_board_section/symbol_info.md') regarding symbol object structures. By default the attribute is set to `True`, unless otherwise overridden using the `gamestate.special_symbol_functions`, defined in the gamestate override.
+Special symbol attributes are assigned based on names appearing in `self.special_symbols = {attribute[str]: [name[str], ...]}`. Multiple symbols can share attributes and multiple attributes can be applied to the same symbol. Most games will at least have a `wild` and `scatter` attribute. Once the symbol is initialized, the value of the attribute is accessed through `symbol.attribute` or symbol.get_attribute(attribute) [see Symbols for more information]('gamestate_section/syms_board_section/symbol_info.md') regarding symbol object structures. By default the attribute is set to `True`, unless otherwise overridden using the `gamestate.special_symbol_functions`, defined in the gamestate override.

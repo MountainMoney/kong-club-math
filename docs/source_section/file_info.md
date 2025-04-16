@@ -11,12 +11,12 @@ The uncompressed `books/` files are used within the front-end testing framework 
 
 ### Force files
 
-Each bet mode will output a file of the format `force_mode.json`. Every time the `.record()` function is called, the decription keys used as input are appended to the file. If the key already exists, the `book-id` is appended to the array. This file is used to count instances of particular events. The optimisation algorithm also makes use of these keys to identify max-win and freegame books. Once all bet mode simulations are finished, a `force.json` file is output which contains all the unique fields and keys.
+Each bet mode will output a file of the format `force_mode.json`. Every time the `.record()` function is called, the description keys used as input are appended to the file. If the key already exists, the `book-id` is appended to the array. This file is used to count instances of particular events. The optimization algorithm also makes use of these keys to identify max-win and freegame books. Once all bet mode simulations are finished, a `force.json` file is output which contains all the unique fields and keys.
 
 
 ### Lookup tables
 
-The final payout multiplier for each simulation is summarised in the `lookUpTable_mode.csv`. This is the file accessed by the optimization algorithm, which works by adjusting the weights, initially assigned to `1`. There is also a `IdToCriteria` file which indicates the win criteria required by a specific simulation number, and a `Segmented` file used to identify what gametype contributed to the final payout multiplier. Both these additional files are not typically uploaded to the ACP and are instead used for various analysis functions.
+The final payout multiplier for each simulation is summarized in the `lookUpTable_mode.csv`. This is the file accessed by the optimization algorithm, which works by adjusting the weights, initially assigned to `1`. There is also a `IdToCriteria` file which indicates the win criteria required by a specific simulation number, and a `Segmented` file used to identify what gametype contributed to the final payout multiplier. Both these additional files are not typically uploaded to the ACP and are instead used for various analysis functions.
 
 
 ### Config files

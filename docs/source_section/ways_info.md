@@ -9,7 +9,7 @@ The ways calculation will search for like-symbols (or Wilds) on consecutive reel
 Note: the ways calculation does not account for Wild symbols appearing on the first reel. 
 
 
-The Ways evaluation takes also takes into account multiplier values attached to symbols containing the `multiplier` attribute. Unlike lines calculations where multiplier values are added together for symbols on consecutive reels, the total number of ways is instead multiplied by the multiplier value. Leading to the payout amount to grow substancially more quickly. So for example given the board:
+The Ways evaluation takes also takes into account multiplier values attached to symbols containing the `multiplier` attribute. Unlike lines calculations where multiplier values are added together for symbols on consecutive reels, the total number of ways is instead multiplied by the multiplier value. Leading to the payout amount to grow substantially more quickly. So for example given the board:
 ```sh
 L5 H1 L4 L4 L4 
 L1 H4 L3 H2 L4 
