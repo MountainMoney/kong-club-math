@@ -1,5 +1,5 @@
-game_name;2_20_96
-bet_type;ante
+game_name;0_0_lines
+bet_type;base
 num_show_pigs;5000
 num_pigs_per_fence;10000
 threads_for_fence_construction;20
@@ -10,5 +10,5 @@ test_spins_weights;[0.3,0.4,0.3]
 simulation_trials;5000
 graph_indexes;0
 run_1000_batch;False
-path_to_games;/home/kalo/workspace/carrot/math-sdk/games
+path_to_games;/Users/DeclanArmstrong/GitRepos/math-sdk/games/
 pmb_rtp;1.0
