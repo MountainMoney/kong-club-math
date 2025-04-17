@@ -7,7 +7,7 @@ use rayon::prelude::*;
 use std::env;
 use std::hash::{Hash, Hasher};
 use std::mem;
-use std::path;
+use std::path::{self, Path, PathBuf};
 use std::{
     cmp::Ordering, collections::HashMap, fmt::format, fs, fs::File, io::BufWriter, io::Write,
     time::Instant,
@@ -368,14 +368,11 @@ fn print_information(
             pmb_rtp,
         );
         {
-            let file_path = path_to_games.clone()
-                + &game_name
-                + "/library/optimization_files/trial_results/"
-                + &bet_type
-                + "_0_"
-                + &(pig_index + 1).to_string()
-                + ".csv";
-
+            let file_path = Path::new(&path_to_games)
+                .join(game_name.clone())
+                .join("library")
+                .join("optimization_files")
+                .join(format!("{}_0_{}.csv", bet_type, pig_index + 1));
             // let mut file = File::create(file_path).expect("Failed to create file");
             let mut file = BufWriter::new(File::create(file_path).unwrap());
             for (_index, value) in succuss_vals.iter().enumerate() {
@@ -433,11 +430,11 @@ fn print_information(
         rtp = rtp / sum_dist;
         if pig_index == 0 {
             {
-                let file_path = path_to_games.to_string()
-                    + &game_name
-                    + "/library/lookup_tables/lookUpTable_"
-                    + &bet_type
-                    + "_0.csv";
+                let file_path = Path::new(&path_to_games)
+                    .join(&game_name)
+                    .join("library")
+                    .join("lookup_tables")
+                    .join(format!("lookUpTable_{}_0.csv", bet_type));
 
                 // let mut file = File::create(file_path).expect("Failed to create file");
                 let mut file = BufWriter::new(File::create(file_path).unwrap());
@@ -450,13 +447,11 @@ fn print_information(
             }
         }
         {
-            let file_path = path_to_games.to_string()
-                + &game_name
-                + "/library/optimization_files/"
-                + &bet_type
-                + "_0_"
-                + &(pig_index + 1).to_string()
-                + ".csv";
+            let file_path = Path::new(&path_to_games)
+                .join(&game_name)
+                .join("library")
+                .join("optimization_files")
+                .join(format!("{}_0_{}.csv", bet_type, pig_index + 1));
             // let mut file = File::create(file_path).expect("Failed to create file");
             let mut file = BufWriter::new(File::create(file_path).unwrap());
             write!(file, "Name,Pig{}\n", (pig_index + 1)).expect("Failed to write to file");

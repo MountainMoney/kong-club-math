@@ -27,9 +27,9 @@ def get_sha_256(file_to_hash: str):
 
 
 def make_force_json(gamestate: object):
-    """Construct fore-file from recorded description keys."""
+    """Construct force-file from recorded description keys."""
     folder_path = gamestate.config.force_path
-    force_file_path = str.join("/", [folder_path, "force.json"])
+    force_file_path = os.path.join(folder_path, "force.json")
 
     if os.path.isfile(force_file_path) and os.path.getsize(force_file_path) > 0:
         try:
@@ -62,6 +62,7 @@ def make_force_json(gamestate: object):
 
     with open(force_file_path, "w", encoding="UTF-8") as force_file:
         json.dump(force_data, force_file, indent=4)
+
 
 
 def get_force_options(force_results: dict):
@@ -118,7 +119,7 @@ def write_library_events(gamestate: object, library: list, gametype: str):
                 event_items[lib_event] = dict_details
     json_object = json.dumps(event_items, indent=4)
     with open(
-        str.join("/", [gamestate.output_files.config_path, "event_config_" + gametype + ".json"]),
+        os.path.join(gamestate.output_files.config_path, f"event_config_{gametype}.json"),
         "w",
         encoding="UTF-8",
     ) as f:
@@ -146,7 +147,8 @@ def output_lookup_and_force_files(
 
     if compress:
         # Write a temporary file
-        with open(gamestate.output_files.book_path + "/temp_book_output.json", "w", encoding="UTF-8") as outfile:
+        temp_book_output_path = os.path.join(gamestate.output_files.book_path, "temp_book_output.json")
+        with open(temp_book_output_path, "w", encoding="UTF-8") as outfile:
             for idx, fname in enumerate(file_list):
                 with open(fname, "rb") as infile:
                     decompressed = zstd.ZstdDecompressor().decompress(infile.read())
@@ -155,14 +157,10 @@ def output_lookup_and_force_files(
                         outfile.write("\n")
 
         final_out = gamestate.output_files.get_final_book_name(betmode, True)
-        with open(gamestate.output_files.book_path + "/temp_book_output.json", "rb") as f_in, open(
-            final_out, "wb"
-        ) as f_out:
+        with open(temp_book_output_path, "rb") as f_in, open(final_out, "wb") as f_out:
             f_out.write(zstd.ZstdCompressor().compress(f_in.read()))
 
-        os.remove(
-            gamestate.output_files.book_path + "/temp_book_output.json",
-        )
+        os.remove(temp_book_output_path)
     else:
         with open(
             gamestate.output_files.get_final_book_name(betmode, False),
@@ -204,16 +202,12 @@ def output_lookup_and_force_files(
         force_results_dict_just_for_rob.append(force_dict)
 
     json_object_for_rob = json.dumps(force_results_dict_just_for_rob, indent=4)
-    file = open(
-        str.join("/", [gamestate.output_files.force_path, "force_record_" + betmode + ".json"]),
-        "w",
-        encoding="UTF-8",
-    )
-    file.write(json_object_for_rob)
-    file.close()
+    force_record_path = os.path.join(gamestate.output_files.force_path, f"force_record_{betmode}.json")
+    with open(force_record_path, "w", encoding="UTF-8") as file:
+        file.write(json_object_for_rob)
 
     forceResultKeys = get_force_options(force_results_dict)
-    json_file_path = str.join("/", [gamestate.output_files.force_path, "force.json"])
+    json_file_path = os.path.join(gamestate.output_files.force_path, "force.json")
     try:
         with open(json_file_path, "r", encoding="UTF-8") as file:
             data = json.load(file)
@@ -221,9 +215,9 @@ def output_lookup_and_force_files(
         data = {}
     data[gamestate.get_current_betmode().get_name()] = forceResultKeys
     json_object = json.dumps(data, indent=4)
-    file = open(str.join("/", [gamestate.output_files.force_path, "force.json"]), "w", encoding="UTF-8")
-    file.write(json_object)
-    file.close()
+    with open(json_file_path, "w", encoding="UTF-8") as file:
+        file.write(json_object)
+
     weights_plus_wins_file_list = []
     segmented_lut_file_list = []
     print("Saving LUTs for", game_id, "in", betmode)
