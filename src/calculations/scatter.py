@@ -58,7 +58,7 @@ class Scatter:
         # Update all symbol positions with wilds, as this symbol is shared
         for sym in symbols_on_board:
             if len(wild_positions) > 0:
-                symbols_on_board[sym].append(wild_positions)
+                symbols_on_board[sym].extend(wild_positions)
             win_size = len(symbols_on_board[sym])
             if (win_size, sym) in config.paytable:
                 symbol_mult = 0

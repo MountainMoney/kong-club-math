@@ -50,7 +50,7 @@ This position is calculated as the board position closest to the  centre-of-mass
 
 ### Wallet manager
 
-When writing game logic, the intent is to have a clear seperation of logic, events and wins for clarity. The wins are all handled through a `WalletManager` class, which will handle outcomes from single spins while also keeping track of total cumulative win amount for RTP calculations, as well as which gametype the wins arise from.
+When writing game logic, the intent is to have a clear separation of logic, events and wins for clarity. The wins are all handled through a `WalletManager` class, which will handle outcomes from single spins while also keeping track of total cumulative win amount for RTP calculations, as well as which gametype the wins arise from.
 
 This can be seen in a typical gamestate `run_spin()` function where wins are calculated, the wallet is updated and corresponding win events are emitted:
 ```python
@@ -59,13 +59,13 @@ self.win_manager.update_spinwin(self.win_data["totalWin"])
 self.emit_linewin_events()
 ```
 
-Within a single spin there are wallet manager values associed with:
+Within a single spin there are wallet manager values associated with:
 
 1. `spin_win` 
     * This is the win associated with a specific `reveal` event. If the freegame is entered, this value is reset for each new spin. 
     * Updated using `wallet_manager.update_spinwin(win_amount: float)`
 2. `running_bet_win`
-    * This is the cumulative win amount for a simulation. The final value which the `running_bet_win` is updated with should match the `payout_multiplier` for that simuation. 
+    * This is the cumulative win amount for a simulation. The final value which the `running_bet_win` is updated with should match the `payout_multiplier` for that simulation. 
     * This value is automatically updated with the `wallet_manager.set_spinwin(win_amount: float)` method.
 3. `basegame_wins`/`freegame_wins`
     * This value is updated once all basegame actions are completed, or at the end of each freegame spin.

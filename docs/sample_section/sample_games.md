@@ -44,7 +44,7 @@ Standard ways game with 5-reels and 3-rows.
 Minimum of 3 Scatter symbols are needed to enter the freegame. Maximum of 1 Scatter per reel.
 
 #### Freegame rules
-Wild symbols have multipliers ranging from 1x to 5x. Multiplier values compound multiplicitivly (unlike lines games where multiplier values add)
+Wild symbols have multipliers ranging from 1x to 5x. Multiplier values compound multiplicatively (unlike lines games where multiplier values add)
 
 
 ## Cluster-based win game
@@ -65,7 +65,7 @@ A minimum of 3 scatters are required for re-triggers
 
 #### Notes:
 Because of the separation between basegame and freegame types - there is an additional freespin entry check to check of the criteria requires a forced 
-freespin condition. Otherwise, occurences of Scatter symbols tumbling onto the board during basegame criteria may appear.
+freespin condition. Otherwise, occurrences of Scatter symbols tumbling onto the board during basegame criteria may appear.
 
 
 ## Scatter-Pays Game
@@ -98,7 +98,7 @@ The total number of freegame is 2 * (number of Scatters on board). To account fo
 in the game_executables.py file.
 
 #### Event descriptions
-"winInfo" Summarises winning combinations. Includes multipliers, symbol positions, payInfo [passed for every tumble event]
+"winInfo" Summarizes winning combinations. Includes multipliers, symbol positions, payInfo [passed for every tumble event]
 "tumbleBanner" includes values from the cumulative tumble, with global mult applied
 "setWin" this the result for the entire spin (from on Reveal to the next). Applied after board has stopped tumbling
 "seTotalWin" the cumulative win for a round. In the base-game this will be equal to the setWin, but in the bonus it will incrementally increase 
@@ -133,7 +133,7 @@ No retriggers in freegame.
 
 This is a *hold em'* style game.
 The player can purchase a spin for 25x, and starts with 3 *lives*
-Each time a prize symbol lands on the board, the 3 avaliable spins reset. 
+Each time a prize symbol lands on the board, the 3 available spins reset. 
 Prizes are sticky and evaluated once the player has no new spins remaining. 
 
 This game has a purchase-only 'super-spin' mode. This mode can only be activated through a buy menu and cannot be accessed using Scatters like bonus-games

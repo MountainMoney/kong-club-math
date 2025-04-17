@@ -24,7 +24,7 @@ As seen in the [example games](../sample_section/sample_games.md), all games fol
     └── gamestate.py
     ```
 
-Sub-folders within library/ are automatically generated if they do not exist at the completion of the simulation. readme.txt is used for developer descriptions of game mechanics and miscellenous information relevant to that particular game.
+Sub-folders within library/ are automatically generated if they do not exist at the completion of the simulation. readme.txt is used for developer descriptions of game mechanics and miscellaneous information relevant to that particular game.
 
 While all commonly used engine functions are handled by classes within their respective src/ directory, every game is likely to be unique in some way and these game-files allow the user to override existing functions in order to add additional engine features to suit their use-case, or implement game-specific logic. 
 
