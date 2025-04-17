@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from warnings import warn
 import random
 
-from src.config.config import BetMode
+# from src.config.config import BetMode
 from src.wins.win_manager import WinManager
 from src.calculations.symbol import SymbolStorage
 from src.config.output_filenames import OutputFiles
@@ -94,7 +94,7 @@ class GeneralGameState(ABC):
         self.gametype = self.config.freegame_type
         self.win_manager.reset_spin_win()
 
-    def get_betmode(self, mode_name) -> BetMode:
+    def get_betmode(self, mode_name) -> object:
         """Return all current betmode information."""
         for betmode in self.config.bet_modes:
             if betmode.get_name() == mode_name:

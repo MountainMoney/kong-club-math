@@ -1,7 +1,6 @@
 """Set standard gamestate configuration with default values."""
 
 import os
-from src.config.betmode import BetMode
 
 
 class Config:

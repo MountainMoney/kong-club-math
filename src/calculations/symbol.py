@@ -4,7 +4,7 @@ from typing import Dict
 
 
 class SymbolStorage:
-    """Inital symbol generation from configuration file."""
+    """Initial symbol generation from configuration file."""
 
     def __init__(self, config: object, all_symbols: list):
         self.config = config
@@ -17,7 +17,7 @@ class SymbolStorage:
         return Symbol(self.config, symbol_name)
 
     def get_symbol(self, name: str) -> object:
-        """Retrive symbol class from name."""
+        """Retrieve symbol class from name."""
         if name not in self.symbols:
             self.symbols[name] = Symbol(self.config, name)
         return self.symbols[name]
