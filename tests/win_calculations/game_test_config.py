@@ -1,9 +1,3 @@
-"""Game-specific configuration file, inherits from src/config/config.py"""
-
-from src.config.distributions import Distribution
-from src.config.betmode import BetMode
-
-
 class GameConfig:
     """Testing game functions"""
 
@@ -16,7 +10,19 @@ class GameConfig:
         self.num_reels = 5
         self.num_rows = [5] * self.num_reels
         # Board and Symbol Properties
-        self.paytable = {(25, "W"): 100, (25, "H1"): 100}
+        self.paytable = {
+            (25, "W"): 100,
+            (20, "W"): 80,
+            (15, "W"): 50,
+            (25, "H1"): 80,
+            (20, "H1"): 50,
+            (15, "H1"): 20,
+            (10, "H1"): 10,
+            (25, "H2"): 70,
+            (20, "H2"): 15,
+            (15, "H2"): 5,
+            (10, "H2"): 3,
+        }
 
         self.paylines = {
             1: [
@@ -50,3 +56,7 @@ class GameConfig:
         }
 
         self.special_symbols = {"wild": ["W"], "scatter": ["S"], "multiplier": ["M"]}
+
+        self.bet_modes = []
+        self.basegame_type = "basegame"
+        self.freegame_type = "freegame"

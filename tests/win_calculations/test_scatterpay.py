@@ -1,14 +1,13 @@
 from tests.win_calculations.game_test_config import GameConfig
 from src.state.state import GeneralGameState
 from src.calculations.scatter import Scatter
-from src.calculations.symbol import Symbol
-from src.calculations.board import Board
 
 
-class TestGamestate(GeneralGameState):
+class GamestateTest(GeneralGameState):
     """Simple gamestate setup with abstract methods defined."""
 
     def __init__(self, config):
+        super().__init__(config)
         self.config = config
 
     def assign_special_sym_function(self):
@@ -39,28 +38,53 @@ class TestGamestate(GeneralGameState):
 def create_test_gamestate():
     """Boilerplate gamestate for testing."""
     test_config = GameConfig()
-    test_gamestate = TestGamestate(test_config)
+    test_gamestate = GamestateTest(test_config)
     test_gamestate.create_symbol_map()
     test_gamestate.assign_special_sym_function()
 
     return test_gamestate
 
 
-def test_scatterpay():
+def test_scatterpay_nowilds():
     gamestate = create_test_gamestate()
     gamestate.board = [
         [[] for _ in range(gamestate.config.num_rows[x])] for x in range(gamestate.config.num_reels)
     ]
     for idx, _ in enumerate(gamestate.board):
         for idy, _ in enumerate(gamestate.board[idx]):
-            if idy == 0:
+            gamestate.board[idx][idy] = gamestate.create_symbol("H1")
+
+    windata = Scatter.get_scatterpay_wins(gamestate.config, gamestate.board, global_multiplier=1)
+
+    assert windata["totalWin"] == 80
+
+
+def test_scatterpay_wilds():
+    gamestate = create_test_gamestate()
+    gamestate.board = [
+        [[] for _ in range(gamestate.config.num_rows[x])] for x in range(gamestate.config.num_reels)
+    ]
+    for idx, _ in enumerate(gamestate.board):
+        for idy, _ in enumerate(gamestate.board[idx]):
+            if idx == 0:
                 gamestate.board[idx][idy] = gamestate.create_symbol("W")
+            elif idx == 1:
+                gamestate.board[idx][idy] = gamestate.create_symbol("H2")
             else:
                 gamestate.board[idx][idy] = gamestate.create_symbol("H1")
 
     windata = Scatter.get_scatterpay_wins(gamestate.config, gamestate.board, global_multiplier=1)
 
-    print(gamestate)
+    for wd in windata["wins"]:
+        if wd["symbol"] == "H1":
+            assert wd["win"] == 50
+        elif wd["symbol"] == "H2":
+            assert wd["win"] == 3
+
+    assert windata["totalWin"] == 53
 
 
-test_scatterpay()
+if __name__ == "__main__":
+
+    test_scatterpay_nowilds()
+    test_scatterpay_wilds()
