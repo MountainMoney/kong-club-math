@@ -1,5 +1,6 @@
 """Game-specific configuration file, inherits from src/config/config.py"""
 
+import os
 from src.config.config import Config
 from src.config.distributions import Distribution
 from src.config.config import BetMode
@@ -219,7 +220,7 @@ class GameConfig(Config):
         reels = {"BR0": "BR0.csv", "FR0": "FR0.csv", "WCAP": "FRWCAP.csv"}
         self.reels = {}
         for r, f in reels.items():
-            self.reels[r] = self.read_reels_csv(str.join("/", [self.reels_path, f]))
+            self.reels[r] = self.read_reels_csv(os.path.join(self.reels_path, f))
 
         self.padding_reels[self.basegame_type] = self.reels["BR0"]
         self.padding_reels[self.freegame_type] = self.reels["FR0"]
