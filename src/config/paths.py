@@ -2,11 +2,10 @@
 
 import os
 
-ABS_PATH = os.path.abspath("../")
-ABS_PATH = ABS_PATH.replace("\\", "/")
+ABS_PATH = os.path.abspath(os.path.join("..", ""))
+PROJECT_PATH = os.path.abspath(os.path.join("..", ".."))
+PATH_TO_ENGINE = PROJECT_PATH
+PATH_TO_GAMES = os.path.join(PROJECT_PATH, "games")
+OPTIMIZATION_PATH = os.path.join(PROJECT_PATH, "optimization_program")
+SETUP_PATH = os.path.join(OPTIMIZATION_PATH, "src", "setup.txt")
 
-PATH_TO_ENGINE = os.path.join(ABS_PATH, "math-sdk")
-PATH_TO_GAMES = os.path.join(PATH_TO_ENGINE, "games/")
-
-OPTIMIZATION_PATH = "optimization_program/"
-SETUP_PATH = "optimization_program/src/setup.txt"

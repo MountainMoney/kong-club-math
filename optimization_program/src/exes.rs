@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use serde_json::Value;
 use std::error::Error;
-use std::path::{self, Path};
+use std::path::{self, Path, PathBuf};
 use std::{collections::HashMap, fs::File};
 
 ////////////////////////////////////
@@ -101,7 +101,11 @@ pub(crate) fn load_force_options(
     bet_type: &str,
     path_to_games: String,
 ) -> Vec<SearchResult> {
-    let file_path = path_to_games + game_name + "/library/forces/force_record_" + bet_type + ".json";
+    let file_path = Path::new(&path_to_games)
+        .join(game_name)
+        .join("library")
+        .join("forces")
+        .join(format!("force_record_{}.json", bet_type));
     let json_file_path = Path::new(&file_path);
     let file = File::open(json_file_path).expect("Unable to open force file");
     println!("json force path: {}", json_file_path.display());
@@ -111,7 +115,11 @@ pub(crate) fn load_force_options(
 }
 
 pub(crate) fn load_config_data(game_name: &str, path_to_games: String) -> ConfigData {
-    let file_path = path_to_games + game_name + "/library/configs/math_config.json";
+    let file_path = Path::new(&path_to_games)
+        .join(game_name)
+        .join("library")
+        .join("configs")
+        .join("math_config.json");
     let json_file_path = Path::new(&file_path);
     let file = File::open(json_file_path).expect("Unable to open force file");
     let config_data: ConfigData =
@@ -124,7 +132,11 @@ pub(crate) fn read_look_up_table(
     bet_type: &str,
     path_to_games: String,
 ) -> Result<HashMap<u32, LookUpTableEntry>, Box<dyn Error>> {
-    let file_path = path_to_games + game_name + "/library/Lookup_tables/lookUpTable_" + bet_type + ".csv";
+    let file_path = Path::new(&path_to_games)
+        .join(game_name)
+        .join("library")
+        .join("lookup_tables")
+        .join(format!("lookUpTable_{}.csv", bet_type));
     let csv_file_path = Path::new(&file_path);
     let file = File::open(csv_file_path)?;
     let mut rdr = ReaderBuilder::new().has_headers(false).from_reader(file);
