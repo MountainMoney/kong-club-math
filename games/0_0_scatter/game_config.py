@@ -1,7 +1,9 @@
+import os
 from src.config.config import Config
 from src.config.distributions import Distribution
 from src.write_data.force import *
 from src.config.betmode import BetMode
+from src.config.paths import PROJECT_PATH
 
 
 class GameConfig(Config):
@@ -15,6 +17,7 @@ class GameConfig(Config):
         return cls._instance
 
     def __init__(self):
+        os.chdir(PROJECT_PATH)
         super().__init__()
         self.game_id = "0_0_scatter"
         self.game_name = "sample_scatter"
@@ -100,7 +103,7 @@ class GameConfig(Config):
         reels = {"BR0": "BR0.csv", "FR0": "FR0.csv"}
         self.reels = {}
         for r, f in reels.items():
-            self.reels[r] = self.read_reels_csv(str.join("/", [self.reels_path, f]))
+            self.reels[r] = self.read_reels_csv(os.path.join(self.reels_path, f))
 
         self.padding_reels[self.basegame_type] = self.reels["BR0"]
         self.padding_reels[self.freegame_type] = self.reels["FR0"]

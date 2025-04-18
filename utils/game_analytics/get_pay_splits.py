@@ -1,12 +1,14 @@
+from src.config.paths import PATH_TO_GAMES
 from collections import defaultdict
 import os
+
 
 def get_unoptimized_hits(lut_path, all_modes, win_ranges):
     """Calculate hit-rates of simulation output lookup table."""
     all_modes_base_dist = defaultdict(lambda: defaultdict(int))
     total_mode_count = {}
     for mode in all_modes:
-        base_lut_file = lut_path + "/lookUpTable_" + str(mode) + ".csv"
+        base_lut_file = os.path.join(lut_path, "lookUpTable_" + str(mode) + ".csv")
         lut = open(base_lut_file, "r", encoding="UTF-8")
         counter = 0
         for line in lut:
@@ -132,7 +134,9 @@ def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
 
 def return_all_filepaths(game_id: str, mode: str):
     """Return file files required for PAR sheet generation."""
-    lut_path = os.path.join("library", "lookup_tables", f"lookUpTable_{mode}_0.csv")
-    split_path = os.path.join("library", "lookup_tables", f"lookUpTableSegmented_{mode}.csv")
+    lut_path = os.path.join(PATH_TO_GAMES, game_id, "library", "lookup_tables", f"lookUpTable_{mode}_0.csv")
+    split_path = os.path.join(
+        PATH_TO_GAMES, game_id, "library", "lookup_tables", f"lookUpTableSegmented_{mode}.csv"
+    )
 
     return lut_path, split_path
