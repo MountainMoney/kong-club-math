@@ -1,7 +1,8 @@
 """Set standard gamestate configuration with default values."""
 
-import os
 from src.config.betmode import BetMode
+from src.config.paths import PATH_TO_GAMES
+import os
 
 
 class Config:
@@ -140,8 +141,8 @@ class Config:
     def construct_paths(self, game_id: str) -> None:
         """Assign all output file paths"""
         assert len(game_id.split("_")) == 3, "provider_gameNumber_rtp"
-        self.reels_path = "reels"
-        self.library_path = "library"
+        self.reels_path = os.path.join(PATH_TO_GAMES, self.game_id, "reels")
+        self.library_path = os.path.join(PATH_TO_GAMES, self.game_id, "library")
 
     def check_folder_exists(self, folder_path: str) -> None:
         """Check if target folder exists, and create if it does not."""

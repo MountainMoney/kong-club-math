@@ -271,9 +271,7 @@ def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwarg
     elif not json_padding:
         json_info["paddingReels"] = gamestate.config.paddingReels
 
-    f_name = os.path.join(
-        gamestate.output_files.config_path, f"config_fe_{gamestate.config.game_id}.json"
-    )
+    f_name = os.path.join(gamestate.output_files.config_path, f"config_fe_{gamestate.config.game_id}.json")
     fe_json = open(f_name, "w", encoding="UTF-8")
     fe_json.write(json.dumps(json_info, indent=4))
     fe_json.close()
@@ -304,7 +302,7 @@ def make_be_config(gamestate):
     be_info["providerNumber"] = int(config.provider_number)
     be_info["standardForceFile"] = {
         "file": "force.json",
-        "sha256": get_hash(str.join("/", [gamestate.output_files.force_path, "force.json"])),
+        "sha256": get_hash(os.path.join(gamestate.output_files.force_path, "force.json")),
     }
 
     # Betmode specific data
