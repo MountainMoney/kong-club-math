@@ -3,6 +3,7 @@ from src.config.config import Config
 from src.config.distributions import Distribution
 from src.write_data.force import *
 from src.config.betmode import BetMode
+from src.config.paths import PROJECT_PATH
 
 
 class GameConfig(Config):
@@ -16,6 +17,7 @@ class GameConfig(Config):
         return cls._instance
 
     def __init__(self):
+        os.chdir(PROJECT_PATH)
         super().__init__()
         self.game_id = "0_0_scatter"
         self.game_name = "sample_scatter"

@@ -1,7 +1,7 @@
 import json
 import subprocess
 import os
-from src.config.paths import PATH_TO_GAMES, SETUP_PATH, OPTIMIZATION_PATH
+from src.config.paths import PATH_TO_GAMES, SETUP_PATH, OPTIMIZATION_PATH, PROJECT_PATH
 
 
 class OptimizationExecution:
@@ -17,6 +17,7 @@ class OptimizationExecution:
     @staticmethod
     def run_opt_single_mode(game_config, mode, threads):
         """Create setup txt file for a single mode and run Rust executable binary."""
+        os.chdir(PROJECT_PATH)
         filename = os.path.join(PATH_TO_GAMES, game_config.game_id, "library", "configs", "math_config.json")
         opt_config = OptimizationExecution.load_math_config(filename)
 
