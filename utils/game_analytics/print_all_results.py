@@ -5,6 +5,9 @@ Note: The PrintXLSX class assumes the use of 'symbol' and 'kind' keys within the
 
 import json
 import xlsxwriter
+import os
+
+from src.config.paths import PATH_TO_GAMES
 
 
 class PrintJSON:
@@ -18,7 +21,7 @@ class PrintJSON:
 
     def setup_json(self):
         """Create new JSON format file for storing PAR sheet results."""
-        json_path = "/".join([self.game_info.libraryPath, "statistics_summary.json"])
+        json_path = os.path.join(self.game_info.libraryPath, "statistics_summary.json")
         self.json_object = open(json_path, "w", encoding="UTF-8")
 
     def print_info(self):
@@ -51,12 +54,11 @@ class PrintXLSX:
 
     def setup_xlsx(self):
         """Initiate Excel format file."""
-        self.stat_file_name = str.join(
-            "_",
-            [
-                "games/" + str(self.game_info.game_id) + "/library/" + self.game_info.game_id,
-                "full_statistics.xlsx",
-            ],
+        self.stat_file_name = os.path.join(
+            PATH_TO_GAMES,
+            str(self.game_info.game_id),
+            "library",
+            f"{self.game_info.game_id}_full_statistics.xlsx",
         )
         self.workbook = xlsxwriter.Workbook(self.stat_file_name)
 

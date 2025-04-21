@@ -1,5 +1,6 @@
 """Template game configuration file, detailing required user-specified inputs."""
 
+import os
 from src.config.config import Config
 from src.config.distributions import Distribution
 from src.config.betmode import BetMode
@@ -91,7 +92,7 @@ class GameConfig(Config):
         reels = {"BR0": "BR0.csv", "FR0": "FR0.csv", "SSR": "SSR.csv", "SSWCAP": "SSWCAP.csv"}
         self.reels = {}
         for r, f in reels.items():
-            self.reels[r] = self.read_reels_csv(str.join("/", [self.reels_path, f]))
+            self.reels[r] = self.read_reels_csv(os.path.join(self.reels_path, f))
 
         self.padding_reels = {
             "basegame": self.reels["BR0"],

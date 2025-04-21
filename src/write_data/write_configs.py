@@ -11,8 +11,8 @@ from utils.analysis.distribution_functions import get_distribution_std, get_look
 
 def copy_and_rename_csv(filepath: str) -> None:
     """If no optimization has been run, initialise the lookup table."""
-    file_location = str.join("/", filepath.split("/")[:-1])
-    new_filepath = str.join("/", [file_location, filepath.split("/")[-1].split(".csv")[0] + "_0.csv"])
+    file_location = os.path.dirname(filepath)
+    new_filepath = os.path.join(file_location, os.path.splitext(os.path.basename(filepath))[0] + "_0.csv")
     shutil.copy(filepath, new_filepath)
 
 
@@ -271,9 +271,7 @@ def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwarg
     elif not json_padding:
         json_info["paddingReels"] = gamestate.config.paddingReels
 
-    f_name = str.join(
-        "/", [gamestate.output_files.config_path, "config_fe_" + str(gamestate.config.game_id) + ".json"]
-    )
+    f_name = os.path.join(gamestate.output_files.config_path, f"config_fe_{gamestate.config.game_id}.json")
     fe_json = open(f_name, "w", encoding="UTF-8")
     fe_json.write(json.dumps(json_info, indent=4))
     fe_json.close()
@@ -304,7 +302,7 @@ def make_be_config(gamestate):
     be_info["providerNumber"] = int(config.provider_number)
     be_info["standardForceFile"] = {
         "file": "force.json",
-        "sha256": get_hash(str.join("/", [gamestate.output_files.force_path, "force.json"])),
+        "sha256": get_hash(os.path.join(gamestate.output_files.force_path, "force.json")),
     }
 
     # Betmode specific data

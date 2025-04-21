@@ -16,8 +16,8 @@ def swap_tables(game_name: str, game_mode: str, target_file_number: int):
 
     target_file = game_mode + "_0_" + str(target_file_number) + ".csv"
     lut_name = str.join("_", ["lookUpTable", game_mode, "0.csv"])
-    new_lut_file = str.join("/", ["games", game_name, "library", "lookup_tables", lut_name])
-    new_opt_file = str.join("/", ["games", game_name, "library", "optimization_files", target_file])
+    new_lut_file = os.path.join("library", "lookup_tables", lut_name)
+    new_opt_file = os.path.join("library", "optimization_files", target_file)
 
     start_recording = False
     new_lut = open(new_lut_file, "w", encoding="UTF-8")

@@ -1,6 +1,7 @@
 import json
 import subprocess
-from src.config.paths import PATH_TO_GAMES, SETUP_PATH, OPTIMIZATION_PATH
+import os
+from src.config.paths import PATH_TO_GAMES, SETUP_PATH, OPTIMIZATION_PATH, PROJECT_PATH
 
 
 class OptimizationExecution:
@@ -16,7 +17,8 @@ class OptimizationExecution:
     @staticmethod
     def run_opt_single_mode(game_config, mode, threads):
         """Create setup txt file for a single mode and run Rust executable binary."""
-        filename = str.join("/", ["games", game_config.game_id, "library", "configs", "math_config.json"])
+        os.chdir(PROJECT_PATH)
+        filename = os.path.join(PATH_TO_GAMES, game_config.game_id, "library", "configs", "math_config.json")
         opt_config = OptimizationExecution.load_math_config(filename)
 
         opt_config = game_config.opt_params
@@ -55,6 +57,8 @@ class OptimizationExecution:
     @staticmethod
     def run_rust_script():
         """Run compiled binary and pip results to terminal."""
+        cargo_bin_path = os.path.join(os.path.expanduser("~"), ".cargo", "bin")
+        updated_path = cargo_bin_path + os.pathsep + os.environ.get("PATH", "")
         result = subprocess.run(
             ["cargo", "run", "--release"],
             stdout=subprocess.PIPE,
@@ -62,6 +66,7 @@ class OptimizationExecution:
             text=True,
             cwd=OPTIMIZATION_PATH,
             check=True,
+            env={**os.environ, "PATH": updated_path},
         )
         if result.returncode == 0:
             print(result.stdout)
