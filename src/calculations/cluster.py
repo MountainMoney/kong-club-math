@@ -87,7 +87,7 @@ class Cluster:
         clusters = defaultdict(list)
         for reel, _ in enumerate(board):
             for row, _ in enumerate(board[reel]):
-                if not (board[reel][row].special) and (reel, row) not in already_checked:
+                if (reel, row) not in already_checked and not (board[reel][row].check_attribute(wild_key)):
                     potential_cluster = [(reel, row)]
                     already_checked += [(reel, row)]
                     local_checked = [(reel, row)]

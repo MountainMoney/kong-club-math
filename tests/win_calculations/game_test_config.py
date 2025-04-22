@@ -1,63 +1,36 @@
-class GameConfig:
-    """Testing game functions"""
+from src.state.state import GeneralGameState
 
-    def __init__(self):
-        super().__init__()
-        self.game_id = "0_test_class"
-        self.rtp = 0.9700
 
-        # Game Dimensions
-        self.num_reels = 5
-        self.num_rows = [5] * self.num_reels
-        # Board and Symbol Properties
-        self.paytable = {
-            (25, "W"): 100,
-            (20, "W"): 80,
-            (15, "W"): 50,
-            (25, "H1"): 80,
-            (20, "H1"): 50,
-            (15, "H1"): 20,
-            (10, "H1"): 10,
-            (25, "H2"): 70,
-            (20, "H2"): 15,
-            (15, "H2"): 5,
-            (10, "H2"): 3,
-        }
+class GamestateTest(GeneralGameState):
+    """Simple gamestate setup with abstract methods defined."""
 
-        self.paylines = {
-            1: [
-                0,
-                0,
-                0,
-                0,
-                0,
-            ],
-            2: [
-                0,
-                1,
-                2,
-                1,
-                2,
-            ],
-            3: [
-                4,
-                3,
-                2,
-                3,
-                4,
-            ],
-            4: [
-                4,
-                4,
-                4,
-                4,
-                4,
-            ],
-        }
+    def __init__(self, config):
+        self.config = config
 
-        self.special_symbols = {"wild": ["W", "WM"], "scatter": ["S"], "multiplier": ["M", "WM"], "blank": ["X"]}
+    def assign_special_sym_function(self):
+        self.special_symbol_functions = {"M": [self.assign_mult_property], "WM": [self.assign_mult_property]}
 
-        self.mult_values = [2, 3, 4, 5]
-        self.bet_modes = []
-        self.basegame_type = "basegame"
-        self.freegame_type = "freegame"
+    def assign_mult_property(self, symbol) -> dict:
+        symbol.assign_attribute({"multiplier": 3})
+
+    def create_symbol(self, name: str) -> object:
+        if name not in self.symbol_storage.symbols:
+            raise ValueError(f"Symbol '{name}' is not registered.")
+        symObject = self.symbol_storage.create_symbol_state(name)
+        if name in self.special_symbol_functions:
+            for func in self.special_symbol_functions[name]:
+                func(symObject)
+
+        return symObject
+
+    def run_spin(self):
+        pass
+
+    def run_freespin(self):
+        pass
+
+
+def create_blank_board(reels, rows):
+    """Initialise an empty array for the board."""
+    board = [[[] for _ in range(rows[x])] for x in range(reels)]
+    return board

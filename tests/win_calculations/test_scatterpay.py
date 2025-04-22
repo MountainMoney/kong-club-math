@@ -1,46 +1,46 @@
-from tests.win_calculations.game_test_config import GameConfig
-from src.state.state import GeneralGameState
+"""Test basic scatterpay-calculation functionality."""
+
+import pytest
+from tests.win_calculations.game_test_config import GamestateTest, create_blank_board
 from src.calculations.scatter import Scatter
 
 
-class GamestateTest(GeneralGameState):
-    """Simple gamestate setup with abstract methods defined."""
+class GameScatterConfig:
+    """Testing game functions"""
 
-    def __init__(self, config):
-        super().__init__(config)
-        self.config = config
+    def __init__(self):
+        self.game_id = "0_test_class"
+        self.rtp = 0.9700
 
-    def assign_special_sym_function(self):
-        self.special_symbol_functions = {"M": [self.assign_mult_property], "WM": [self.assign_mult_property]}
+        # Game Dimensions
+        self.num_reels = 5
+        self.num_rows = [5] * self.num_reels
+        # Board and Symbol Properties
+        self.paytable = {
+            (25, "W"): 100,
+            (20, "W"): 80,
+            (15, "W"): 50,
+            (25, "H1"): 80,
+            (20, "H1"): 50,
+            (15, "H1"): 20,
+            (10, "H1"): 10,
+            (25, "H2"): 70,
+            (20, "H2"): 15,
+            (15, "H2"): 5,
+            (10, "H2"): 3,
+        }
 
-    def assign_mult_property(self, symbol) -> dict:
-        symbol.assign_attribute({"multiplier": 3})
+        self.special_symbols = {"wild": ["W", "WM"], "scatter": ["S"], "multiplier": ["M", "WM"], "blank": ["X"]}
 
-    def create_symbol(self, name: str) -> object:
-        if name not in self.symbol_storage.symbols:
-            raise ValueError(f"Symbol '{name}' is not registered.")
-        symObject = self.symbol_storage.create_symbol_state(name)
-        if name in self.special_symbol_functions:
-            for func in self.special_symbol_functions[name]:
-                func(symObject)
-
-        return symObject
-
-    def run_spin(self):
-        pass
-
-    def run_freespin(self):
-        pass
-
-
-def create_blank_board(reels, rows):
-    board = [[[] for _ in range(rows[x])] for x in range(reels)]
-    return board
+        self.mult_values = [2, 3, 4, 5]
+        self.bet_modes = []
+        self.basegame_type = "basegame"
+        self.freegame_type = "freegame"
 
 
-def create_test_gamestate():
+def create_test_scatter_gamestate():
     """Boilerplate gamestate for testing."""
-    test_config = GameConfig()
+    test_config = GameScatterConfig()
     test_gamestate = GamestateTest(test_config)
     test_gamestate.create_symbol_map()
     test_gamestate.assign_special_sym_function()
@@ -49,37 +49,42 @@ def create_test_gamestate():
     return test_gamestate
 
 
-def test_scatterpay_nowilds():
-    gamestate = create_test_gamestate()
+@pytest.fixture
+def gamestate():
+    return create_test_scatter_gamestate()
+
+
+def test_scatterpay_nowilds(gamestate):
+    "Test basic scatter-pay functionality, no wilds/multipliers"
     for idx, _ in enumerate(gamestate.board):
         for idy, _ in enumerate(gamestate.board[idx]):
             gamestate.board[idx][idy] = gamestate.create_symbol("H1")
 
     windata = Scatter.get_scatterpay_wins(gamestate.config, gamestate.board, global_multiplier=1)
 
+    assert len(windata["wins"][0]["positions"]) == 25
     assert windata["totalWin"] == 80
 
 
-def test_scatterpay_mults():
-    """Test wins with multipliers"""
-    gamestate = create_test_gamestate()
-    mult_count = 0
+def test_scatterpay_mults(gamestate):
+    """Test wins with wild-multipliers"""
     for idx, _ in enumerate(gamestate.board):
         for idy, _ in enumerate(gamestate.board[idx]):
-            # if idx % 2 == 0:
-            # gamestate.board[idx][idy] = gamestate.create_symbol("H1")
             if (idx + idy) % 5 == 0:
                 gamestate.board[idx][idy] = gamestate.create_symbol("WM")
-                mult_count += 1
             else:
                 gamestate.board[idx][idy] = gamestate.create_symbol("H1")
 
     windata = Scatter.get_scatterpay_wins(gamestate.config, gamestate.board, global_multiplier=1)
-    print(windata)
+
+    assert windata["wins"][0]["meta"]["clusterMult"] == 15
+    assert round(windata["totalWin"] / windata["wins"][0]["meta"]["clusterMult"], 2) == round(
+        windata["wins"][0]["meta"]["winWithoutMult"], 2
+    )
 
 
-def test_scatterpay_wilds():
-    gamestate = create_test_gamestate()
+def test_scatterpay_wilds(gamestate):
+    "Test scatter-pay method with inclusion of Wild symbols"
     for idx, _ in enumerate(gamestate.board):
         for idy, _ in enumerate(gamestate.board[idx]):
             if idx == 0:
@@ -98,10 +103,3 @@ def test_scatterpay_wilds():
             assert wd["win"] == 3
 
     assert windata["totalWin"] == 53
-
-
-if __name__ == "__main__":
-
-    test_scatterpay_mults()
-    test_scatterpay_nowilds()
-    test_scatterpay_wilds()
