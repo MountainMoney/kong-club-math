@@ -3,7 +3,7 @@
 import os
 from src.config.config import Config
 from src.config.distributions import Distribution
-from src.config.config import BetMode
+from src.config.betmode import BetMode
 
 
 class GameConfig(Config):

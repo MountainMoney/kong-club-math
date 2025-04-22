@@ -65,10 +65,10 @@ class Scatter:
                 for p in symbols_on_board[sym]:
                     if board[p["reel"]][p["row"]].check_attribute(multiplier_key):
                         symbol_mult += board[p["reel"]][p["row"]].get_attribute(multiplier_key)
-                    symbol_mult = max(symbol_mult, 1)
 
                     board[p["reel"]][p["row"]].assign_attribute({"explode": True})
 
+                symbol_mult = max(symbol_mult, 1)
                 overlay_position = Scatter.get_central_scatter_position(
                     rows_for_overlay, symbols_on_board[sym], len(board), len(board[0])
                 )

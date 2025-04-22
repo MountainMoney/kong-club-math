@@ -1,4 +1,4 @@
-game_name;0_0_scatter
+game_name;0_0_ways
 bet_type;bonus
 num_show_pigs;5000
 num_pigs_per_fence;10000

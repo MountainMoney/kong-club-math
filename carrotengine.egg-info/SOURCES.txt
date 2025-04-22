@@ -44,6 +44,12 @@ src/write_data/force.py
 src/write_data/write_configs.py
 src/write_data/write_data.py
 tests/__init__.py
+tests/win_calculations/__init__.py
+tests/win_calculations/game_test_config.py
+tests/win_calculations/test_clusterpay.py
+tests/win_calculations/test_linespay.py
+tests/win_calculations/test_scatterpay.py
+tests/win_calculations/test_wayspay.py
 uploads/__init__.py
 uploads/aws_classes.py
 uploads/aws_constants.py

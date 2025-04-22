@@ -1,7 +1,6 @@
 import os
 from src.config.config import Config
 from src.config.distributions import Distribution
-from src.write_data.force import *
 from src.config.betmode import BetMode
 from src.config.paths import PROJECT_PATH
 
