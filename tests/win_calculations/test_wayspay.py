@@ -5,7 +5,7 @@ from tests.win_calculations.game_test_config import GamestateTest, create_blank_
 from src.calculations.ways import Ways
 
 
-class GameLinesConfig:
+class GameWaysConfig:
     """Testing game functions"""
 
     def __init__(self):
@@ -25,37 +25,6 @@ class GameLinesConfig:
             (3, "H2"): 10,
         }
 
-        self.paylines = {
-            1: [
-                0,
-                0,
-                0,
-                0,
-                0,
-            ],
-            2: [
-                0,
-                1,
-                2,
-                1,
-                2,
-            ],
-            3: [
-                4,
-                3,
-                2,
-                3,
-                4,
-            ],
-            4: [
-                4,
-                4,
-                4,
-                4,
-                4,
-            ],
-        }
-
         self.special_symbols = {"wild": ["W"], "scatter": ["S"], "blank": ["X"]}
         self.bet_modes = []
         self.basegame_type = "basegame"
@@ -64,7 +33,7 @@ class GameLinesConfig:
 
 def create_test_lines_gamestate():
     """Boilerplate gamestate for testing."""
-    test_config = GameLinesConfig()
+    test_config = GameWaysConfig()
     test_gamestate = GamestateTest(test_config)
     test_gamestate.create_symbol_map()
     test_gamestate.assign_special_sym_function()
