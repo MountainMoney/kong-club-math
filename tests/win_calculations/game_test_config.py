@@ -55,8 +55,9 @@ class GameConfig:
             ],
         }
 
-        self.special_symbols = {"wild": ["W"], "scatter": ["S"], "multiplier": ["M"]}
+        self.special_symbols = {"wild": ["W", "WM"], "scatter": ["S"], "multiplier": ["M", "WM"], "blank": ["X"]}
 
+        self.mult_values = [2, 3, 4, 5]
         self.bet_modes = []
         self.basegame_type = "basegame"
         self.freegame_type = "freegame"

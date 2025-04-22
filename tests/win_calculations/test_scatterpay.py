@@ -11,9 +11,7 @@ class GamestateTest(GeneralGameState):
         self.config = config
 
     def assign_special_sym_function(self):
-        self.special_symbol_functions = {
-            "M": [self.assign_mult_property],
-        }
+        self.special_symbol_functions = {"M": [self.assign_mult_property], "WM": [self.assign_mult_property]}
 
     def assign_mult_property(self, symbol) -> dict:
         symbol.assign_attribute({"multiplier": 3})
@@ -35,21 +33,24 @@ class GamestateTest(GeneralGameState):
         pass
 
 
+def create_blank_board(reels, rows):
+    board = [[[] for _ in range(rows[x])] for x in range(reels)]
+    return board
+
+
 def create_test_gamestate():
     """Boilerplate gamestate for testing."""
     test_config = GameConfig()
     test_gamestate = GamestateTest(test_config)
     test_gamestate.create_symbol_map()
     test_gamestate.assign_special_sym_function()
+    test_gamestate.board = create_blank_board(test_config.num_reels, test_config.num_rows)
 
     return test_gamestate
 
 
 def test_scatterpay_nowilds():
     gamestate = create_test_gamestate()
-    gamestate.board = [
-        [[] for _ in range(gamestate.config.num_rows[x])] for x in range(gamestate.config.num_reels)
-    ]
     for idx, _ in enumerate(gamestate.board):
         for idy, _ in enumerate(gamestate.board[idx]):
             gamestate.board[idx][idy] = gamestate.create_symbol("H1")
@@ -59,11 +60,26 @@ def test_scatterpay_nowilds():
     assert windata["totalWin"] == 80
 
 
+def test_scatterpay_mults():
+    """Test wins with multipliers"""
+    gamestate = create_test_gamestate()
+    mult_count = 0
+    for idx, _ in enumerate(gamestate.board):
+        for idy, _ in enumerate(gamestate.board[idx]):
+            # if idx % 2 == 0:
+            # gamestate.board[idx][idy] = gamestate.create_symbol("H1")
+            if (idx + idy) % 5 == 0:
+                gamestate.board[idx][idy] = gamestate.create_symbol("WM")
+                mult_count += 1
+            else:
+                gamestate.board[idx][idy] = gamestate.create_symbol("H1")
+
+    windata = Scatter.get_scatterpay_wins(gamestate.config, gamestate.board, global_multiplier=1)
+    print(windata)
+
+
 def test_scatterpay_wilds():
     gamestate = create_test_gamestate()
-    gamestate.board = [
-        [[] for _ in range(gamestate.config.num_rows[x])] for x in range(gamestate.config.num_reels)
-    ]
     for idx, _ in enumerate(gamestate.board):
         for idy, _ in enumerate(gamestate.board[idx]):
             if idx == 0:
@@ -86,5 +102,6 @@ def test_scatterpay_wilds():
 
 if __name__ == "__main__":
 
+    test_scatterpay_mults()
     test_scatterpay_nowilds()
     test_scatterpay_wilds()
