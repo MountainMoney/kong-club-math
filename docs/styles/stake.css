@@ -1,0 +1,25 @@
+:root {
+    --md-text-font: "Inter", sans-serif;
+    --md-code-font: "Fira Code", monospace;
+  }
+
+  [data-md-color-scheme="default"] {
+    --md-primary-fg-color:        rgb(8, 47, 90); 
+    --md-primary-bg-color:        white;
+    --md-accent-fg-color:         rgb(89, 0, 153);
+  }
+ 
+  [data-md-color-scheme="slate"] {
+    --md-primary-fg-color:        rgb(8, 47, 90);
+    --md-primary-bg-color:        white;
+    --md-accent-fg-color:         white;
+    --md-typeset-a-color: white;
+  }
+
+  .md-typeset a:hover {
+    text-shadow: 0 0 8px black;
+  }
+
+  .md-header__button.md-logo svg {
+    color: white;
+  }

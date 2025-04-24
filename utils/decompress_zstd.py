@@ -26,5 +26,5 @@ def decompress(input_path: str):
 
 if __name__ == "__main__":
 
-    test_file = "games/0_0_lines/library/books_compressed/books_base.json.zst"
+    test_file = "games/0_0_lines/library/books_compressed/books_base.jsonl.zst"
     decompress(test_file)
