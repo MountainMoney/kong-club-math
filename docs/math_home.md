@@ -1,14 +1,15 @@
-# Carrot Software Development Kit
+# Stake Engine Software Development Kit
 
-**Welcome to the Carrot-SDK!**
+## **Math - SDK**
 
-<!-- *Your one stop shop for spectacular slots* -->
+### **Why Use the Math SDK?**
 
+Traditionally, developing slot games involves navigating complex mathematical models to balance payouts, hit rates, and player engagement. This process can be time-consuming and resource-intensive. The Carrot Math SDK eliminates these challenges by providing:
 
-## Math Framework
-
-This *math-sdk* is a Python-based framework for simulating discrete outcomes for slot games. This package is used for outputting all relevant game files required by the frontend and Carrot Remote Game Server (RGS). There is an optional optimization program which can be used to balance discrete outcome probabilities. 
-
+- **Predefined Frameworks**: Start with customizable templates or sample games to accelerate development.
+- **Mathematical Precision**: Simulate and optimize win distributions using discrete outcome probabilities, ensuring strict control over game mechanics.
+- **Seamless Integration**: Outputs are formatted to align with the Carrot RGS, enabling quick deployment to production environments.
+- **Scalability**: Built-in multithreading and optimization tools allow for efficient handling of large-scale simulations.
 
 ### **What Does the SDK Offer?**
 
