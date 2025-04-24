@@ -6,7 +6,7 @@ import os
 import hashlib
 import json
 import ast
-import zstandard as zstd
+import zstandard as zstd  # type: ignore
 
 
 def get_sha_256(file_to_hash: str):
@@ -62,7 +62,6 @@ def make_force_json(gamestate: object):
 
     with open(force_file_path, "w", encoding="UTF-8") as force_file:
         json.dump(force_data, force_file, indent=4)
-
 
 
 def get_force_options(force_results: dict):
@@ -147,7 +146,7 @@ def output_lookup_and_force_files(
 
     if compress:
         # Write a temporary file
-        temp_book_output_path = os.path.join(gamestate.output_files.book_path, "temp_book_output.json")
+        temp_book_output_path = os.path.join(gamestate.output_files.book_path, "temp_book_output.jsonl")
         with open(temp_book_output_path, "w", encoding="UTF-8") as outfile:
             for idx, fname in enumerate(file_list):
                 with open(fname, "rb") as infile:

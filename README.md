@@ -1,4 +1,15 @@
 # Carrot Engine Installation
+ 
+ ## (Recommended) Run Makefile
+ ```sh
+    make setup
+ ```
+
+ -Sets up a virtual environment using a tested release version.
+ -Activates the *venv*
+ -Installs required packages using pip 
+ -Install repo using setuptools
+
 
 # Open and read documentation
 
@@ -7,8 +18,12 @@ Documentation is written as Markdown files with the `docs/` folder, using the `M
  mkdocs serve
 ```
 
+
+
 # Python venv usage
+
 Windows: python -m venv env 
+
 Mac: python3 -m venv env
 
 'python3.12 -m venv env' (version specific)
@@ -29,7 +44,11 @@ pip install -e .
 
 deactivate 
 
-rm -r env (if virtual env is not needed)
+```sh
+make clean
+```
+
+Or: rm -r env (if virtual env is not needed)
 
 
 

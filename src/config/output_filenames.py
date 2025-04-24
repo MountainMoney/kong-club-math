@@ -71,11 +71,11 @@ class OutputFiles:
             self.books[mode.get_name()] = {
                 "folder_dir": self.book_path,
                 "names": {
-                    "books_uncompressed": f"books_{mode.get_name()}.json",
+                    "books_uncompressed": f"books_{mode.get_name()}.jsonl",
                     "books_compressed": f"books_{mode.get_name()}.json.zst",
                 },
                 "paths": {
-                    "books_uncompressed": os.path.join(self.book_path, f"books_{mode.get_name()}.json"),
+                    "books_uncompressed": os.path.join(self.book_path, f"books_{mode.get_name()}.jsonl"),
                     "books_compressed": os.path.join(self.compressed_path, f"books_{mode.get_name()}.json.zst"),
                 },
             }
@@ -110,7 +110,7 @@ class OutputFiles:
 
     def get_temp_multi_thread_name(self, betmode: str, thread_index: int, repeat_count: int, compress: bool):
         """Naming convention for temp book files."""
-        filename = f"books_{betmode}_{thread_index}_{repeat_count}.json"
+        filename = f"books_{betmode}_{thread_index}_{repeat_count}.jsonl"
         if compress:
             filename += ".zst"
         return os.path.join(self.temp_path, filename)
@@ -129,7 +129,7 @@ class OutputFiles:
 
     def get_final_book_name(self, betmode: str, compress: bool):
         """Returns final simulation books output name."""
-        filename = f"books_{betmode}.json"
+        filename = f"books_{betmode}.jsonl"
         if compress:
             filename += ".zst"
         return os.path.join(self.compressed_path if compress else self.book_path, filename)
