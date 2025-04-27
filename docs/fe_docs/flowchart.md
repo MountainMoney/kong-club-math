@@ -9,7 +9,7 @@ Here it is a simplified flow chart of steps how a game is processed after RGS re
 
 ## playBookEvents()
 
-This function is created by [packages/utils-book/src/createPlayBookUtils.ts](/packages/utils-book/src/createPlayBookUtils.ts). It goes through bookEvents one by one, handles each one with async function `playBookEvent()`. It resolves them one after another with `sequence()` in the order of the bookEvents array. <mark>It means the sequence of bookEvents matters eminently and it determines the behaviors of the game.</mark> For example, we don't want to see the "win" before "spin", so we should put "win" after the "spin". This function is also used in the `MODE_<GAME_MODE>/book/random` stories.
+This function is created by `packages/utils-book/src/createPlayBookUtils.ts`. It goes through bookEvents one by one, handles each one with async function `playBookEvent()`. It resolves them one after another with `sequence()` in the order of the bookEvents array. <mark>It means the sequence of bookEvents matters eminently and it determines the behaviors of the game.</mark> For example, we don't want to see the "win" before "spin", so we should put "win" after the "spin". This function is also used in the `MODE_<GAME_MODE>/book/random` stories.
 
 - `playBookEvent()`: This is a function that takes in a bookEvent with some context (usually all the bookEvents), then find the bookEventHandler in bookEventHandlerMap based on `bookEvent.type` to process it. This function is also used in the `MODE_<GAME_MODE>/bookEvent/<BOOK_EVENT_TYPE>` stories.
 
@@ -19,7 +19,7 @@ This function is created by [packages/utils-book/src/createPlayBookUtils.ts](/pa
 
 ## bookEvent
 
-- `book`: A book is a json data that is returned from the RGS (Remote Game Server) for each game requested. It is randomly picked from over a million of books, which is [math](https://twist-gaming.github.io/carrot-math-engine). It is mainly composed by bookEvents.
+- `book`: A book is a json data that is returned from the RGS (Remote Game Server) for each game requested. It is mainly composed by bookEvents.
 
 ```
 // base_books.ts - Example of a base game book
@@ -82,7 +82,7 @@ This function is created by [packages/utils-book/src/createPlayBookUtils.ts](/pa
 
 ## bookEventHandlerMap
 
-An object that the key is `bookEvent.type` and value is a `bookEventHandler`. We can find an example in [apps/lines/src/game/bookEventHandlerMap.ts](/apps/lines/src/game/bookEventHandlerMap.ts).
+An object that the key is `bookEvent.type` and value is a `bookEventHandler`. We can find an example in `/apps/lines/src/game/bookEventHandlerMap.ts`.
 
 ```
 // bookEventHandlerMap.ts - Example of "updateFreeSpin" bookEventHandler

@@ -5,7 +5,7 @@
 - [ContextXstate](#contextXstate)
 - [ContextApp](#contextApp)
 
-[svelte-context](https://svelte.dev/docs/svelte/context) is a useful feature from svelte especially when a shared state requires some inputs/types to create. Here it shows the structure of context of sample game [apps/lines](/apps/lines). As showed before, `setContext()` is called at entry level component. For example, [apps/lines/src/routes/+page.svelte](/apps/lines/src/routes/%2Bpage.svelte) or [apps/lines/src/stories/ComponentsGame.stories.svelte](/apps/lines/src/stories/ComponentsGame.stories.svelte). It sets four major contexts from the packages by this:
+[svelte-context](https://svelte.dev/docs/svelte/context) is a useful feature from svelte especially when a shared state requires some inputs/types to create. Here it shows the structure of context of sample game `/apps/lines`. As showed before, `setContext()` is called at entry level component. For example, `apps/lines/src/routes/+page.svelte` or `apps/lines/src/stories/ComponentsGame.stories.svelte`. It sets four major contexts from the packages by this:
 
 ```
 // context.ts - Example of setContext in apps
@@ -26,13 +26,13 @@ export const setContext = () => {
 
 ## ContextEventEmitter
 
-`eventEmitter` is created by [packages/utils-event-emitter/src/createEventEmitter.ts](/packages/utils-event-emitter/src/createEventEmitter.ts). We have covered eventEmitter in the [previous content](#eventEmitter).
+`eventEmitter` is created by `packages/utils-event-emitter/src/createEventEmitter.ts`. We have covered eventEmitter in the [previous content](#eventEmitter).
 
 <a name="contextLayout"></a>
 
 ## ContextLayout
 
-`stateLayout` and `stateLayoutDerived` are created by [packages/utils-layout/src/createLayout.svelte.ts](/packages/utils-layout/src/createLayout.svelte.ts). It provides canvasSizes, canvasRatio, layoutType and so on. Because we have a setting `resizeTo: window` for PIXI.Application, we use the sizes of window from [svelte-reactivity](https://svelte.dev/docs/svelte/svelte-reactivity-window) as `canvasSizes`.
+`stateLayout` and `stateLayoutDerived` are created by `packages/utils-layout/src/createLayout.svelte.ts`. It provides canvasSizes, canvasRatio, layoutType and so on. Because we have a setting `resizeTo: window` for PIXI.Application, we use the sizes of window from [svelte-reactivity](https://svelte.dev/docs/svelte/svelte-reactivity-window) as `canvasSizes`.
 
 For html, the tags will auto-flow by default. However, in the canvas/pixijs we need to set positions manually to avoid overlapping. The importance of LayoutContext is that it provides us the values of boundaries (canvasSizes), device type based on the dimensions (layoutType) and so on. For example:
 
@@ -71,7 +71,7 @@ const stateLayoutDerived = {
 
 ## ContextXstate
 
-`stateXstate` and `stateXstateDerived` are created by [packages/utils-xstate/src/createXstateUtils.svelte.ts](/packages/utils-xstate/src/createXstateUtils.svelte.ts). It provides a few functions to check the state of [finite state machine](https://en.wikipedia.org/wiki/Finite-state_machine), also known as `gameActor`, which is created by [packages/utils-xstate/src/createGameActor.svelte.ts](/packages/utils-xstate/src/createGameActor.ts).
+`stateXstate` and `stateXstateDerived` are created by `packages/utils-xstate/src/createXstateUtils.svelte.ts`. It provides a few functions to check the state of [finite state machine](https://en.wikipedia.org/wiki/Finite-state_machine), also known as `gameActor`, which is created by `packages/utils-xstate/src/createGameActor.svelte.ts`.
 
 ```
 // createXstateUtils.svelte.ts
@@ -147,7 +147,7 @@ const gameActor = createActor(gameMachine);
 
 ## AppContext
 
-`stateApp` is created by [packages/pixi-svelte/src/lib/createApp.svelte.ts](/packages/pixi-svelte/src/lib/createApp.svelte.ts). `loadedAssets` contains the static images, animations and sound data that is processed by `PIXI.Assets.load` with `stateApp.assets`. `loadedAssets` can be digested by pixi-svelte components directly as showed in pixi-svelte component [\<Sprite /\>](/packages/pixi-svelte/src/lib/components/Sprite.svelte).
+`stateApp` is created by `packages/pixi-svelte/src/lib/createApp.svelte.ts`. `loadedAssets` contains the static images, animations and sound data that is processed by `PIXI.Assets.load` with `stateApp.assets`. `loadedAssets` can be digested by pixi-svelte components directly as showed in pixi-svelte component `\<Sprite /\>`(`/packages/pixi-svelte/src/lib/components/Sprite.svelte`).
 
 ```
 // createApp.svelte.ts

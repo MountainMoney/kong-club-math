@@ -1,7 +1,7 @@
 
 # UI
 
-We have provided solutions for the UI, which are [components-ui-pixi](/packages/components-ui-pixi) and [components-ui-html](/packages/components-ui-html). They are functional with a few features like auto gaming, turbo mode, bonus button, responsiveness and so on, but they are not as beautiful.
+We have provided solutions for the UI, which are `/packages/components-ui-pixi` and `/packages/components-ui-html`. They are functional with a few features like auto gaming, turbo mode, bonus button, responsiveness and so on, but they are not as beautiful.
 
 ```
 <script lang="ts">

@@ -77,5 +77,3 @@ This repository is organized into several directories, each focusing on a specif
 - Experimental genetic algorithm (written in Rust) for balancing discrete-outcome games.
 
 ---
-
-This structure ensures a clear separation of concerns, making it easier to navigate and maintain the repository.

@@ -15,11 +15,12 @@ Within each `BetMode` there is a set of `Distribution` Classes which determine t
     Note that `force_wincap` and `force_freegame` are set to `False` by default and do not have to be explicitly added.
     
     The most common use for the Distribution Conditions is when drawing a random value using the BetMode's built-in method `get_distribution_conditions()`. i.e.
-    ```python
+    ```
         multiplier = get_random_outcome(betmode.get_distribution_conditions()['mult_values'])
     ```
     Or to check if a board forcing the `freegame` should be drawn with:
-    ```python
+
+    ```
     if get_distribution_conditions()['force_freegame']:
         ...
     ```
