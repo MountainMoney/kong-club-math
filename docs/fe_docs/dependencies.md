@@ -1,6 +1,6 @@
 # Dependencies
 
-Besides basic web skills (html, css and javascript), here it shows a list of [npm](https://www.npmjs.com) dependencies of this repo. It would be great to start with understanding them before kicking off [Get Started](#getStarted).
+Besides basic web skills (html, css and javascript), here it shows a list of [npm](https://www.npmjs.com) dependencies of this repo. It would be great to start with understanding them before kicking off [Get Started](get_started.md).
 
 - pixijs: https://www.npmjs.com/package/pixi.js and [more...](https://pixijs.download/release/docs/index.html)
 - svelte: https://www.npmjs.com/package/svelte and [more...](https://svelte.dev/docs/svelte/overview)

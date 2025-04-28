@@ -121,7 +121,7 @@ An emitterEvent is a json data that `eventEmitter.broadcast(emitterEvent)` or `e
 
 <mark>For a game we have many animations, so sometimes we need to "await" for those animations to finish before going to the next step.</mark>
 
-Conceptually a bookEvent is composed by emitterEvents. <mark>Nevertheless, the flexibility lies in that the [emitterEvents composing a bookEvent can come from multiple different svelte components](#taskBreakdownImg).</mark> This way we can achieve and control the interactions and timing between different svelte components for the same bookEvent, ultimately, to achieve our games.
+Conceptually a bookEvent is composed by emitterEvents. <mark>Nevertheless, the flexibility lies in that the emitterEvents composing a bookEvent can come from multiple different svelte components.</mark> This way we can achieve and control the interactions and timing between different svelte components for the same bookEvent, ultimately, to achieve our games.
 
 ```
 // bookEventHandlerMap.ts - Example of an emitterEvent
@@ -182,7 +182,7 @@ context.eventEmitter.subscribeOnMount({
 
 ## emitterEventHandlerMap
 
-An object that the key is `emitterEvent.type` and value is an `emitterEventHandler`. We can find this object in each component. For example, [apps/lines/src/components/FreeSpinCounter.svelte](/apps/lines/src/components/FreeSpinCounter.svelte).
+An object that the key is `emitterEvent.type` and value is an `emitterEventHandler`. We can find this object in each component. For example, (`/apps/lines/src/components/FreeSpinCounter.svelte`).
 
 - <mark>Each emitterEventHandler can do a lot or a little, but we prefer each emitterEventHandler just doing a minimum job to achieve the duty that is described by its type. This way we follow the [Single Responsibility Principle of SOLID](https://www.digitalocean.com/community/conceptual-articles/s-o-l-i-d-the-first-five-principles-of-object-oriented-design#single-responsibility-principle).</mark> For example, `freeSpinCounterShow` just shows this component and does nothing more.
 

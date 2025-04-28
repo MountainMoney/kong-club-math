@@ -5,6 +5,7 @@
 - [ContextXstate](#contextXstate)
 - [ContextApp](#contextApp)
 
+<a name="contextEventEmitter"></a>
 [svelte-context](https://svelte.dev/docs/svelte/context) is a useful feature from svelte especially when a shared state requires some inputs/types to create. Here it shows the structure of context of sample game `/apps/lines`. As showed before, `setContext()` is called at entry level component. For example, `apps/lines/src/routes/+page.svelte` or `apps/lines/src/stories/ComponentsGame.stories.svelte`. It sets four major contexts from the packages by this:
 
 ```
@@ -26,7 +27,7 @@ export const setContext = () => {
 
 ## ContextEventEmitter
 
-`eventEmitter` is created by `packages/utils-event-emitter/src/createEventEmitter.ts`. We have covered eventEmitter in the [previous content](#eventEmitter).
+`eventEmitter` is created by `packages/utils-event-emitter/src/createEventEmitter.ts`. We have covered eventEmitter in the previous content.
 
 <a name="contextLayout"></a>
 

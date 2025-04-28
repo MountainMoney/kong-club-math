@@ -41,7 +41,7 @@ markdown_extensions:
 
 
 nav:
-  - Home: index.md
+  - index.md
   - Frontend-SDK: fe_home.md
   - Math-SDK: math_home.md
   - Technical Details:
@@ -87,8 +87,6 @@ nav:
       
       - Optimization Algorithm: math_docs/optimization_section/optimization_algorithm.md
 
-      - Tests: math_docs/tests_section/test_info.md
-
     - Frontend SDK Technical Details: 
       - Dependencies: fe_docs/dependencies.md
       - Getting Started: fe_docs/get_started.md
@@ -99,4 +97,3 @@ nav:
       - File Structure: fe_docs/file_struct.md
       - Context: fe_docs/context.md
       - UI: fe_docs/ui.md
-      - Localization: fe_docs/localisation.md

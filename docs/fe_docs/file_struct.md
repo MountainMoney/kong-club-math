@@ -20,9 +20,7 @@ root
      |_pixi-*
 ```
 
-<a name="apps"></a>
-
-## [/apps](/apps)
+## /apps
 
 For each game, it has an individual folder in the apps, for example `/apps/lines`.
 
@@ -83,7 +81,7 @@ pnpm run dev --filter=lines
 
 <a name="packages"></a>
 
-## [/packages](/packages)
+## /packages
 
 For every TurboRepo local package, you can import and use them in an app or in another local package directly without publishing them to [npm](https://www.npmjs.com). <mark>Our codebase benefits considerably from a monorepo because it brings reusability, readability, maintainability, code splitting and so on.</mark> Here is an example of importing local packages with `workspace:*` in `/apps/lines/package.json`:
 
