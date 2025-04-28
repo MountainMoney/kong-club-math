@@ -97,3 +97,5 @@ nav:
       - File Structure: fe_docs/file_struct.md
       - Context: fe_docs/context.md
       - UI: fe_docs/ui.md
+
+    - RGS Technical Details: rgs_docs/RGS.md
