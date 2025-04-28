@@ -1,359 +1,312 @@
 # RGS Endpoints
 
-This specification outlines the API endpoints that are available to a
-provider when communicating with the Stake Engine. Through
-these APIs a provider can do many functions including; create a bet,
-complete a bet, validate a session and get a players balance.
+This specification outlines the API endpoints available to providers for communicating with the Stake Engine. These APIs enable key operations such as creating bets, completing bets, validating sessions, and retrieving player balances.
 
 # Introduction
 
-The provider integration displays the communication between the
-providers Frontend to the Stake Engine endpoints. These endpoints are used for
-creating bets, getting players balances and completing bets. The core API
-functionality has been thoroughly documented with requests and response
-information.
+This document defines how the provider’s frontend communicates with the Stake Engine endpoints. It includes a detailed description of the core API functionality, along with the corresponding request and response structures.
 
-# URL structure
+# URL Structure
 
-Stake Engine will host games under a predefined URL for your team. Use this information to interact with the RGS on behalf of the user and use these parameters to display the correct information to the user.
+Games are hosted under a predefined URL. Providers should use the parameters below to interact with the RGS on behalf of the user and correctly display game information.
 
+```
 https://games.stake-engine.com/{{.TeamID}}/{{.GameID}}/{{.GameVersion}}/index.html?sessionID={{.SessionID}}&gameID={{.GameID}}&lang={{.Lang}}&device={{.Device}}&rgs_url={{.RgsUrl}}
+```
 
-| Field     | Description                                                                                                                                                                                                                    |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| sessionID | Session ID is a unique session for a player, using this token within requests allows the game to make requests for the user.                                                                                                   |
-| gameID    | Describes the game ID with the Stake Engine system, many API calls will require the GameID in the parameters.                                                                                                                  |
-| lang      | The language the user intends to play the game in. It is up to the provider to define translations for each language if they wish their game to be played in different languages.                                              |
-| device    | Either 'mobile' or 'desktop'                                                                                                                                                                                                   |
-| rgs_url   | This is the url to send the subsequent request to for Authentication, making bets and completing rounds. The URL should never be hard coded as Stake Engine may dynamically change the endpoint URLs without consulting Teams. |
+| Field     | Description                                                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| sessionID | Unique session ID for the player. Required for all requests made by the game.                                                         |
+| gameID    | The game’s identifier within the Stake Engine. Used in many API calls.                                                                |
+| lang      | Language in which the game will be displayed.                                                                                         |
+| device    | Specifies 'mobile' or 'desktop'.                                                                                                      |
+| rgs_url   | The URL used for authentication, placing bets, and completing rounds. This URL should not be hardcoded, as it may change dynamically. |
 
 ## Language
 
-Language in which the player wants the game displayed in (ISO 639-1)
+The `lang` parameter should be an [ISO 639-1](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes) language code.
 
-- https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
+Supported languages:
 
-Below is a list of languages within Stake.com which can be expected values.
-
-- ar (Arabic)
-- de (German)
-- en (English)
-- es (Spanish)
-- fi (Finnish)
-- fr (French)
-- hi (Hindi)
-- id (Indonesian)
-- ja (Japanese)
-- ko (Korean)
-- pl (Polish)
-- pt (Portuguese)
-- ru (Russian)
-- tr (Turkish)
-- vi (Vietnamese)
-- zh (Chinese)
+- `ar` (Arabic)
+- `de` (German)
+- `en` (English)
+- `es` (Spanish)
+- `fi` (Finnish)
+- `fr` (French)
+- `hi` (Hindi)
+- `id` (Indonesian)
+- `ja` (Japanese)
+- `ko` (Korean)
+- `pl` (Polish)
+- `pt` (Portuguese)
+- `ru` (Russian)
+- `tr` (Turkish)
+- `vi` (Vietnamese)
+- `zh` (Chinese)
 
 # Understanding Money
 
-Monetary values in the Stake Engine API are all Integer values. There are 6 decimal points of precision for all values.
+Monetary values in the Stake Engine are integers with **six decimal places** of precision:
 
-- 100000 = 0.1
-- 1000000 = 1
-- 10000000 = 10
-- 100000000 = 100
+| Value       | Actual Amount |
+| ----------- | ------------- |
+| 100,000     | 0.1           |
+| 1,000,000   | 1             |
+| 10,000,000  | 10            |
+| 100,000,000 | 100           |
 
-When a player wishes to place a $1 bet, you would pass in "1000000" as the value for the amount.
+For example, to place a $1 bet, pass `"1000000"` as the amount.
 
-Currency does not affect the web development except for displaying the correct currency symbols to the player as they play.
+Currency impacts **only** the display layer; it does not affect gameplay logic.
 
-## Currency List
+## Supported Currencies
 
-- USD (United States)
-- CAD (Canada)
-- JPY (Japan)
-- EUR (Europe)
-- RUB (Ruble)
-- CNY (Yuan)
-- PHP (Peso)
-- INR (Rupee)
-- IDR (Rupiah)
-- KRW (Won)
-- BRL (Real)
-- MXN (Peso)
-- DKK (Krone)
-- PLN (Polish)
-- VND (Vietnamese)
-- TRY (Turkish)
-- CLP (Chilean)
-- ARS (Argentina)
-- PEN (Peru)
+- USD (United States Dollar)
+- CAD (Canadian Dollar)
+- JPY (Japanese Yen)
+- EUR (Euro)
+- RUB (Russian Ruble)
+- CNY (Chinese Yuan)
+- PHP (Philippine Peso)
+- INR (Indian Rupee)
+- IDR (Indonesian Rupiah)
+- KRW (South Korean Won)
+- BRL (Brazilian Real)
+- MXN (Mexican Peso)
+- DKK (Danish Krone)
+- PLN (Polish Złoty)
+- VND (Vietnamese Đồng)
+- TRY (Turkish Lira)
+- CLP (Chilean Peso)
+- ARS (Argentine Peso)
+- PEN (Peruvian Sol)
 
 ### Social Casino Currencies
 
 - XGC (Gold)
 - XSC (Stake Cash)
 
-## Bet Levels
+# Bet Levels
 
-The available bet levels are defined by the operator and will be passed to the game, using bet levels outside of the available levels will result in an error.
+Although bet levels are not mandatory, bets must satisfy these conditions:
 
-These bet levels are returned within the `/wallet/authenticate` response as a list of numbers, these numbers are monetary amounts described in the introduction of this section.
+1. The bet must fall between `minBet` and `maxBet` (returned from `/wallet/authenticate`).
+2. The bet must be divisible by `stepBet`.
 
-```
-"betLevels": [
-    100000, ($0.10)
+It is recommended to use the predefined `betLevels` to guide players.
+
+Example:
+
+```json
+{
+  "minBet": 100000,
+  "maxBet": 1000000000,
+  "stepBet": 10000,
+  "betLevels": [
+    100000, // $0.10
     200000,
     400000,
     600000,
-    800000,
-    1000000,
-    1200000,
-    1400000,
-    1600000,
-    1800000,
-    2000000,
-    3000000,
-    4000000,
-    5000000,
-    6000000,
-    7000000,
-    8000000,
-    9000000,
-    10000000,
-    12000000,
-    14000000,
-    16000000,
-    18000000,
-    20000000,
-    30000000,
-    40000000,
-    50000000,
-    75000000,
-    100000000,
-    150000000,
-    200000000,
-    250000000,
-    300000000,
-    350000000,
-    400000000,
-    450000000,
-    500000000,
-    750000000,
-    1000000000 ($1000)
-]
+    ...
+    1000000000 // $1000
+  ]
+}
 ```
 
-## Bet Modes / Cost Multipliers
+# Bet Modes / Cost Multipliers
 
-A game may have many bet modes which will be defined through the game config, see the math documentation for how these are defined (https://carrot-engineering.github.io/math-sdk/math_docs/gamestate_section/configuration_section/betmode_overview/).
+Games may have multiple bet modes defined in the game configuration. Refer to the [Math SDK Documentation](https://carrot-engineering.github.io/math-sdk/math_docs/gamestate_section/configuration_section/betmode_overview/).
 
-When making a play request, pass in the base bet amount and the Bet Mode and the RGS will automatically debit the player as described below:
+When making a play request:
 
-`Player debit amount = Base bet amount * bet mode cost multiplier`
+```
+Player debit amount = Base bet amount × Bet mode cost multiplier
+```
 
 # Wallet
 
-The wallet endpoints interact with the RGS to make requests to the Operators Wallet API. These endpoints make interactions with an Operators Wallet API; this means any call made here will make communication to the operator about the players current session.
-
-These endpoints are the core endpoints for the RGS.
+The wallet endpoints enable interactions between the RGS and the Operator's Wallet API, managing the player's session and balance operations.
 
 ## Authenticate Request
 
-This endpoint validates a sessionID with the operator to ensure it is a valid session. After a session has been validated then it can be used by the other wallet endpoints below. If this endpoint is not called for a session ID; the other endpoints will throw ERR_IS for an unauthenticated session ID.
+Validates a `sessionID` with the operator. This must be called before using other wallet endpoints. Otherwise, they will throw `ERR_IS` (invalid session).
+
+### Round
+
+The `round` returned may represent a currently active or the last completed round. Frontends should continue the round if it remains active.
 
 ### Request
 
-```
+```http
 POST /wallet/authenticate
+```
 
+```json
 {
-    sessionID: "xxxxxxx",
-    gameID: "xxxxxxx"
+  "sessionID": "xxxxxxx",
+  "gameID": "xxxxxxx"
 }
 ```
 
 ### Response
 
-```
-200
+```json
 {
-    balance: {
-        amount: 100000,
-        currency: "USD"
-    }
-    config: {
-        gameID: "game_xxx"
-        minBet: 100000,
-        maxBet: 1000000000,
-        stepBet: 10000,
-        defaultBetLevel: 1000000,
-        betLevels: [
-            100000,
-            200000,
-            300000,
-            400000,
-            500000,
-            600000,
-            ...
-        ],
-        betModes: {
-            BASE: {
-                costMultiplier: 1,
-                feature: true,
-                mode: "BASE"
-            },
-            ANTE: {
-                costMultiplier: 1.25,
-                feature: true,
-                mode: "ANTE"
-            },
-            ...
-        },
-        jurisdiction: {
-            socialCasino: false,
-            disabledFullscreen: false,
-            disabledTurbo: false,
-            disabledSuperTurbo: false,
-            disabledAutoplay: false,
-            disabledSlamstop: false,
-            disabledSpacebar: false,
-            disabledBuyFeature: false,
-            displayNetPosition: false,
-            displayRTP: false,
-            displaySessionTimer: false,
-            minimumRoundDuration: false
-        }
+  "balance": {
+    "amount": 100000,
+    "currency": "USD"
+  },
+  "config": {
+    "gameID": "game_xxx",
+    "minBet": 100000,
+    "maxBet": 1000000000,
+    "stepBet": 100000,
+    "defaultBetLevel": 1000000,
+    "betLevels": [...],
+    "betModes": {
+      "BASE": { "costMultiplier": 1, "feature": true, "mode": "BASE" },
+      "ANTE": { "costMultiplier": 1.25, "feature": true, "mode": "ANTE" }
     },
-    round: {
-        ...
+    "jurisdiction": {
+      "socialCasino": false,
+      "disabledFullscreen": false,
+      "disabledTurbo": false,
+      ...
     }
+  },
+  "round": { ... }
 }
 ```
 
 ## Balance Request
 
-Additional API call to receive balance of the player. Most API calls return the players balance, although a provider may want to periodically check if the balance has changed.
+Retrieves the player’s current balance. Useful for periodic balance updates.
 
 ### Request
 
-```
+```http
 POST /wallet/balance
+```
+
+```json
 {
-    sessionID: "xxxxxx"
+  "sessionID": "xxxxxx"
 }
 ```
 
 ### Response
 
-```
+```json
 {
-    balance: {
-        amount: 100000,
-        currency: "USD"
-    }
+  "balance": {
+    "amount": 100000,
+    "currency": "USD"
+  }
 }
 ```
 
 ## Play Request
 
-This API endpoint triggers a play where the Player is debited money to play a round of the game.
+Initiates a game round and debits the bet amount from the player's balance.
 
 ### Request
 
-```
+```json
 {
-    amount: 100000,
-    gameID: "xxxxxx",
-    sessionID: "xxxxxxx",
-    mode: "BASE"
+  "amount": 100000,
+  "gameID": "xxxxxx",
+  "sessionID": "xxxxxxx",
+  "mode": "BASE"
 }
 ```
 
 ### Response
 
-```
+```json
 {
-    balance: {
-        amount: 100000,
-        currency: "USD"
-    },
-    round: {
-        ...
-    }
+  "balance": {
+    "amount": 100000,
+    "currency": "USD"
+  },
+  "round": { ... }
 }
 ```
 
 ## End Round Request
 
-This API endpoint triggers an end round to occur. No further actions can be made for this round. A payout request will be sent to the operator.
+Completes a round, triggering a payout and ending all activity for that round.
 
 ### Request
 
-```
+```http
 POST /wallet/endround
+```
+
+```json
 {
-    sessionID: "xxxxxx",
-    gameID: "xxxxxx
+  "sessionID": "xxxxxx",
+  "gameID": "xxxxxx"
 }
 ```
 
 ### Response
 
-```
+```json
 {
-    balance: {
-        amount: 100000,
-        currency: "USD"
-    },
+  "balance": {
+    "amount": 100000,
+    "currency": "USD"
+  }
 }
 ```
 
-# Game play
+# Game Play
 
 ## Event
 
-These endpoints are for interacting with the RGS while a round is being played. This is often used to track how much of a bet the player has observed to allow this user to continue playing a round if they disconnect. This endpoint tracks where in the bet the user is up to, send a 'event' string to this endpoint to be saved to the RGS database with the bet.
+Tracks in-progress player actions during a round. Useful for resuming gameplay if a player disconnects.
 
 ### Request
 
-```
+```http
 POST /bet/event
+```
+
+```json
 {
-    sessionID: "xxxxxx",
-    gameID: "xxxxxx",
-    event: "xxxxxx"
+  "sessionID": "xxxxxx",
+  "gameID": "xxxxxx",
+  "event": "xxxxxx"
 }
 ```
 
 ### Response
 
-```
+```json
 {
-    event: "xxxxxx"
+  "event": "xxxxxx"
 }
 ```
 
 # Response Codes
 
-Stake Engine returns 200, 400 and 500 response codes for API requests. Below are the status code value and their meanings for the API.
+Stake Engine uses standard HTTP response codes (200, 400, 500) with specific error codes.
 
-## 400
+## 400 – Client Errors
 
-All error status codes that are returned from the Stake Engine for a 400 status code.
+| Status Code | Description                                |
+| ----------- | ------------------------------------------ |
+| ERR_VAL     | Invalid Request                            |
+| ERR_IPB     | Insufficient Player Balance                |
+| ERR_IS      | Invalid Session Token / Session Timeout    |
+| ERR_ATE     | Failed User Authentication / Token Expired |
+| ERR_GLE     | Gambling Limits Exceeded                   |
+| ERR_LOC     | Invalid Player Location                    |
 
-| Status Code | Description                                              |
-| ----------- | -------------------------------------------------------- |
-| ERR_VAL     | Invalid Request                                          |
-| ERR_IPB     | Insufficient Player Balance                              |
-| ERR_IS      | Invalid Session Token / Session Timeout                  |
-| ERR_ATE     | Failed User Authentication/ Authentication Token Expired |
-| ERR_GLE     | Gambling limits exceeded (loss or betting)               |
-| ERR_LOC     | Invalid player location for jurisdiction                 |
+## 500 – Server Errors
 
-## 500
-
-All error status codes that are returned from the Stake Engine for a 500 status code.
-
-| Status Code     | Description                      |
-| --------------- | -------------------------------- |
-| ERR_GEN         | General Server Error             |
-| ERR_MAINTENANCE | RGS is under planned maintenance |
+| Status Code     | Description                   |
+| --------------- | ----------------------------- |
+| ERR_GEN         | General Server Error          |
+| ERR_MAINTENANCE | RGS Under Planned Maintenance |
