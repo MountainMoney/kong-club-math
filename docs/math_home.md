@@ -33,3 +33,5 @@ The game-logic files contain an ordered list of critical game details such as sy
 ### **Get Started Today**
 
 Dive into the technical details and explore how the Carrot Math SDK can transform your game development process. With powerful tools, sample games, and detailed documentation, you'll have everything you need to create engaging and mathematically sound games.
+
+See [Math SDK Technical Details](math_docs/directory.md) for more details.
