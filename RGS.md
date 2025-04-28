@@ -94,11 +94,17 @@ Currency does not affect the web development except for displaying the correct c
 
 ## Bet Levels
 
-The available bet levels are defined by the operator and will be passed to the game, using bet levels outside of the available levels will result in an error.
+Bet levels are not enforced although there are a few rules for a valid bet amount.
 
-These bet levels are returned within the `/wallet/authenticate` response as a list of numbers, these numbers are monetary amounts described in the introduction of this section.
+1. A bet must be between the Min and the Max values returned in the `/wallet/authenticate` endpoint.
+2. The bet amount must be divisible by the `stepBet` returned in the `/wallet/authenticate` endpoint.
+
+The use of bet levels returned by `/wallet/authenticate` are recommended though to help display the correct values.
 
 ```
+"minBet": 100000,
+"maxBet": 1000000000,
+"stepBet": 10000,
 "betLevels": [
     100000, ($0.10)
     200000,
@@ -160,6 +166,10 @@ These endpoints are the core endpoints for the RGS.
 
 This endpoint validates a sessionID with the operator to ensure it is a valid session. After a session has been validated then it can be used by the other wallet endpoints below. If this endpoint is not called for a session ID; the other endpoints will throw ERR_IS for an unauthenticated session ID.
 
+### Round
+
+The round value on the authenticate request shows the last round this player had completed on this game. In some cases this round may still be `active`, in this case the frontend should continue displaying the round for the player.
+
 ### Request
 
 ```
@@ -184,7 +194,7 @@ POST /wallet/authenticate
         gameID: "game_xxx"
         minBet: 100000,
         maxBet: 1000000000,
-        stepBet: 10000,
+        stepBet: 100000,
         defaultBetLevel: 1000000,
         betLevels: [
             100000,
