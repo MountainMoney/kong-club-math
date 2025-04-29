@@ -36,6 +36,11 @@ def make_manifest(gamestate: object):
     through the ACP, though the new directory structure must be reflected in the manifest.json file.
     """
     manifest_object = defaultdict(list)
+
+    cost_map = {}
+    for bclass in gamestate.config.bet_modes:
+        cost_map[bclass._name] = float(bclass._cost)
+
     with open(gamestate.output_files.configs["paths"]["manifest"], "w", encoding="UTF-8") as f:
         with open(gamestate.output_files.configs["paths"]["be_config"], "r", encoding="UTF-8") as f2:
             config_json = json.load(f2)
@@ -43,10 +48,11 @@ def make_manifest(gamestate: object):
         for bm in config_json["bookShelfConfig"]:
             mode_obj = defaultdict(str)
             mode_obj["name"] = bm["name"]
-            mode_obj["books"] = "/" + bm["booksFile"]["file"]
-            mode_obj["weights"] = "/" + bm["tables"][0]["file"]
+            mode_obj["cost"] = cost_map[bm["name"]]
+            mode_obj["events"] = bm["booksFile"]["file"]
+            mode_obj["weights"] = bm["tables"][0]["file"]
 
-            manifest_object["files"].append(mode_obj)
+            manifest_object["modes"].append(mode_obj)
 
         f.write(json.dumps(manifest_object, indent=4))
 
@@ -320,9 +326,11 @@ def make_be_config(gamestate):
         lut_sha_value = get_hash(lut_table)
         std_val = round(get_distribution_std(lut_table) / bet.get_cost(), 2)
         booklength = get_lookup_length(lut_table)
+
+        _, lut_nme = os.path.split(lut_table)
         dic = {
             "name": bet.get_name(),
-            "tables": [{"file": lut_table, "sha256": lut_sha_value}],
+            "tables": [{"file": lut_nme, "sha256": lut_sha_value}],
             "cost": bet.get_cost(),
             "rtp": bet.get_rtp(),
             "std": std_val,
