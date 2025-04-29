@@ -252,3 +252,13 @@ def tumble_board_event(gamestate):
         "explodingSymbols": exploding,
     }
     gamestate.book.add_event(event)
+
+
+def enter_bonus_event(gamestate) -> None:
+    "Indicate feature game entry explicitly."
+    event = {
+        "index": len(gamestate.book.events),
+        "type": EventConstants.ENTER_BONUS.value,
+        "reason": gamestate.bonus_type,
+    }
+    gamestate.book.add_event(event)

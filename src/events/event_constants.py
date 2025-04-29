@@ -1,4 +1,4 @@
-"""Single class containing all reuseable event  `type` constants."""
+"""Single class containing all reuseable event `type` constants."""
 
 from enum import Enum
 
@@ -21,6 +21,7 @@ class EventConstants(Enum):
     FREESPINTRIGGER = "freeSpinTrigger"
     FREESPINRETRIGGER = "freeSpinRetrigger"
     FREE_SPIN_END = "freeSpinEnd"
+    ENTER_BONUS = "enterBonus"
 
     # Tumble events
     TUMBLE_BOARD = "tumbleBoard"

@@ -38,7 +38,13 @@ class GameInformation:
             self.custom_keys = [{}]
         else:
             assert isinstance(custom_keys, list), "Search keys must be a list of dictionaries."
-            self.custom_keys = custom_keys
+            key_str = []
+            key_dict = {}
+            for d in custom_keys:
+                for k, v in d.items():
+                    key_dict[str(k)] = str(v)
+                key_str.append(key_dict)
+            self.custom_keys = key_str
 
         if analysis_ranges is not None:
             self.win_ranges = analysis_ranges
@@ -60,7 +66,7 @@ class GameInformation:
                 (2000, 3000),
                 (3000, 5000),
                 (5000, 10000),
-                (10000, int(1e9)),
+                (10000, gamestate.config.wincap + 1),
             ]
 
         if modes_to_analyse is not None:

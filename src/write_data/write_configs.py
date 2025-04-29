@@ -240,7 +240,7 @@ def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwarg
     for key, val in kwargs:
         json_info[key] = val
 
-    if hasattr(gamestate.config, "pay_lines"):
+    if hasattr(gamestate.config, "pay_lines") or hasattr(gamestate.config, "paylines"):
         json_info["paylines"] = gamestate.config.paylines
 
     symbols = {}
@@ -257,7 +257,10 @@ def make_fe_config(gamestate, json_padding=True, assign_properties=True, **kwarg
         if len(special_properties) > 0:
             symbols[sym.name]["special_properties"] = special_properties
 
-    json_info["symbols"] = symbols
+    json_info["symbols"] = []
+    for key, val in symbols.items():
+        json_info["symbols"].append({key: val})
+
     reelstrip_json = {}
     if json_padding:
         for idx, reels in gamestate.config.padding_reels.items():
