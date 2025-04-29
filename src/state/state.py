@@ -62,6 +62,7 @@ class GeneralGameState(ABC):
 
     def reset_book(self) -> None:
         """Reset global simulation variables."""
+        self.temp_wins = []
         self.board = [[[] for _ in range(self.config.num_rows[x])] for x in range(self.config.num_reels)]
         self.top_symbols = None
         self.bottom_symbols = None

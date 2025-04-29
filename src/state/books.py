@@ -19,6 +19,11 @@ class Book:
         "Append event to book."
         self.events.append(deepcopy(event))
 
+    def append_book_items(self, event_id: int, appended_info: dict):
+        "Modify an existing book event at position 'event_id'"
+        for k, v in appended_info.items():
+            self.events[event_id][k] = v
+
     def to_json(self):
         "Return JSON-ready object."
         json_book = {
