@@ -51,13 +51,13 @@ class OutputFiles:
         self.configs = {
             "folder_dir": self.config_path,
             "names": {
-                "manifest": "manifest.json",
+                "manifest": "index.json",
                 "be_config": "config.json",
                 "fe_config": "fe_config.json",
                 "math_config": "math_config.json",
             },
             "paths": {
-                "manifest": os.path.join(self.config_path, "manifest.json"),
+                "manifest": os.path.join(self.config_path, "index.json"),
                 "be_config": os.path.join(self.config_path, "config.json"),
                 "fe_config": os.path.join(self.config_path, f"config_fe_{self.game_config.game_id}.json"),
                 "math_config": os.path.join(self.config_path, "math_config.json"),
