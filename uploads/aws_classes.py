@@ -123,9 +123,9 @@ class FileDetails:
         for line in file:
             _, weight, win = line.split(",")
             try:
-                winDict[float(win)] += float(weight)
+                winDict[float(win) / 100] += float(weight)
             except:
-                winDict[float(win)] = float(weight)
+                winDict[float(win) / 100] = float(weight)
             total_weight += float(weight)
 
         sorted_wins = list(winDict.keys())
@@ -139,15 +139,15 @@ class FileDetails:
         game_to_upload = self.game_to_upload
         game_modes = self.game_modes
 
-        gamePath = "/".join(["Games", game_to_upload[:-1], "Library"])
+        gamePath = os.path.join("Games", game_to_upload[:-1], "Library")
         all_file_paths = {}
         if config_files:
             try:
-                all_file_paths["config_frontend"] = "/".join(
-                    [gamePath, "Configs", "config_fe_" + game_to_upload[:-1] + ".json"]
+                all_file_paths["config_frontend"] = os.path.join(
+                    gamePath, "Configs", "config_fe_" + game_to_upload[:-1] + ".json"
                 )
-                all_file_paths["config_backend"] = "/".join([gamePath, "Configs", "config.json"])
-                all_file_paths["standardForce"] = "/".join([gamePath, "Forces", "force.json"])
+                all_file_paths["config_backend"] = os.path.join(gamePath, "Configs", "config.json")
+                all_file_paths["standardForce"] = os.path.join(gamePath, "Forces", "force.json")
             except FileNotFoundError:
                 print("Config File or force.json Upload Error!")
 
@@ -158,19 +158,19 @@ class FileDetails:
             force_name = mode + "_force_file"
             if books:
                 try:
-                    all_file_paths[books_name] = "/".join(
-                        [gamePath, "books_compressed", "books_" + mode + ".json.zst"]
+                    all_file_paths[books_name] = os.path.join(
+                        gamePath, "books_compressed", "books_" + mode + ".json.zst"
                     )
                 except FileNotFoundError:
                     print("Book Upload Error!")
             if lookupTables:
-                lut_f_name = "/".join([gamePath, "lookup_tables", "lookUpTable_" + mode + "_0.csv"])
+                lut_f_name = os.path.join(gamePath, "lookup_tables", "lookUpTable_" + mode + "_0.csv")
                 if os.path.exists(lut_f_name):
                     all_file_paths[lut_name] = lut_f_name
                 else:
                     raise FileNotFoundError
             if force_files:
-                force_f_name = "/".join([gamePath, "forces", "force_record_" + mode + ".json"])
+                force_f_name = os.path.join(gamePath, "forces", "force_record_" + mode + ".json")
                 if os.path.exists(force_f_name):
                     all_file_paths[force_name] = force_f_name
                 else:
@@ -195,7 +195,7 @@ class FileDetails:
     def check_config_details(self):
         """Ensure config file has required fields for ACP upload."""
 
-        config_filepath = "/".join(["games", self.game_to_upload, "library", "configs", "config.json"])
+        config_filepath = os.path.join("games", self.game_to_upload, "library", "configs", "config.json")
         required_keywords = ["minDenomination", "providerNumber", "gameID", "rtp"]
         bookshelf_keywords = ["cost", "rtp", "bookLength"]
         with open(config_filepath, "r") as file:
@@ -215,18 +215,16 @@ class FileDetails:
     def check_rtp(self, game_modes):
         """Verify RTP from lookup tables matches configuration file value."""
 
-        config_filepath = "/".join(["Games", self.game_to_upload, "library", "configs", "config.json"])
-        config_details = json.load(open(config_filepath, "r"))
+        config_filepath = os.path.join("Games", self.game_to_upload, "library", "configs", "config.json")
+        config_details = json.load(open(config_filepath, "r", encoding="UTF-8"))
         failed = False
         for bookshelf in config_details["bookShelfConfig"]:
-            lut_file = "/".join(
-                [
-                    "games",
-                    self.game_to_upload,
-                    "library",
-                    "lookup_tables",
-                    "lookUpTable_" + bookshelf["name"] + "_0.csv",
-                ]
+            lut_file = os.path.join(
+                "games",
+                self.game_to_upload,
+                "library",
+                "lookup_tables",
+                "lookUpTable_" + bookshelf["name"] + "_0.csv",
             )
             if lut_file.split("/")[-1].split("_")[1] in game_modes:
                 wins, weights = self.get_win_weights(lut_file)
