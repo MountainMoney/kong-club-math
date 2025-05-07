@@ -159,7 +159,7 @@ class FileDetails:
             if books:
                 try:
                     all_file_paths[books_name] = os.path.join(
-                        gamePath, "books_compressed", "books_" + mode + ".json.zst"
+                        gamePath, "books_compressed", "books_" + mode + ".jsonl.zst"
                     )
                 except FileNotFoundError:
                     print("Book Upload Error!")

@@ -72,11 +72,11 @@ class OutputFiles:
                 "folder_dir": self.book_path,
                 "names": {
                     "books_uncompressed": f"books_{mode.get_name()}.jsonl",
-                    "books_compressed": f"books_{mode.get_name()}.json.zst",
+                    "books_compressed": f"books_{mode.get_name()}.jsonl.zst",
                 },
                 "paths": {
                     "books_uncompressed": os.path.join(self.book_path, f"books_{mode.get_name()}.jsonl"),
-                    "books_compressed": os.path.join(self.compressed_path, f"books_{mode.get_name()}.json.zst"),
+                    "books_compressed": os.path.join(self.compressed_path, f"books_{mode.get_name()}.jsonl.zst"),
                 },
             }
 
