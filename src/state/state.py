@@ -129,7 +129,10 @@ class GeneralGameState(ABC):
         Freespin triggers are most commonly used, i.e {"kind": X, "symbol": "S", "gametype": "basegame"}
         It is recommended to otherwise record rare events with several keys in order to reduce the overall file-size containing many duplicate ids
         """
-        self.temp_wins.append(description)
+        dstr = {}
+        for k, v in description.items():
+            dstr[str(k)] = str(v)
+        self.temp_wins.append(dstr)
         self.temp_wins.append(self.book_id)
 
     def check_force_keys(self, description) -> None:

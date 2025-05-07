@@ -1,9 +1,8 @@
 use csv::ReaderBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json;
-use serde_json::Value;
 use std::error::Error;
-use std::path::{self, Path, PathBuf};
+use std::path::{Path};
 use std::{collections::HashMap, fs::File};
 
 ////////////////////////////////////
@@ -92,6 +91,14 @@ pub(crate) struct LookUpTableEntry {
     pub win: f64,
 }
 
+//Integer payout values
+#[derive(Debug, Deserialize)]
+pub(crate) struct LookUpTableInput {
+    pub id: u32,
+    pub weight: u64,
+    pub win: u32,
+}
+
 ////////////////////////////////////
 /// FUNCTIONS TO LOAD CONFIG FILES
 ////////////////////////////////////
@@ -144,8 +151,12 @@ pub(crate) fn read_look_up_table(
     let mut lookup_table: HashMap<u32, LookUpTableEntry> = HashMap::new();
 
     for result in rdr.deserialize() {
-        let record: LookUpTableEntry = result?;
-        lookup_table.insert(record.id, record);
+        let record: LookUpTableInput = result?;
+        let record_float = LookUpTableEntry{
+            id: record.id, 
+            weight: record.weight, 
+            win: record.win as f64 / 100.0};
+        lookup_table.insert(record.id, record_float);
     }
 
     Ok(lookup_table)

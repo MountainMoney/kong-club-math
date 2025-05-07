@@ -11,22 +11,22 @@ from uploads.aws_upload import upload_to_aws
 
 if __name__ == "__main__":
 
-    num_threads = 1
+    num_threads = 10
     rust_threads = 20
     batching_size = 5000
     compression = True
     profiling = False
 
     num_sim_args = {
-        "base": int(1e2),
-        "bonus": int(1e2),
+        "base": int(1e4),
+        "bonus": int(1e4),
     }
 
     run_conditions = {
-        "run_sims": True,
+        "run_sims": False,
         "run_optimization": False,
         "run_analysis": False,
-        "upload_data": False,
+        "upload_data": True,
     }
     target_modes = list(num_sim_args.keys())
 
@@ -62,8 +62,4 @@ if __name__ == "__main__":
             "force_files": True,
             "config_files": True,
         }
-        upload_to_aws(
-            gamestate,
-            target_modes,
-            upload_items,
-        )
+        upload_to_aws(gamestate, target_modes, upload_items, override_check=False)

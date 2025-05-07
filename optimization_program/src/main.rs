@@ -7,9 +7,9 @@ use rayon::prelude::*;
 use std::env;
 use std::hash::{Hash, Hasher};
 use std::mem;
-use std::path::{self, Path, PathBuf};
+use std::path::{Path};
 use std::{
-    cmp::Ordering, collections::HashMap, fmt::format, fs, fs::File, io::BufWriter, io::Write,
+    cmp::Ordering, collections::HashMap, fs, fs::File, io::BufWriter, io::Write,
     time::Instant,
 };
 
@@ -18,7 +18,6 @@ use exes::{
     load_config_data, load_force_options, read_look_up_table, DressJson, FenceJson,
     LookUpTableEntry, SearchResult
 }; // Import the functions
-use std::str::FromStr;
 // use flame;
 
 fn main() {
@@ -440,8 +439,8 @@ fn print_information(
                 let mut file = BufWriter::new(File::create(file_path).unwrap());
                 for index in &sorted_indexes {
                     let entry = lookup_table.get(index).unwrap();
-                    let rounded_win = format!("{:.2}", entry.win);
-                    write!(file, "{},{},{}\n", entry.id, entry.weight, rounded_win)
+                    let rounded_win = entry.win * 100.0; //format!("{:.2}", entry.win);
+                    write!(file, "{},{},{}\n", entry.id, entry.weight, rounded_win as u32)
                         .expect("Failed to write to file");
                 }
             }
@@ -471,7 +470,6 @@ fn print_information(
         }
     });
 
-    for pig_index in 0..10 {}
 }
 
 fn get_win_ranges<T: std::io::Write>(
