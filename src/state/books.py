@@ -28,7 +28,7 @@ class Book:
         "Return JSON-ready object."
         json_book = {
             "id": self.id,
-            "payoutMultiplier": self.payout_multiplier,
+            "payoutMultiplier": int(round(self.payout_multiplier * 100, 0)),
             "events": self.events,
             "criteria": self.criteria,
             "baseGameWins": self.basegame_wins,

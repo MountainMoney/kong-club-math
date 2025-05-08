@@ -79,9 +79,7 @@ def make_lookup_tables(gamestate: object, name: str):
     sims = list(gamestate.library.keys())
     sims.sort()
     for sim in sims:
-        file.write(
-            "{},1,{}\n".format(gamestate.library[sim]["id"], int(100 * gamestate.library[sim]["payoutMultiplier"]))
-        )
+        file.write("{},1,{}\n".format(gamestate.library[sim]["id"], gamestate.library[sim]["payoutMultiplier"]))
     file.close()
 
 

@@ -439,8 +439,8 @@ fn print_information(
                 let mut file = BufWriter::new(File::create(file_path).unwrap());
                 for index in &sorted_indexes {
                     let entry = lookup_table.get(index).unwrap();
-                    let rounded_win = entry.win * 100.0; //format!("{:.2}", entry.win);
-                    write!(file, "{},{},{}\n", entry.id, entry.weight, rounded_win as u32)
+                    let rounded_win = (entry.win * 100.0).round(); //format!("{:.2}", entry.win);
+                    write!(file, "{},{},{}\n", entry.id, entry.weight, rounded_win as u64)
                         .expect("Failed to write to file");
                 }
             }

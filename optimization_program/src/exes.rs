@@ -96,7 +96,7 @@ pub(crate) struct LookUpTableEntry {
 pub(crate) struct LookUpTableInput {
     pub id: u32,
     pub weight: u64,
-    pub win: u32,
+    pub win: u64,
 }
 
 ////////////////////////////////////
