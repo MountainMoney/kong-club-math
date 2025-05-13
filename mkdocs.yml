@@ -1,5 +1,5 @@
 site_name: Stake Development Kits
-site_url: https://carrot-engineering.github.io/math-sdk
+site_url: https://github.com/StakeEngine/math-sdk.git
 theme:
   favicon: assets/favicon.png
   logo: assets/logo_stake_eng_white.png
