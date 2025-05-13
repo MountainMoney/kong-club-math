@@ -432,7 +432,7 @@ fn print_information(
                 let file_path = Path::new(&path_to_games)
                     .join(&game_name)
                     .join("library")
-                    .join("lookup_tables")
+                    .join("publish_files")
                     .join(format!("lookUpTable_{}_0.csv", bet_type));
 
                 // let mut file = File::create(file_path).expect("Failed to create file");

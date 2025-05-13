@@ -33,6 +33,7 @@ class GameInformation:
         self.load_config()
         self.libraryPath = gamestate.output_files.library_path
         self.lutPath = gamestate.output_files.lookup_path
+        self.finalLUTPath = gamestate.output_files.final_lookup_path
 
         if custom_keys is None:
             self.custom_keys = [{}]

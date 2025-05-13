@@ -27,9 +27,12 @@ class OutputFiles:
         self.config_path = os.path.join(self.library_path, "configs")
         self.force_path = os.path.join(self.library_path, "forces")
         self.book_path = os.path.join(self.library_path, "books")
-        self.compressed_path = os.path.join(self.library_path, "books_compressed")
         self.lookup_path = os.path.join(self.library_path, "lookup_tables")
+        self.publish_path = os.path.join(self.library_path, "publish_files")
         self.optimization_path = os.path.join(self.library_path, "optimization_files")
+        self.index_config_path = self.publish_path  # Required RGS files
+        self.compressed_path = self.publish_path  # Required RGS files
+        self.final_lookup_path = self.publish_path  # Required RGS files
         self.optimization_result_path = os.path.join(self.optimization_path, "trial_results")
 
         all_paths = [
@@ -42,6 +45,7 @@ class OutputFiles:
             "temp_path",
             "optimization_path",
             "optimization_result_path",
+            "publish_path",
         ]
         for p in all_paths:
             self.check_folder_exists(getattr(self, p))
@@ -57,7 +61,7 @@ class OutputFiles:
                 "math_config": "math_config.json",
             },
             "paths": {
-                "manifest": os.path.join(self.config_path, "index.json"),
+                "manifest": os.path.join(self.publish_path, "index.json"),
                 "be_config": os.path.join(self.config_path, "config.json"),
                 "fe_config": os.path.join(self.config_path, f"config_fe_{self.game_config.game_id}.json"),
                 "math_config": os.path.join(self.config_path, "math_config.json"),
@@ -103,7 +107,7 @@ class OutputFiles:
                 },
                 "paths": {
                     "base_lookup": os.path.join(self.lookup_path, f"lookUpTable_{mode.get_name()}.csv"),
-                    "optimized_lookup": os.path.join(self.lookup_path, f"lookUpTable_{mode.get_name()}_0.csv"),
+                    "optimized_lookup": os.path.join(self.publish_path, f"lookUpTable_{mode.get_name()}_0.csv"),
                     "segmented_id": os.path.join(self.lookup_path, f"lookUpTableSegmented_{mode.get_name()}.csv"),
                 },
             }
@@ -137,6 +141,10 @@ class OutputFiles:
     def get_final_lookup_name(self, betmode: str):
         """Final csv lookup table name."""
         return os.path.join(self.lookup_path, f"lookUpTable_{betmode}.csv")
+
+    def get_optimized_lookup_name(self, betmode: str):
+        """Optimized lookup table"""
+        return os.path.join(self.publish_path, f"lookUpTable_{betmode}_0.csv")
 
     def get_final_segmented_name(self, betmode: str):
         """Final csv segmented wins lookup table name."""

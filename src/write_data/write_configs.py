@@ -25,11 +25,11 @@ def generate_configs(gamestate: object, json_padding: bool = True, assign_proper
     )
     make_be_config(gamestate)
     make_temp_math_config(gamestate)
-    make_manifest(gamestate)
+    make_index_config(gamestate)
     # make_math_config(gamestate)
 
 
-def make_manifest(gamestate: object):
+def make_index_config(gamestate: object):
     """
     RGS config file list verification
     This file is used to locate all published math files from AWS. Custom directory structures can be uplaoded
