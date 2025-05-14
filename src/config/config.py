@@ -143,6 +143,7 @@ class Config:
         assert len(game_id.split("_")) == 3, "provider_gameNumber_rtp"
         self.reels_path = os.path.join(PATH_TO_GAMES, self.game_id, "reels")
         self.library_path = os.path.join(PATH_TO_GAMES, self.game_id, "library")
+        self.publish_path = os.path.join(PATH_TO_GAMES, self.game_id, "library", "publish_files")
 
     def check_folder_exists(self, folder_path: str) -> None:
         """Check if target folder exists, and create if it does not."""

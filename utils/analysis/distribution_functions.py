@@ -15,7 +15,7 @@ def make_win_distribution(filepath: str, normalize: bool = True) -> dict:
         for line in f:
             _, weight, payout = line.strip().split(",")
             weight = int(weight)
-            payout = float(payout)
+            payout = float(payout) / 100
             dist[payout] += weight
 
     # Sort by win amount

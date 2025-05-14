@@ -25,8 +25,8 @@ if __name__ == "__main__":
     run_conditions = {
         "run_sims": False,
         "run_optimization": False,
-        "run_analysis": False,
-        "upload_data": True,
+        "run_analysis": True,
+        "upload_data": False,
     }
     target_modes = list(num_sim_args.keys())
 
