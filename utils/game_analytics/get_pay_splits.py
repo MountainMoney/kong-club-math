@@ -13,7 +13,7 @@ def get_unoptimized_hits(lut_path, all_modes, win_ranges):
         counter = 0
         for line in lut:
             _, _, payout = line.strip().split(",")
-            all_modes_base_dist[mode][float(payout)] += 1
+            all_modes_base_dist[mode][float(round(int(payout) / 100, 2))] += 1
             counter += 1
 
         total_mode_count[mode] = counter
