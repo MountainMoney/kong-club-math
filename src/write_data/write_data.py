@@ -2,6 +2,7 @@
 
 from collections import defaultdict
 from warnings import warn
+import shutil
 import os
 import hashlib
 import json
@@ -236,6 +237,12 @@ def output_lookup_and_force_files(
             with open(filename, "r", encoding="UTF-8") as infile:
                 outfile.write(infile.read())
 
+    # Write _0 file if it does not exist
+    if not (os.path.exists(gamestate.output_files.get_optimized_lookup_name(betmode))):
+        shutil.copy(
+            gamestate.output_files.get_final_lookup_name(betmode),
+            gamestate.output_files.get_optimized_lookup_name(betmode),
+        )
     with open(
         gamestate.output_files.get_final_segmented_name(betmode),
         "w",

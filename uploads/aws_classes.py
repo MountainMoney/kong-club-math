@@ -72,13 +72,13 @@ class check_files:
                 mode_params["EXPECTED_LUT_LENGTH"] = int(bookshelf[mode]["bookLength"])
                 mode_params["ACTUAL_LUT_LENGTH"] = int(
                     self.get_lut_length(
-                        lut_base_path + "lookup_tables/", bookshelf[mode]["tables"][0]["file"].split("/")[-1]
+                        lut_base_path + "publish_files/", bookshelf[mode]["tables"][0]["file"].split("/")[-1]
                     )
                 )
 
                 mode_params["EXPECTED_SHA"] = bookshelf[mode]["tables"][0]["sha256"]
                 mode_params["ACTUAL_SHA"] = self.get_lut_sha(
-                    lut_base_path + "Lookup_tables/", bookshelf[mode]["tables"][0]["file"].split("/")[-1]
+                    lut_base_path + "publish_files/", bookshelf[mode]["tables"][0]["file"].split("/")[-1]
                 )
 
                 all_check_items.append(mode_params)
@@ -164,7 +164,7 @@ class FileDetails:
                 except FileNotFoundError:
                     print("Book Upload Error!")
             if lookupTables:
-                lut_f_name = os.path.join(gamePath, "lookup_tables", "lookUpTable_" + mode + "_0.csv")
+                lut_f_name = os.path.join(gamePath, "publish_files", "lookUpTable_" + mode + "_0.csv")
                 if os.path.exists(lut_f_name):
                     all_file_paths[lut_name] = lut_f_name
                 else:
@@ -223,7 +223,7 @@ class FileDetails:
                 "games",
                 self.game_to_upload,
                 "library",
-                "lookup_tables",
+                "publish_files",
                 "lookUpTable_" + bookshelf["name"] + "_0.csv",
             )
             if lut_file.split("/")[-1].split("_")[1] in game_modes:

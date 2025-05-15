@@ -6,7 +6,11 @@ import shutil
 import warnings
 from collections import defaultdict
 from utils.get_file_hash import get_hash
-from utils.analysis.distribution_functions import get_distribution_std, get_lookup_length
+from utils.analysis.distribution_functions import (
+    make_win_distribution,
+    get_lookup_length,
+    get_distribution_moments,
+)
 
 
 def copy_and_rename_csv(filepath: str) -> None:
@@ -25,11 +29,11 @@ def generate_configs(gamestate: object, json_padding: bool = True, assign_proper
     )
     make_be_config(gamestate)
     make_temp_math_config(gamestate)
-    make_manifest(gamestate)
+    make_index_config(gamestate)
     # make_math_config(gamestate)
 
 
-def make_manifest(gamestate: object):
+def make_index_config(gamestate: object):
     """
     RGS config file list verification
     This file is used to locate all published math files from AWS. Custom directory structures can be uplaoded
@@ -324,7 +328,9 @@ def make_be_config(gamestate):
             copy_and_rename_csv(base_table)
 
         lut_sha_value = get_hash(lut_table)
-        std_val = round(get_distribution_std(lut_table) / bet.get_cost(), 2)
+        dist = make_win_distribution(lut_table)
+        _, std_val, _, _ = get_distribution_moments(dist)
+        std_val = round(std_val / bet.get_cost(), 2)
         booklength = get_lookup_length(lut_table)
 
         _, lut_nme = os.path.split(lut_table)
