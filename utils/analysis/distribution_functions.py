@@ -34,22 +34,24 @@ def get_distribution_average(dist: dict) -> float:
 
 def get_distribution_moments(dist: dict) -> float:
     """Given a (weighted) lookup-table, return standard deviation."""
-    av = get_distribution_average(dist)
-    win_amounts = np.array(list(dist.keys()))
-    probabilities = np.array(list(dist.values()))
+    av_win = get_distribution_average(dist)
+    total_weight = sum(list(dist.values()))
 
-    variance = np.average((win_amounts - av) ** 2, weights=probabilities)  # Weighted variance
-    stdandard_dev = sqrt(variance)
+    variance = 0.0
+    for pay, weight in dist.items():
+        variance += ((pay - av_win) ** 2) * (weight / total_weight)
+    standard_dev = sqrt(variance)
 
     skewness, kurtosis = 0.0, 0.0
-    av_win = get_distribution_average(dist)
     av_win = float(av_win)
     for win, weight in dist.items():
         skewness += ((win - av_win) ** 3) * weight
         kurtosis += ((win - av_win) ** 4) * weight
+    skewness /= (standard_dev) ** 3
+    kurtosis /= (standard_dev) ** 4
     kurtosis -= 3
 
-    return variance, stdandard_dev, skewness, kurtosis
+    return variance, standard_dev, skewness, kurtosis
 
 
 def get_distribution_median(dist: dict, total_weight=None) -> float:
