@@ -1,5 +1,10 @@
 # Setup and installation
 
+Clone the Math SDK repository to get started
+```sh
+git@github.com:StakeEngine/math-sdk.git
+```
+
 ## Makefile (recommended)
 
 Assuming [Make](https://www.gnu.org/software/make/) and a recent version of [Python3](https://www.python.org/download/releases/3.0/) is installed on your machine, the easiest method of setting up the SDK is using the terminal to invoke:

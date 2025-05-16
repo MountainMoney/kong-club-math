@@ -4,13 +4,14 @@
   }
 
   [data-md-color-scheme="default"] {
-    --md-primary-fg-color:        rgb(8, 47, 90); 
+    --md-primary-fg-color:        #15212E;
     --md-primary-bg-color:        white;
     --md-accent-fg-color:         rgb(89, 0, 153);
   }
  
   [data-md-color-scheme="slate"] {
-    --md-primary-fg-color:        rgb(8, 47, 90);
+    --md-default-bg-color:       #1F2B37;
+    --md-primary-fg-color:        #15212E;
     --md-primary-bg-color:        white;
     --md-accent-fg-color:         white;
     --md-typeset-a-color: white;
@@ -18,6 +19,11 @@
 
   .md-typeset a:hover {
     text-shadow: 0 0 8px black;
+  }
+
+  .md-header {
+    box-shadow: none;
+    padding: 8px 0;
   }
 
   .md-header__button.md-logo svg {

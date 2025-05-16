@@ -20,7 +20,7 @@ class HitRateCalculations:
             PATH_TO_GAMES, self.game_id, "library", "forces", f"force_record_{self.mode}.json"
         )
         lut_file = os.path.join(
-            PATH_TO_GAMES, self.game_id, "library", "lookup_tables", f"lookUpTable_{self.mode}_0.csv"
+            PATH_TO_GAMES, self.game_id, "library", "publish_files", f"lookUpTable_{self.mode}_0.csv"
         )
         with open(force_file, "r", encoding="UTF-8") as f:
             file_dict = json.load(f)
