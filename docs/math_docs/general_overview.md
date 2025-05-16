@@ -1,5 +1,9 @@
 # Setup and installation
 
+***Running the math-sdk requires Python3 and PIP to be installed!***
+
+***Rust/Cargo must also be installed for the optimization algorithm to run!***
+
 Clone the Math SDK repository to get started
 ```sh
 git@github.com:StakeEngine/math-sdk.git
@@ -12,6 +16,15 @@ Assuming [Make](https://www.gnu.org/software/make/) and a recent version of [Pyt
   make setup
 ```
 This will setup and activate a Python virtual environment, installing all necessary packages as defined within ***requirements.txt***, and install an editable math-sdk module.
+
+
+## Installing Cargo (Only if using Optimization Algorithm)
+
+If the optimization algorithm is being utilized, [**Rust**](https://www.rust-lang.org/) and **Cargo** should be [installed](https://doc.rust-lang.org/cargo/getting-started/installation.html). 
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
 
 
 ## Manual installation
@@ -81,10 +94,3 @@ When finished, deactivate the virtual environment with:
 deactivate
 ```
 
-## Installing Cargo (Only if using Optimization Algorithm)
-
-If the optimization algorithm is being utilized, [**Rust**](https://www.rust-lang.org/) and **Cargo** should be [installed](https://doc.rust-lang.org/cargo/getting-started/installation.html). 
-
-```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-```
