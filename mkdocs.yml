@@ -43,6 +43,7 @@ nav:
   - Math-SDK: math_home.md
   - Technical Details:
     - Math SDK Technical Details:
+      - Required Math File Format: rgs_docs/data_format.md
       - SDK Directory: math_docs/directory.md
       - Engine Setup: math_docs/general_overview.md
       - High-Level Structure:

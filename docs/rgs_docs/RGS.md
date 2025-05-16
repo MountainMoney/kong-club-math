@@ -1,3 +1,5 @@
+
+
 # RGS Endpoints
 
 This specification outlines the API endpoints available to providers for communicating with the Stake Engine. These APIs enable key operations such as creating bets, completing bets, validating sessions, and retrieving player balances.
@@ -310,3 +312,9 @@ Stake Engine uses standard HTTP response codes (200, 400, 500) with specific err
 | --------------- | ----------------------------- |
 | ERR_GEN         | General Server Error          |
 | ERR_MAINTENANCE | RGS Under Planned Maintenance |
+
+
+
+## Math Publication File Formats
+
+When publishing math results, ensure that the [file-format](../rgs_docs/data_format.md) is abided by. These are strict conditions for successful math file publication. 
