@@ -1,54 +1,22 @@
-# Carrot Engine Installation
+# Stake Engine Math SDK
+
+Welcome to [Stake Engine Math SDK](https://engine.stake.com/)!
+
+The Math SDK is a Python-based engine for defining game rules, simulating outcomes, and optimizing win distributions. It generates all necessary backend and configuration files, lookup tables, and simulation results.
+   
+
+For technical details [view the docs](https://stakeengine.github.io/math-sdk/)
+
+
+# Installation
  
- ## (Recommended) Run Makefile
- ```sh
-    make setup
- ```
+This repository requires Python3 (version >= 3.12), along with the PIP package installer.
+If the included optimization algorithm is being used, Rust/Cargo will also need to be installed.
 
- -Sets up a virtual environment using a tested release version.
- -Activates the *venv*
- -Installs required packages using pip 
- -Install repo using setuptools
-
-
-# Open and read documentation
-
-Documentation is written as Markdown files with the `docs/` folder, using the `MkDocs` package. When the repositiory is publicly avaliable documentation will be on GitHub Pages. For the meantime, they can be read through a *localhost*.
+It is recommended to use [Make](https://www.gnu.org/software/make/) and setup the engine by running:
 ```sh
- mkdocs serve
+make setup
 ```
 
-
-
-# Python venv usage
-
-Windows: python -m venv env 
-
-Mac: python3 -m venv env
-
-'python3.12 -m venv env' (version specific)
-
-Windows: env\Scripts\activate.bat
-Mac: source env/bin/activate/
-
-
-# Package management
-install packages: pip install -r requirements.txt
-
-
-# Setup python package module
-pip install -e .
-
-
-# Removing instances
-
-deactivate 
-
-```sh
-make clean
-```
-
-Or: rm -r env (if virtual env is not needed)
-
-
+Alternatively, visit our [Setup and Installation page](https://stakeengine.github.io/math-sdk/math_docs/general_overview/) for more details.
 
