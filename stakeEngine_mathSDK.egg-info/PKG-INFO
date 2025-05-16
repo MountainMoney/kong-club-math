@@ -1,7 +1,0 @@
-Metadata-Version: 2.4
-Name: stakeEngine-mathSDK
-Version: 0.0.0
-Author: CarrotRGS
-Requires-Python: >=3.12
-Dynamic: author
-Dynamic: requires-python
