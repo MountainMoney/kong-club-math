@@ -4,14 +4,22 @@ else
 	PYTHON = python3 
 endif 
 
-.PHONY: setup test clean
+.PHONY: setup test clean virtual activate pipInstall packInstall 
 
 
-setup:
-	$(PYTHON) -m venv env
-	source env/bin/activate && pip install --upgrade pip
-	pip install -r requirements.txt 
-	pip install -e .
+virtual:
+	$(PYTHON) -m venv env 
+	
+activate: virtual
+	./env/bin/pip install --upgrade pip
+
+pipInstall: activate
+	./env/bin/pip install -r requirements.txt 
+
+packInstall: pipInstall
+	./env/bin/pip install -e .
+
+setup: packInstall
 
 test:
 	cd $(CURDIR)
