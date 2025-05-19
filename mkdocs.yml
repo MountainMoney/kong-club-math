@@ -43,9 +43,10 @@ nav:
   - Math-SDK: math_home.md
   - Technical Details:
     - Math SDK Technical Details:
+      - Engine Setup: math_docs/general_overview.md
+      - Quickstart Guide: math_docs/quickstart.md
       - Required Math File Format: rgs_docs/data_format.md
       - SDK Directory: math_docs/directory.md
-      - Engine Setup: math_docs/general_overview.md
       - High-Level Structure:
           - State Machine: math_docs/overview_section/state_overview.md
           - Game Structure: math_docs/overview_section/game_struct.md

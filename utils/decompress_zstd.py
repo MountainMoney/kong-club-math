@@ -4,7 +4,7 @@ import json
 import zstandard as zstd
 
 
-def decompress(input_path: str):
+def decompress(input_path: str, save_output: bool = False):
     """Decompress zst files assuming newline char to indicate different sims."""
 
     def json_validate(json_blob):
@@ -23,8 +23,12 @@ def decompress(input_path: str):
     for sim in all_sims:
         json_validate(sim)
 
+    if save_output:
+        with open("decompressed.jsonl", "w", encoding="UTF-8") as f:
+            f.write(json.dumps(decompressed_data, indent=4))
+
 
 if __name__ == "__main__":
 
-    test_file = "games/gray/books_compressed/books_Tiki_96.jsonl.zst"
+    test_file = "compressed_name.jsonl.zst"
     decompress(test_file)

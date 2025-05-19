@@ -5,9 +5,9 @@ from game_config import GameConfig
 from game_optimization import OptimizationSetup
 from optimization_program.run_script import OptimizationExecution
 from utils.game_analytics.run_analysis import create_stat_sheet
+from utils.rgs_verification import execute_all_tests
 from src.state.run_sims import create_books
 from src.write_data.write_configs import generate_configs
-from uploads.aws_upload import upload_to_aws
 
 if __name__ == "__main__":
 
@@ -26,7 +26,7 @@ if __name__ == "__main__":
         "run_sims": True,
         "run_optimization": True,
         "run_analysis": True,
-        "upload_data": False,
+        "run_format_checks": True,
     }
     target_modes = ["base", "bonus"]
 
@@ -55,15 +55,5 @@ if __name__ == "__main__":
         custom_keys = [{"symbol": "scatter"}]
         create_stat_sheet(gamestate, custom_keys=custom_keys)
 
-    if run_conditions["upload_data"]:
-        upload_items = {
-            "books": True,
-            "lookup_tables": True,
-            "force_files": True,
-            "config_files": True,
-        }
-        upload_to_aws(
-            gamestate,
-            target_modes,
-            upload_items,
-        )
+    if run_conditions["run_format_checks"]:
+        execute_all_tests(config)
