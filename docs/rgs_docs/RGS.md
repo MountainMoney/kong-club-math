@@ -13,8 +13,10 @@ This document defines how the provider’s frontend communicates with the Stake 
 Games are hosted under a predefined URL. Providers should use the parameters below to interact with the RGS on behalf of the user and correctly display game information.
 
 ```
-https://{{.TeamName}}.cdn.stake-engine.com/{{.TeamID}}/{{.GameID}}/{{.GameVersion}}/index.html?sessionID={{.SessionID}}&gameID={{.GameID}}&lang={{.Lang}}&device={{.Device}}&rgs_url={{.RgsUrl}}
+https://{{.TeamName}}.cdn.stake-engine.com/{{.GameID}}/{{.GameVersion}}/index.html?sessionID={{.SessionID}}&lang={{.Lang}}&device={{.Device}}&rgs_url={{.RgsUrl}}
 ```
+
+### Query Params in URL
 
 | Field     | Description                                                                                                                           |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
