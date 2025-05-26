@@ -164,10 +164,6 @@ POST /wallet/authenticate
     "stepBet": 100000,
     "defaultBetLevel": 1000000,
     "betLevels": [...],
-    "betModes": {
-      "BASE": { "costMultiplier": 1, "feature": true, "mode": "BASE" },
-      "ANTE": { "costMultiplier": 1.25, "feature": true, "mode": "ANTE" }
-    },
     "jurisdiction": {
       "socialCasino": false,
       "disabledFullscreen": false,
