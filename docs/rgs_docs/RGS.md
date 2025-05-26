@@ -160,7 +160,6 @@ POST /wallet/authenticate
     "currency": "USD"
   },
   "config": {
-    "gameID": "game_xxx",
     "minBet": 100000,
     "maxBet": 1000000000,
     "stepBet": 100000,
