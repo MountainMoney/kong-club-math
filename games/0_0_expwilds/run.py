@@ -51,6 +51,7 @@ if __name__ == "__main__":
 
     if run_conditions["run_optimization"]:
         OptimizationExecution().run_all_modes(config, target_modes, rust_threads)
+        generate_configs(gamestate)
 
     if run_conditions["run_analysis"]:
         custom_keys = [{"symbol": "scatter"}]
