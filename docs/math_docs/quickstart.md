@@ -8,7 +8,7 @@ There are several example games provided within `/games/`, showing how common sl
 Simulation parameters including number of simulations, payout statistics, optimization conditions, which modes to run etc.. are all handled within `run.py`. 
 
 Using the default settings, running:
-```
+```sh
 make run GAME=0_0_lines
 ```
 (or calling the script manually after activating your virtual-environment)
