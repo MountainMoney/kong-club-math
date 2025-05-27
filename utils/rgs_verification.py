@@ -9,6 +9,8 @@ import importlib
 from io import TextIOWrapper
 import numpy as np
 import zstandard as zst
+import hashlib
+import pickle
 from utils.analysis.distribution_functions import (
     make_win_distribution,
     get_distribution_moments,
@@ -44,6 +46,7 @@ class WinStatistics:
         non_zero_hr=None,
         prob_nil=None,
         prob_less_bet=None,
+        num_non_zero_payouts=None,
         skew=None,
         excess_kurtosis=None,
     ):
@@ -62,6 +65,7 @@ class WinStatistics:
         self.hr_max = hr_max
         self.non_zero_hr = non_zero_hr
         self.prob_nil = prob_nil
+        self.num_non_zero_payouts = num_non_zero_payouts
         self.prob_less_bet = prob_less_bet
         self.skew = skew
         self.excess_kurtosis = excess_kurtosis
@@ -142,9 +146,14 @@ def verify_books_and_payout_mults(books_filename: str) -> list:
 
 def compare_payout_values(book_int_payouts, lut_int_payouts) -> None:
     """Ensure payout multiplier values match between books and lookup tables."""
-    assert len(book_int_payouts) == len(lut_int_payouts), "Mismatch in payout array size."
-    for idx, _ in enumerate(book_int_payouts):
-        assert book_int_payouts[idx] == lut_int_payouts[idx], "Payout mismatch between lookup table and book."
+    book_ints = pickle.dumps(book_int_payouts)
+    lut_ints = pickle.dumps(lut_int_payouts)
+    assert hashlib.md5(book_ints).hexdigest() == hashlib.md5(lut_ints).hexdigest(), "Mismatch in payout array."
+
+
+def get_num_non_zero_payouts(book_int_payouts) -> None:
+    """Count non-zero payouts"""
+    return len([p for p in book_int_payouts if p > 0])
 
 
 def get_lut_statistics(
@@ -169,6 +178,7 @@ def get_lut_statistics(
         non_zero_hr=non_zero_hitrate(win_distribution, weight_range),
         prob_nil=get_prob_no_win(win_distribution, weight_range),
         prob_less_bet=prob_less_than_bet(win_distribution, bet_cost, weight_range),
+        num_non_zero_payouts=get_num_non_zero_payouts(unique_payouts),
         skew=skew,
         excess_kurtosis=kurtosis,
     )
