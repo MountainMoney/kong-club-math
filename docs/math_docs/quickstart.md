@@ -8,8 +8,12 @@ There are several example games provided within `/games/`, showing how common sl
 Simulation parameters including number of simulations, payout statistics, optimization conditions, which modes to run etc.. are all handled within `run.py`. 
 
 Using the default settings, running:
+```
+make run GAME=0_0_lines
+```
+(or calling the script manually after activating your virtual-environment)
 ```sh
-python3 run games/0_0_lines/run.py 
+python3 games/0_0_lines/run.py 
 ```
 will output all the files required by the RGS. All required files to publish math results are found within the `library/publish_files/` folder. Even if this math-sdk is not being used to generate math results, the *books*, *lookup-tables* and *index* file are required for publication. 
 
