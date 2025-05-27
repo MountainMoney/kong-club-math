@@ -17,6 +17,11 @@ Assuming [Make](https://www.gnu.org/software/make/) and a recent version of [Pyt
 ```
 This will setup and activate a Python virtual environment, installing all necessary packages as defined within ***requirements.txt***, and install an editable math-sdk module.
 
+Once the relavent parameters are set for a particular game, execute the run.py file using:
+```sh
+  make run GAME=<game_id>
+```
+
 
 ## Installing Cargo (Only if using Optimization Algorithm)
 
@@ -29,25 +34,24 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ## Manual installation
 
+*Note: This installation is for Mac operating systems, Windows OS uses the prefix python (instead of python3)
 
 ### Create and Activate a Virtual Environment
 
 It's recommended to use a virtual environment to manage dependencies. Using the Virtual Environment manager (_venv_), install Python version >=3.12 using:
 
 ```sh
-python -m venv env
+python3 -m venv env
 ```
 
-- **macOS/Linux**:
-
+If you are using Mac, activate the env with:
 ```sh
-source env/bin/activate
+source env/bin/activate   
 ```
 
-- **Windows**:
-
+If using a Windows computer use:
 ```sh
-venv \\scripts \\activate
+  env\Scripts\activate.bat
 ```
 
 
@@ -56,7 +60,7 @@ venv \\scripts \\activate
 Use `pip` to install dependencies from the `requirements.txt` file:
 
 ```sh
-pip install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 
@@ -65,7 +69,7 @@ pip install -r requirements.txt
 Using the `setup.py` file, the package should be installed it in editable mode (for development purposes) with the command:
 
 ```sh
-pip install -e .
+python3 -m pip install -e .
 ```
 
 This allows modifications to the package source code to take effect without reinstallation. 
@@ -76,7 +80,7 @@ This allows modifications to the package source code to take effect without rein
 You can check that the package is installed by running:
 
 ```sh
-pip list
+python3 -m pip list
 ```
 
 or testing the package import in Python:
