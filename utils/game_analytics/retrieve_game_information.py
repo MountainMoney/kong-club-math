@@ -69,6 +69,14 @@ class GameInformation:
                 (5000, 10000),
                 (10000, gamestate.config.wincap + 1),
             ]
+            if gamestate.config.wincap < self.win_ranges[-1][0]:
+                restricted_win_ranges = []
+                for wr in list(self.win_ranges):
+                    if gamestate.config.wincap >= wr[0]:
+                        restricted_win_ranges.append(wr)
+                    else:
+                        break
+                self.win_ranges = restricted_win_ranges
 
         if modes_to_analyse is not None:
             self.modes_to_analyse = modes_to_analyse
