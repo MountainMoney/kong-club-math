@@ -7,7 +7,7 @@ import os
 import hashlib
 import json
 import ast
-import zstandard as zstd  # type: ignore
+import zstandard as zstd
 
 
 def get_sha_256(file_to_hash: str):

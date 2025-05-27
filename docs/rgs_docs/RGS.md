@@ -13,13 +13,14 @@ This document defines how the provider’s frontend communicates with the Stake 
 Games are hosted under a predefined URL. Providers should use the parameters below to interact with the RGS on behalf of the user and correctly display game information.
 
 ```
-https://games.stake-engine.com/{{.TeamID}}/{{.GameID}}/{{.GameVersion}}/index.html?sessionID={{.SessionID}}&gameID={{.GameID}}&lang={{.Lang}}&device={{.Device}}&rgs_url={{.RgsUrl}}
+https://{{.TeamName}}.cdn.stake-engine.com/{{.GameID}}/{{.GameVersion}}/index.html?sessionID={{.SessionID}}&lang={{.Lang}}&device={{.Device}}&rgs_url={{.RgsUrl}}
 ```
+
+### Query Params in URL
 
 | Field     | Description                                                                                                                           |
 | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | sessionID | Unique session ID for the player. Required for all requests made by the game.                                                         |
-| gameID    | The game’s identifier within the Stake Engine. Used in many API calls.                                                                |
 | lang      | Language in which the game will be displayed.                                                                                         |
 | device    | Specifies 'mobile' or 'desktop'.                                                                                                      |
 | rgs_url   | The URL used for authentication, placing bets, and completing rounds. This URL should not be hardcoded, as it may change dynamically. |
@@ -147,7 +148,6 @@ POST /wallet/authenticate
 ```json
 {
   "sessionID": "xxxxxxx",
-  "gameID": "xxxxxxx"
 }
 ```
 
@@ -160,16 +160,11 @@ POST /wallet/authenticate
     "currency": "USD"
   },
   "config": {
-    "gameID": "game_xxx",
     "minBet": 100000,
     "maxBet": 1000000000,
     "stepBet": 100000,
     "defaultBetLevel": 1000000,
     "betLevels": [...],
-    "betModes": {
-      "BASE": { "costMultiplier": 1, "feature": true, "mode": "BASE" },
-      "ANTE": { "costMultiplier": 1.25, "feature": true, "mode": "ANTE" }
-    },
     "jurisdiction": {
       "socialCasino": false,
       "disabledFullscreen": false,
@@ -217,7 +212,6 @@ Initiates a game round and debits the bet amount from the player's balance.
 ```json
 {
   "amount": 100000,
-  "gameID": "xxxxxx",
   "sessionID": "xxxxxxx",
   "mode": "BASE"
 }
@@ -247,8 +241,7 @@ POST /wallet/endround
 
 ```json
 {
-  "sessionID": "xxxxxx",
-  "gameID": "xxxxxx"
+  "sessionID": "xxxxxx"
 }
 ```
 
@@ -278,7 +271,6 @@ POST /bet/event
 ```json
 {
   "sessionID": "xxxxxx",
-  "gameID": "xxxxxx",
   "event": "xxxxxx"
 }
 ```
