@@ -69,6 +69,14 @@ class GameInformation:
                 (5000, 10000),
                 (10000, gamestate.config.wincap + 1),
             ]
+            if gamestate.config.wincap < self.win_ranges[-1][0]:
+                restricted_win_ranges = []
+                for wr in list(self.win_ranges):
+                    if gamestate.config.wincap >= wr[0]:
+                        restricted_win_ranges.append(wr)
+                    else:
+                        break
+                self.win_ranges = restricted_win_ranges
 
         if modes_to_analyse is not None:
             self.modes_to_analyse = modes_to_analyse
@@ -142,7 +150,7 @@ class GameInformation:
                 lut_path, split_path, sub_modes, "basegame"
             )
             sub_mode_hits, sub_mode_probs, sub_mode_rtp_allocation = return_hit_rates(
-                mode_sorted_distributions, total_mode_weight, self.win_ranges
+                mode_sorted_distributions, total_mode_weight, self.win_ranges, self.cost_mapping[mode]
             )
 
             mode_hit_rate_info[mode]["all_gameType_hits"] = sub_mode_hits
