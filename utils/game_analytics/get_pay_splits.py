@@ -97,7 +97,7 @@ def make_split_win_distribution(lut_file, split_file, all_modes, base_mode_name=
     return all_sorted_distributions, total_lut_weight
 
 
-def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
+def return_hit_rates(all_mode_distributions, total_weight, win_ranges, mode_cost):
     """Calculate hit-rates for game-type specific types."""
     all_modes = list(all_mode_distributions.keys())
     all_mode_probs = {}
@@ -111,6 +111,7 @@ def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
     for w in win_ranges:
         for mode in all_modes:
             all_mode_probs[mode][w] = 0
+            all_mode_rtps[mode][w] = 0
 
     for mode in all_modes:
         mode_wins = list(all_mode_distributions[mode].keys())
@@ -118,16 +119,15 @@ def return_hit_rates(all_mode_distributions, total_weight, win_ranges):
             for win_range in win_ranges:
                 if win >= win_range[0] and win < win_range[1]:
                     all_mode_probs[mode][win_range] += all_mode_distributions[mode][win] / total_weight
+                    all_mode_rtps[mode][win_range] += win * (all_mode_distributions[mode][win] / total_weight)
                     continue
 
         for win_range in win_ranges:
             try:
                 all_mode_hits[mode][win_range] = round((1 / (all_mode_probs[mode][win_range])), 3)
+                all_mode_rtps[mode][win_range] /= mode_cost
             except ZeroDivisionError:
                 all_mode_hits[mode][win_range] = "NaN"
-
-            mean_range_pay = round((win_range[0] + win_range[1]) / 2, 2)
-            all_mode_rtps[mode][mean_range_pay] = all_mode_probs[mode][win_range] * mean_range_pay
 
     return all_mode_hits, all_mode_probs, all_mode_rtps
 

@@ -150,7 +150,7 @@ class GameInformation:
                 lut_path, split_path, sub_modes, "basegame"
             )
             sub_mode_hits, sub_mode_probs, sub_mode_rtp_allocation = return_hit_rates(
-                mode_sorted_distributions, total_mode_weight, self.win_ranges
+                mode_sorted_distributions, total_mode_weight, self.win_ranges, self.cost_mapping[mode]
             )
 
             mode_hit_rate_info[mode]["all_gameType_hits"] = sub_mode_hits
