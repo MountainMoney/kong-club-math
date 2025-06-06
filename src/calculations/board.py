@@ -192,7 +192,7 @@ class Board(GeneralGameState):
             board_str.append([x.name for x in board[reel]])
         return board_str
 
-    def draw_board(self, emit_event: bool = True) -> None:
+    def draw_board(self, emit_event: bool = True, trigger_symbol: str = "scatter") -> None:
         """Instead of retrying to draw a board, force the initial revel to have a
         specific number of scatters, if the betmode criteria specifies this."""
         if (
@@ -200,13 +200,13 @@ class Board(GeneralGameState):
             and self.gametype == self.config.basegame_type
         ):
             num_scatters = get_random_outcome(self.get_current_distribution_conditions()["scatter_triggers"])
-            self.force_special_board("scatter", num_scatters)
+            self.force_special_board(trigger_symbol, num_scatters)
         elif (
             not (self.get_current_distribution_conditions()["force_freegame"])
             and self.gametype == self.config.basegame_type
         ):
             self.create_board_reelstrips()
-            while self.count_special_symbols("scatter") >= min(
+            while self.count_special_symbols(trigger_symbol) >= min(
                 self.config.freespin_triggers[self.gametype].keys()
             ):
                 self.create_board_reelstrips()
@@ -216,7 +216,36 @@ class Board(GeneralGameState):
             reveal_event(self)
 
     def force_special_board(self, force_criteria: str, num_force_syms: int) -> None:
-        """Force a board to have a specified number of symbols."""
+        """Force a board to have a specified number of symbols.
+        Set a specific type of special symbol on a given number of reels.
+        This function is mostly used to set the board so that there is a given number
+        of scatter symbols.
+
+        Args:
+            force_criteria: The type of symbol to force on the board. (e.g. "scatter")
+            num_force_syms: The number of symbols to force on the board.
+
+        Note: If it is possible for two target symbols to appear on one reel, this method
+        will not be able to guarantee an exact number of target symbols or actually random
+        reel positions. I.e. Ensure the reels do not have stacked scatter symbols.
+        """
+        while True:
+            self._force_special_board(force_criteria, num_force_syms)
+            if (
+                force_criteria in self.config.special_symbols
+                and self.count_special_symbols(force_criteria) == num_force_syms
+            ):
+                break
+            elif (
+                not (force_criteria in self.config.special_symbols)
+                and self.count_symbols_on_board(force_criteria) == num_force_syms
+            ):
+                break
+
+    def _force_special_board(self, force_criteria: str, num_force_syms: int) -> None:
+        """
+        Helper function for forcing special (or name specific) symbols
+        """
         reelstrip_id = get_random_outcome(
             self.get_current_distribution_conditions()["reel_weights"][self.gametype]
         )
@@ -243,7 +272,12 @@ class Board(GeneralGameState):
         reelstop_positions = [[] for _ in range(self.config.num_reels)]
         for r in range(self.config.num_reels):
             for s in range(len(reel[r])):
-                if reel[r][s] in self.config.special_symbols[target_symbol]:
+                if (
+                    target_symbol in self.config.special_symbols
+                    and reel[r][s] in self.config.special_symbols[target_symbol]
+                ):
+                    reelstop_positions[r].append(s)
+                elif reel[r][s] == target_symbol:
                     reelstop_positions[r].append(s)
 
         return reelstop_positions
@@ -251,3 +285,12 @@ class Board(GeneralGameState):
     def count_special_symbols(self, special_sym_criteria: str) -> int:
         "Returns integer number of active symbols of any 'special' kind."
         return len(self.special_syms_on_board[special_sym_criteria])
+
+    def count_symbols_on_board(self, symbol_name: str) -> int:
+        """Count number of sumbols on the board matching the target name."""
+        symbol_count = 0
+        for idx, _ in enumerate(self.board):
+            for idy, _ in enumerate(self.board[idx]):
+                if self.board[idx][idy].name.upper() == symbol_name.upper():
+                    symbol_count += 1
+        return symbol_count
