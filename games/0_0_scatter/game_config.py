@@ -20,12 +20,12 @@ class GameConfig(Config):
         super().__init__()
         self.game_id = "0_0_scatter"
         self.game_name = "sample_scatter"
-        self.provider_numer = int(self.game_id.split("_", maxsplit=1)[0])
+        self.provider_numer = 0
         self.working_name = "Sample scatter pay (pay anywhere)"
         self.wincap = 5000.0
         self.win_type = "scatter"
         self.rtp = 0.9700
-        self.construct_paths(self.game_id)
+        self.construct_paths()
 
         # Game Dimensions
         self.num_reels = 6

@@ -16,7 +16,7 @@ class GameConfig(Config):
         self.wincap = 0
         self.win_type = ""
         self.rtp = 0
-        self.construct_paths(self.game_id)
+        self.construct_paths()
 
         # Game Dimensions
         self.num_reels = 0
