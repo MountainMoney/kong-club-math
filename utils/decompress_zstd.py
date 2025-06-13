@@ -19,9 +19,10 @@ def decompress(input_path: str, save_output: bool = False):
     with open(input_path, "rb") as f:
         decompressed_data = decompressor.decompress(f.read()).decode("UTF-8")
 
-    all_sims = decompressed_data.split("\n")
+    all_sims = decompressed_data.strip().split("\n")
     for sim in all_sims:
-        json_validate(sim)
+        if sim.strip():
+            json_validate(sim)
 
     if save_output:
         with open("decompressed.jsonl", "w", encoding="UTF-8") as f:
@@ -30,5 +31,5 @@ def decompress(input_path: str, save_output: bool = False):
 
 if __name__ == "__main__":
 
-    test_file = "compressed_name.jsonl.zst"
-    decompress(test_file)
+    test_file = "books_base.jsonl.zst"
+    decompress(test_file, save_output=True)

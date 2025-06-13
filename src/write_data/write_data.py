@@ -145,14 +145,12 @@ def output_lookup_and_force_files(
 
     if compress:
         # Write a temporary file
-        temp_book_output_path = os.path.join(gamestate.output_files.book_path, "temp_book_output.jsonl")
+        temp_book_output_path = os.path.join(gamestate.output_files.book_path, "temp_book_output.json")
         with open(temp_book_output_path, "w", encoding="UTF-8") as outfile:
-            for idx, fname in enumerate(file_list):
+            for fname in file_list:
                 with open(fname, "rb") as infile:
                     decompressed = zstd.ZstdDecompressor().decompress(infile.read())
                     outfile.write(decompressed.decode("UTF-8"))
-                    if idx < len(file_list) - 1:
-                        outfile.write("\n")
 
         final_out = gamestate.output_files.get_final_book_name(betmode, True)
         with open(temp_book_output_path, "rb") as f_in, open(final_out, "wb") as f_out:
@@ -256,7 +254,7 @@ def output_lookup_and_force_files(
 def write_json(gamestate, filename: str):
     """Convert the list of dictionaries to a JSON-encoded string and compress it in chunks."""
     json_objects = [json.dumps(item) for item in gamestate.library.values()]
-    combined_data = "\n".join(json_objects)
+    combined_data = "\n".join(json_objects) + "\n"
 
     if filename.endswith(".zst"):
         compressor = zstd.ZstdCompressor()
