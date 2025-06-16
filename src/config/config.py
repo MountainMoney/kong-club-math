@@ -13,12 +13,12 @@ class Config:
 
     def __init__(self):
         self.rtp = 0.97
-        self.game_id = "0_0_sample"
+        self.game_id = "0_0_asample"
         self.provider_name = "sample_provider"
-        self.provider_number = int(self.game_id.split("_", maxsplit=1)[0])
+        self.provider_number = 1
         self.game_name = "sample_lines"
         if self.game_id != "0_0_sample":
-            self.construct_paths(self.game_id)
+            self.construct_paths()
 
         # Win information
         self.min_denomination = 0.1
@@ -138,9 +138,8 @@ class Config:
 
         return reelstrips
 
-    def construct_paths(self, game_id: str) -> None:
+    def construct_paths(self) -> None:
         """Assign all output file paths"""
-        assert len(game_id.split("_")) == 3, "provider_gameNumber_rtp"
         self.reels_path = os.path.join(PATH_TO_GAMES, self.game_id, "reels")
         self.library_path = os.path.join(PATH_TO_GAMES, self.game_id, "library")
         self.publish_path = os.path.join(PATH_TO_GAMES, self.game_id, "library", "publish_files")

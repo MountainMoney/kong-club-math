@@ -17,13 +17,13 @@ class GameConfig(Config):
 
     def __init__(self):
         super().__init__()
-        self.game_id = "0_0_lines"
-        self.provider_number = int(self.game_id.split("_", maxsplit=1)[0])
+        self.game_id = "0_0_lines"  # "0_0_lines"
+        self.provider_number = 0
         self.working_name = "Sample Lines Game"
         self.wincap = 5000.0
         self.win_type = "lines"
         self.rtp = 0.9700
-        self.construct_paths(self.game_id)
+        self.construct_paths()
 
         # Game Dimensions
         self.num_reels = 5
