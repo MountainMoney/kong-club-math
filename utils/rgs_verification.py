@@ -74,7 +74,10 @@ class WinStatistics:
         map_object = {}
         for item in self.__dict__.keys():
             if item is not None:
-                map_object[item] = getattr(self, item)
+                if isinstance(getattr(self, item), float):
+                    map_object[item] = round(getattr(self, item), 3)
+                else:
+                    map_object[item] = getattr(self, item)
         return map_object
 
 
@@ -161,7 +164,7 @@ def get_lut_statistics(
 ) -> object:
     """Run RGS statistic tests for upload verification."""
 
-    var, std, skew, kurtosis = get_distribution_moments(win_distribution)
+    var, std, skew, kurtosis = get_distribution_moments(win_distribution, bet_cost)
     MathStats = WinStatistics(
         win_distribution=win_distribution,
         num_events=num_events,
