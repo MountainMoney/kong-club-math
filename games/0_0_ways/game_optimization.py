@@ -4,6 +4,7 @@ from optimization_program.optimization_config import (
     ConstructScaling,
     ConstructParameters,
     ConstructConditions,
+    ConstructFenceBias,
     verify_optimization_input,
 )
 
@@ -63,6 +64,11 @@ class OptimizationSetup:
                     test_spins=[50, 100, 200],
                     test_weights=[0.3, 0.4, 0.3],
                     score_type="rtp",
+                ).return_dict(),
+                "distribution_bias": ConstructFenceBias(
+                    applied_criteria=["basegame"],
+                    bias_ranges=[(1.5, 3.5)],
+                    bias_weights=[0.4],
                 ).return_dict(),
             },
             "bonus": {

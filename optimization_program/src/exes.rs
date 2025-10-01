@@ -75,12 +75,27 @@ pub struct DressesInfo {
     pub dresses: Vec<DressJson>,
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct BiasInfo {
+    pub bet_mode: String,
+    pub bias: Vec<BiasJson>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct BiasJson {
+    pub criteria: String,
+    pub range: [f64; 2],
+    pub prob: f64,
+}
+
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct ConfigData {
     pub game_id: String,
     pub bet_modes: Vec<BetMode>,
     pub fences: Vec<FencesInfo>,
     pub dresses: Vec<DressesInfo>,
+    pub bias: Vec<BiasInfo>,
 }
 
 // LOOK UP TABLE STRUCT
@@ -113,6 +128,7 @@ pub(crate) fn load_force_options(
         .join("library")
         .join("forces")
         .join(format!("force_record_{}.json", bet_type));
+    println!("{}", file_path.display());
     let json_file_path = Path::new(&file_path);
     let file = File::open(json_file_path).expect("Unable to open force file");
     println!("json force path: {}", json_file_path.display());

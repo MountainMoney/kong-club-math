@@ -5,7 +5,6 @@ use rand::Rng;
 use rand_distr::{Distribution, WeightedIndex};
 use rayon::prelude::*;
 use core::panic;
-use std::env;
 use std::hash::{Hash, Hasher};
 use std::mem;
 use std::path::{Path};
@@ -14,140 +13,41 @@ use std::{
     time::Instant,
 };
 
+mod setup;
+use setup::SetupConfig;
+
 mod exes;
 use exes::{
     load_config_data, load_force_options, read_look_up_table, DressJson, FenceJson,
     LookUpTableEntry, SearchResult
-}; // Import the functions
+};
+
+use crate::exes::BiasJson;
 // use flame;
 
 fn main() {
     // Read the contents of the file
     let now = Instant::now();
-    let args: Vec<String> = env::args().collect();
-    let contents: String;
-    if args.len() > 1 {
-        contents = fs::read_to_string(args[1].clone()).expect("Failed to read file");
-    } else {
-        contents = fs::read_to_string("src/setup.txt").expect("Failed to read file");
-    }
-
-    let mut variables: HashMap<String, String> = HashMap::new();
-    for line in contents.lines() {
-        let parts: Vec<&str> = line.split(';').collect();
-        if parts.len() == 2 {
-            variables.insert(parts[0].to_string(), parts[1].to_string());
-        }
-    }
-
-    let game_name = variables
-        .get("game_name")
-        .unwrap_or(&"".to_string())
-        .to_string();
-    let bet_type = variables
-        .get("bet_type")
-        .unwrap_or(&"".to_string())
-        .to_string();
-    let num_show_pigs = variables
-        .get("num_show_pigs")
-        .unwrap_or(&"0".to_string())
-        .parse::<u32>()
-        .unwrap_or(0);
-    let num_pigs_per_fence = variables
-        .get("num_pigs_per_fence")
-        .unwrap_or(&"0".to_string())
-        .parse::<u32>()
-        .unwrap_or(0);
-    let threads_for_fence_construction = variables
-        .get("threads_for_fence_construction")
-        .unwrap_or(&"0".to_string())
-        .parse::<u32>()
-        .unwrap_or(0);
-    let threads_for_show_construction = variables
-        .get("threads_for_show_construction")
-        .unwrap_or(&"0".to_string())
-        .parse::<u32>()
-        .unwrap_or(0);
-
-    let test_spins: Vec<u32> = variables
-        .get("test_spins")
-        .map(|s| {
-            s.trim_matches(|c| c == '[' || c == ']')
-                .split(',')
-                .map(|v| v.trim().parse::<u32>().unwrap_or(0))
-                .collect()
-        })
-        .unwrap_or(Vec::new());
-
-    let test_spins_weights: Vec<f64> = variables
-        .get("test_spins_weights")
-        .map(|s| {
-            s.trim_matches(|c| c == '[' || c == ']')
-                .split(',')
-                .map(|v| v.trim().parse::<f64>().unwrap_or(0.0))
-                .collect()
-        })
-        .unwrap_or(Vec::new());
-
-    let simulation_trials = variables
-        .get("simulation_trials")
-        .unwrap_or(&"0".to_string())
-        .parse::<u32>()
-        .unwrap_or(0);
-
-    let graph_indexes: Vec<u32> = variables
-        .get("graph_indexes")
-        .map(|s| {
-            s.trim_matches(|c| c == '[' || c == ']')
-                .split(',')
-                .map(|v| v.parse::<u32>().unwrap_or(0))
-                .collect()
-        })
-        .unwrap_or(Vec::new());
-
-    let run_1000_batch = variables
-        .get("run_1000_batch")
-        .unwrap_or(&"false".to_string())
-        .parse::<bool>()
-        .unwrap_or(false);
-    let path_to_games = variables
-        .get("path_to_games")
-        .unwrap_or(&"".to_string())
-        .to_string();
-    let min_mean_to_median = variables
-        .get("min_mean_to_median")
-        .unwrap_or(&"".to_string())
-        .parse::<f64>()
-        .unwrap_or(2.5);
-    let max_mean_to_median = variables
-        .get("max_mean_to_median")
-        .unwrap_or(&"".to_string())
-        .parse::<f64>()
-        .unwrap_or(3.0);
-    let pmb_rtp = variables
-        .get("pmb_rtp")
-        .unwrap_or(&"".to_string())
-        .parse::<f64>()
-        .unwrap_or(1.0);
-
+    let cont = fs::read_to_string("src/setup.toml").expect("cannot find setup file in src/");
+    let config: SetupConfig = toml::from_str(&cont).expect("failed to parse setup file");
+    
     run_farm(
-        &game_name,
-        &bet_type,
-        num_show_pigs,
-        num_pigs_per_fence,
-        threads_for_fence_construction,
-        threads_for_show_construction,
-        &test_spins,
-        &test_spins_weights,
-        simulation_trials,
-        &graph_indexes,
-        run_1000_batch,
-        &path_to_games,
-        min_mean_to_median,
-        max_mean_to_median,
-        pmb_rtp,
+        &config.game_name,
+        &config.bet_type,
+        config.num_show_pigs,
+        config.num_pigs_per_fence,
+        config.threads_for_fence_construction,
+        config.threads_for_show_construction,
+        &config.test_spins,
+        &config.test_spins_weights,
+        config.simulation_trials,
+        config.run_1000_batch,
+        &config.path_to_games,
+        config.min_mean_to_median,
+        config.max_mean_to_median,
+        config.pmb_rtp,
     );
-    println!("time taken {}ms", now.elapsed().as_millis());
+    println!("time taken {}ms", now.elapsed().as_secs());
 }
 
 fn run_farm(
@@ -160,7 +60,6 @@ fn run_farm(
     test_spins: &Vec<u32>,
     test_spins_weights: &Vec<f64>,
     simulation_trials: u32,
-    graph_indexes: &[u32],
     run_1000_batch: bool,
     path_to_games: &str,
     min_mean_to_median: f64,
@@ -174,23 +73,11 @@ fn run_farm(
     
     let config_file: exes::ConfigData;
     config_file = load_config_data(game_name, path_to_games.to_string());
-    // NEED TO PULL OUT THE INDEXES OF BET MODE AND DRESSES
-    let mut bet_mode_index = 0;
-    let mut dress_index = 0;
-    let mut fence_index = 0;
-    while config_file.bet_modes[bet_mode_index].bet_mode != bet_type {
-        bet_mode_index += 1;
-    }
-    while config_file.dresses[dress_index].bet_mode != bet_type {
-        dress_index += 1;
-    }
-    while config_file.fences[fence_index].bet_mode != bet_type {
-        fence_index += 1;
-    }
+    let bet_mode_index = config_file.bet_modes.iter().position(|bm| bm.bet_mode == bet_type).expect("betmode index not found in betmode summary array");
+    let fence_index = config_file.fences.iter().position(|fi| fi.bet_mode == bet_type).expect("betmode not found in fences array");
+    let dress_index = config_file.dresses.iter().position(|di|di.bet_mode == bet_type).expect("betmode not found in dress array");
+    let bias_index = config_file.bias.iter().position(|bi| bi.bet_mode == bet_type).expect("betmode not found in bias array");
 
-    ////////////////////
-    // DECLARE VARIABLES
-    ////////////////////
     let mut lookup_table = match read_look_up_table(game_name, bet_type, path_to_games.to_string())
     {
         Ok(table) => table,
@@ -225,6 +112,16 @@ fn run_farm(
         }
         println!("\nCreating {} Fence\n", fence.name);
         sort_wins_by_parameter(&mut fence, &force_options, &mut lookup_table);
+
+        let bias_betmode: Vec<BiasJson> = config_file.bias[bias_index].bias.clone();
+        let mut bias_fence: Option<BiasJson> = None;
+        for b in bias_betmode.iter() {
+            if b.criteria == fence.name {
+                bias_fence = Some(b.clone());
+                break;
+            }
+        }
+
 
         if !fence.win_type {
             let mut win_range_params: Vec<&mut Dress> = Vec::new();
@@ -267,6 +164,11 @@ fn run_farm(
                             &pig_heaven,
                             fence.min_mean_to_median,
                             fence.max_mean_to_median,
+                            bias_fence.clone().unwrap_or(BiasJson {
+                                criteria: "".to_string(),
+                                range: [0.0, 0.0],
+                                prob: 0.0,
+                            }),
                         )
                     })
                     .collect()
@@ -990,6 +892,7 @@ fn create_ancestors(
     pig_heaven: &PigHeaven,
     min_mean_to_median: f64,
     max_mean_to_median: f64,
+    bias_application: BiasJson
 ) -> Vec<Pig> {
     let mut pos_pigs: Vec<Pig> = Vec::with_capacity((pig_heaven.num_pigs as f64).sqrt() as usize);
     let mut neg_pigs: Vec<Pig> = Vec::with_capacity((pig_heaven.num_pigs as f64).sqrt() as usize);
@@ -1038,23 +941,32 @@ fn create_ancestors(
             for _ in 0..variables {
                 amps.push(rng.gen_range(1..=14) as f64);
                 let v = rng.gen::<f64>();
-                let condition = v % 2.0 == 0.0;
-                mus.push(
-                    pig_heaven.avg_win
-                        * ((v * 0.25 + 1.0) * condition as i32 as f64
-                            + (1.0 - v * 0.25) * (!condition as i32 as f64))
-                        * (rng.gen_range(5..=10) as f64 / 10.0),
-                );
+                if bias_application.prob > 0.0 && v <= bias_application.prob {
+                    let m = rng.gen_range(bias_application.range[0]..=bias_application.range[1]);
+                    mus.push(m);
+                } else {
+                    let condition = v % 2.0 == 0.0;
+                    mus.push(
+                        pig_heaven.avg_win
+                            * ((v * 0.25 + 1.0) * condition as i32 as f64
+                                + (1.0 - v * 0.25) * (!condition as i32 as f64))
+                            * (rng.gen_range(5..=15) as f64 / 10.0),
+                    );
+                }
                 stds.push(rng.gen::<f64>() * 30.0 * rng.gen::<f64>() * std_weight);
             }
         } else {
             for _ in 0..variables {
                 let v = rng.gen::<f64>();
                 let random_value2: f64 = rng.gen();
-                mus.push(f64::max(
-                    v * pig_heaven.avg_win + 0.01 * random_value2 * pig_heaven.max_win,
-                    pig_heaven.min_win,
-                ));
+                if bias_application.prob > 0.0 && v <= bias_application.prob {
+                    mus.push(rng.gen_range(bias_application.range[0]..=bias_application.range[1]));
+                } else {
+                    mus.push(f64::max(
+                        v * pig_heaven.avg_win + 0.01 * random_value2 * pig_heaven.max_win,
+                        pig_heaven.min_win,
+                    ));
+                }
                 stds.push(rng.gen::<f64>() * std_weight);
                 amps.push(rng.gen::<f64>());
             }
@@ -1660,5 +1572,5 @@ impl Hash for F64Wrapper {
 
 struct ShowPig {
     pub pig_indexes: Vec<usize>,
-    pub success_score: f64,
+    pub success_score: f64
 }

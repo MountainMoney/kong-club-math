@@ -15,5 +15,5 @@ rand = "0.8.4"
 ndarray = "0.15.3"
 rand_distr = "0.4.2"
 rand_pcg = "0.2"
-
+toml = "0.9.7"
 

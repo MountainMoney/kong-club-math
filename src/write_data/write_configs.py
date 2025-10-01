@@ -85,9 +85,11 @@ def make_temp_math_config(gamestate):
     jsonInfo["bet_modes"] = []
     jsonInfo["fences"] = []
     jsonInfo["dresses"] = []
+    jsonInfo["bias"] = []
     rust_dict = {}
     rust_dict["game_id"] = jsonInfo["game_id"]
     rust_dict["bet_modes"] = []
+    rust_dict["bias"] = []
 
     # Separated betmode information
     opt_mode = None
@@ -151,6 +153,13 @@ def make_temp_math_config(gamestate):
 
             rust_dict["dresses"] += [rust_dress]
             jsonInfo["dresses"].append(rust_dress)
+
+            rust_bias = {"bet_mode": bet_mode.get_name(), "bias": []}
+            if "distribution_bias" in mode_obj.keys():
+                rust_bias["bias"].extend(mode_obj["distribution_bias"])
+            else:
+                rust_bias["bias"].extend([{"criteria": "", "range": [0.0, 0.0], "prob": 0.0}])
+            jsonInfo["bias"].append(rust_bias)
 
     file.write(json.dumps(jsonInfo, indent=4))
     file.close()

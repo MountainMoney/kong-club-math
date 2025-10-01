@@ -1,4 +1,5 @@
 import json
+import toml
 import subprocess
 import os
 from src.config.paths import PATH_TO_GAMES, SETUP_PATH, OPTIMIZATION_PATH, PROJECT_PATH
@@ -26,25 +27,17 @@ class OptimizationExecution:
         for idx, obj in opt_config.items():
             if idx == mode:
                 params = obj["parameters"]
+        params["game_name"] = game_config.game_id
+        params["path_to_games"] = "../games/"
+        params["run_1000_batch"] = False
+        params["bet_type"] = mode
+        params["threads_for_fence_construction"] = threads
+        params["threads_for_show_construction"] = threads
 
         assert params is not None, "Could not load optimization parameters."
 
-        setup_file = open(SETUP_PATH, "w", encoding="UTF-8")
-        setup_file.write("game_name;" + game_config.game_id + "\n")
-        setup_file.write("bet_type;" + mode + "\n")
-        setup_file.write("num_show_pigs;" + str(params["num_show_pigs"]) + "\n")
-        setup_file.write("num_pigs_per_fence;" + str(params["num_pigs_per_fence"]) + "\n")
-        setup_file.write("threads_for_fence_construction;" + str(threads) + "\n")
-        setup_file.write("threads_for_show_construction;" + str(threads) + "\n")
-        setup_file.write("score_type;" + params["score_type"] + "\n")
-        setup_file.write("test_spins;" + str(params["test_spins"]).replace(" ", "") + "\n")
-        setup_file.write("test_spins_weights;" + str(params["test_spins_weights"]).replace(" ", "") + "\n")
-        setup_file.write("simulation_trials;" + str(params["simulation_trials"]) + "\n")
-        setup_file.write("graph_indexes;" + str(0) + "\n")
-        setup_file.write("run_1000_batch;" + str(False) + "\n")
-        setup_file.write("path_to_games;" + PATH_TO_GAMES + "\n")
-        setup_file.write("pmb_rtp;" + str(params["pmb_rtp"]) + "\n")
-        setup_file.close()
+        with open(SETUP_PATH, "w", encoding="UTF-8") as f:
+            toml.dump(params, f)
         print(f"Running optimization for mode: {mode}")
         OptimizationExecution.run_rust_script()
 
