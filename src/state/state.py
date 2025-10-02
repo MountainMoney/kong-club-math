@@ -23,7 +23,7 @@ class GeneralGameState(ABC):
     def __init__(self, config):
         self.config = config
         self.output_files = OutputFiles(self.config)
-        self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
+        self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type, config.wincap)
         self.library = {}
         self.recorded_events = {}
         self.special_symbol_functions = {}
@@ -243,7 +243,13 @@ class GeneralGameState(ABC):
         write_event_list=True,
     ) -> None:
         """Assigns criteria and runs individual simulations. Results are stored in temporary file to be combined when all threads are finished."""
-        self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type)
+        mode_max_win = None
+        for bm in self.config.bet_modes:
+            if bm._name.lower() == betmode.lower():
+                mode_max_win = bm._wincap
+        assert mode_max_win is not None
+
+        self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type, mode_max_win)
         self.library = {}
         self.betmode = betmode
         self.num_sims = num_sims
