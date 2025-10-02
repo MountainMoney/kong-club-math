@@ -4,12 +4,13 @@
 class WinManager:
     """ "stores all simulation win info, at a cumulative and individual spin level"""
 
-    def __init__(self, base_game_mode, free_game_mode):
+    def __init__(self, base_game_mode: str, free_game_mode: str, mode_max_win: float):
         """Initialize total simulation win values."""
         self.base_game_mode = base_game_mode
         self.free_game_mode = free_game_mode
 
         # Updates win amounts across all simulations
+        self.max_allowed_win = mode_max_win
         self.total_cumulative_wins = 0
         self.cumulative_base_wins = 0
         self.cumulative_free_wins = 0
@@ -51,9 +52,11 @@ class WinManager:
 
     def update_end_round_wins(self):
         """Accumulate total wins for a given betting round."""
-        self.total_cumulative_wins += self.basegame_wins + self.freegame_wins
-        self.cumulative_base_wins += self.basegame_wins
-        self.cumulative_free_wins += self.freegame_wins
+        base = min(self.max_allowed_win, self.basegame_wins)
+        free = min(self.max_allowed_win, self.freegame_wins)
+        self.total_cumulative_wins += base + free
+        self.cumulative_base_wins += base
+        self.cumulative_free_wins += free
 
     def reset_end_round_wins(self):
         """Reset wins at end of gameround/simulation."""
