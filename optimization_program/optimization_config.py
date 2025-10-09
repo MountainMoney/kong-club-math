@@ -26,6 +26,31 @@ class ConstructScaling:
         return self.scaling
 
 
+class ConstructFenceBias:
+    """Bias distribution mean generation"""
+
+    def __init__(
+        self,
+        applied_criteria: list[str],
+        bias_ranges: list[tuple[float, float]],
+        bias_weights: list[float],
+    ):
+        assert len(applied_criteria) == len(bias_ranges)
+        assert len(bias_ranges) == len(bias_weights)
+        assert all([len(x) == 2 for x in bias_ranges])
+        assert all([x[0] <= x[1] for x in bias_ranges])
+
+        bias_dict = []
+        for idx, c in enumerate(applied_criteria):
+            bias_dict.append({"criteria": c, "range": bias_ranges[idx], "prob": bias_weights[idx]})
+
+        self.bias = bias_dict
+
+    def return_dict(self):
+        """Return bias values"""
+        return self.bias
+
+
 class ConstructParameters:
     """Optimization run conditions."""
 
@@ -149,3 +174,5 @@ def verify_optimization_input(game_config, opt_dict):
             param_rtp += p["rtp"]
 
         assert round(bm_rtp, 5) == round(param_rtp, 5), "Optimization RTP does not match betmode RTP."
+
+        # Verify bias criteria is valid
