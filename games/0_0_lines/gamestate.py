@@ -8,12 +8,23 @@ class GameState(GameStateOverride):
     """Handles game logic and events for a single simulation number/game-round."""
 
     def run_spin(self, sim, thread_index):
+        if self.bonus_pays is None:
+            self.bonus_pays = []
+            with open("games/0_0_lines/library/lookup_tables/LookUpTable_bonus.csv", "r") as f:
+                for line in f:
+                    _, _, p = line.strip().split(",")
+                    self.bonus_pays.append(int(p))
+            with open("games/0_0_lines/library/lookup_tables/LookUpTableSegmented_bonus.csv", "r") as f:
+                for line in f:
+                    _, c, _, _ = line.strip().split(",")
+                    self.bonus_criteria.append(c)
+
         sim_override = None
         if self.get_current_distribution_conditions()["force_wincap"]:
-            sim_override = thread_index * self.wincap_offset + self.wincap_index
+            sim_override = (thread_index + 1) * self.wincap_offset + self.wincap_index
             self.wincap_index += 1
         elif self.get_current_distribution_conditions()["force_freegame"]:
-            sim_override = thread_index * self.freegame_offset + self.freegame_index
+            sim_override = (thread_index + 1) * self.freegame_offset + self.freegame_index
             self.freegame_index += 1
 
         self.reset_seed(sim, sim_override)
@@ -31,10 +42,6 @@ class GameState(GameStateOverride):
 
             self.evaluate_finalwin()
             self.check_repeat()
-
-        if sim_override is not None:
-            print(f"override: {sim_override} -- {self.win_manager.running_bet_win} -- {self.criteria}")
-
         self.imprint_wins()
 
     def run_freespin(self):
