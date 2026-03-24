@@ -145,14 +145,6 @@ def output_lookup_and_force_files(
             )
 
     if compress:
-        # temp_book_output_path = os.path.join(gamestate.output_files.book_path, "temp_book_output.json")
-        # with open(temp_book_output_path, "w", encoding="UTF-8") as outfile:
-        #     for fname in file_list:
-        #         with open(fname, "rb") as infile:
-        #             decompressed = zstd.ZstdDecompressor().decompress(infile.read())
-        #             outfile.write(decompressed.decode("UTF-8"))
-
-        # Stream-compress to avoid MemoryError on large sim sets
         final_out = gamestate.output_files.get_final_book_name(betmode, True)
         compressor = zstd.ZstdCompressor()
         with open(final_out, "wb") as f_out:
