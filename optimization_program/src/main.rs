@@ -914,10 +914,23 @@ fn create_ancestors(
     let mut already_printed = false;
     let mut bool_added_extra_parms = false;
 
+    let max_loop_count = pig_heaven.num_pigs * 100;
     while (pos_pigs.len() as f64) < (pig_heaven.num_pigs as f64).sqrt()
         || (neg_pigs.len() as f64) < (pig_heaven.num_pigs as f64).sqrt()
     {
         loop_count += 1;
+        if loop_count > max_loop_count {
+            eprintln!(
+                "ERROR: create_ancestors failed to converge after {} iterations. \
+                pos_pigs={}/{}, neg_pigs={}/{}. \
+                Target avg_win={:.4}, fence RTP may be unreachable from sim distribution.",
+                max_loop_count,
+                pos_pigs.len(), (pig_heaven.num_pigs as f64).sqrt() as u32,
+                neg_pigs.len(), (pig_heaven.num_pigs as f64).sqrt() as u32,
+                pig_heaven.avg_win
+            );
+            std::process::exit(1);
+        }
         if !go_back_down {
             std_weight = f64::min(
                 std_weight * (1.0 + 1.0 / (pig_heaven.num_pigs as f64).powf(0.9)),
