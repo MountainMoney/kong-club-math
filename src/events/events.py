@@ -202,7 +202,7 @@ def freespin_end_event(gamestate, winlevel_key="endFeature"):
     event = {
         "index": len(gamestate.book.events),
         "type": EventConstants.FREE_SPIN_END.value,
-        "amount": int(min(gamestate.win_manager.freegame_wins, gamestate.config.wincap) * 100),
+        "amount": int(round(min(gamestate.win_manager.freegame_wins, gamestate.config.wincap) * 100, 0)),
         "winLevel": gamestate.config.get_win_level(gamestate.win_manager.freegame_wins, winlevel_key),
     }
     gamestate.book.add_event(event)
