@@ -12,6 +12,10 @@ class GameStateOverride(GameExecutables):
         super().reset_book()
         # Reset parameters relevant to local game only
         self.tumble_win = 0
+        # Clear the position-multiplier grid every spin so a previous freegame's
+        # sticky grid cannot leak into a later base spin (the grid is re-zeroed at
+        # freegame start by reset_fs_spin and accumulates only within a feature).
+        self.reset_grid_mults()        
 
     def reset_fs_spin(self):
         super().reset_fs_spin()
