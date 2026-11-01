@@ -27,3 +27,6 @@ __pycache__
 
 **/site/*
 
+
+# big archived books (backup in D:\KC_backups\pre_965_stub_books)
+games/kong_club/archive/pre_965_publish/stake_uploads_250k_stub/*.jsonl.zst
