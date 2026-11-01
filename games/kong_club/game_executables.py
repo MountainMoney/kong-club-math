@@ -1,4 +1,4 @@
-"""Scratch Monkey Mayhem state-machine mechanics — Jul 2 Le Bandit Phase A."""
+"""Scratch Kong Club state-machine mechanics — Jul 2 Le Bandit Phase A."""
 
 from __future__ import annotations
 

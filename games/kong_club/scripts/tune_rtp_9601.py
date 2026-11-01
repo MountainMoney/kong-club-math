@@ -1,4 +1,4 @@
-"""Smoke-tune Monkey Mayhem bet modes toward 96.01% RTP.
+"""Smoke-tune Kong Club bet modes toward 96.01% RTP.
 
 Measures mean(payout)/cost with fixed criteria per mode (basegame for base/ante).
 Payout unit: book.payout_multiplier (== final_win bet multiples).
@@ -287,7 +287,7 @@ def suggest_rtp_levers(results: list[dict], config: GameConfig | None = None) ->
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Measure / suggest RTP levers for Monkey Mayhem")
+    parser = argparse.ArgumentParser(description="Measure / suggest RTP levers for Kong Club")
     parser.add_argument("--final", action="store_true", help="Use larger final verification N")
     parser.add_argument("--split", action="store_true", help="Estimate cluster vs coin split")
     parser.add_argument("--mode", choices=list(MODE_COST), help="Measure a single mode")

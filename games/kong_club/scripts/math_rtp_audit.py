@@ -1,4 +1,4 @@
-"""Long cost-aware RTP audit for Monkey Mayhem (playbook).
+"""Long cost-aware RTP audit for Kong Club (playbook).
 
 Reports per mode: RTP, hit rate, % profitable (buys), max paid.
 Base/ante mix freegame criteria at certified quotas and use **weighted** RTP
@@ -73,7 +73,7 @@ def _is_freegame_book(gs: GameState) -> bool:
     return any(
         e.get("type") == "freeSpinTrigger"
         or (
-            e.get("type") == "monkeyMayhemMode"
+            e.get("type") == "kongClubMode"
             and str(e.get("state", "")).startswith("organic_bonus_")
         )
         for e in gs.book.events
@@ -157,7 +157,7 @@ def audit_mode(mode: str, n: int, *, config: GameConfig | None = None) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Monkey Mayhem long RTP audit")
+    parser = argparse.ArgumentParser(description="Kong Club long RTP audit")
     parser.add_argument("--quick", action="store_true", help="Small N for smoke")
     parser.add_argument("--buys", type=int, default=10_000, help="Buy / feature sample size")
     parser.add_argument("--base", type=int, default=25_000, help="Base / ante sample size")

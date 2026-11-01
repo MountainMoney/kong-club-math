@@ -1431,7 +1431,7 @@ def test_three_scatters_trigger_see_bonus():
     assert getattr(gs, "triggered_freegame", False)
     assert gs.bonus_variant == "see"
     assert any(
-        event.get("type") == "monkeyMayhemMode" and "see" in str(event.get("state", ""))
+        event.get("type") == "kongClubMode" and "see" in str(event.get("state", ""))
         for event in gs.book.events
     )
 
@@ -1613,7 +1613,7 @@ def test_gamble_hear_emits_freespins():
     assert getattr(gs, "triggered_freegame", False)
     assert gs.bonus_variant == "hear"
     assert any(
-        event.get("type") == "monkeyMayhemMode" and event.get("state") == "start_bonus_hear"
+        event.get("type") == "kongClubMode" and event.get("state") == "start_bonus_hear"
         for event in gs.book.events
     )
 
@@ -1645,7 +1645,7 @@ def test_gamble_madness_emits_freespins():
     assert getattr(gs, "triggered_freegame", False)
     assert gs.bonus_variant == "madness"
     assert any(
-        event.get("type") == "monkeyMayhemMode" and event.get("state") == "start_bonus_madness"
+        event.get("type") == "kongClubMode" and event.get("state") == "start_bonus_madness"
         for event in gs.book.events
     )
     fills = [event for event in gs.book.events if event.get("type") == "progressFill"]
@@ -2040,14 +2040,14 @@ def test_organic_bonus_entry_resets_progress():
         sink = __import__("io").StringIO()
         with __import__("contextlib").redirect_stdout(sink):
             gs.run_spin(seed)
-        modes = [e for e in gs.book.events if e.get("type") == "monkeyMayhemMode"]
+        modes = [e for e in gs.book.events if e.get("type") == "kongClubMode"]
         if not any(str(e.get("state", "")).startswith("organic_bonus_") for e in modes):
             continue
         # First progressFill after organic mode should be 0 (bonus entry reset).
         organic_idx = next(
             i
             for i, e in enumerate(gs.book.events)
-            if e.get("type") == "monkeyMayhemMode"
+            if e.get("type") == "kongClubMode"
             and str(e.get("state", "")).startswith("organic_bonus_")
         )
         fills = [

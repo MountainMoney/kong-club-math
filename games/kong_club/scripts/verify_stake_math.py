@@ -133,7 +133,7 @@ def fail_checks(rows_by_mode: dict[str, dict], cfg: GameConfig) -> list[str]:
 
 def main() -> int:
     cfg = GameConfig()
-    print("Monkey Mayhem Stake-brief verification")
+    print("Kong Club Stake-brief verification")
     print("Mode map: ante=base_ante feature=feature_spin summit=peak_spin")
     print("          bonus_3=bonus_see bonus_4=bonus_hear gamble=bonus_gamble")
     print(

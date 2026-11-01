@@ -12,7 +12,7 @@ GAME_DIR = Path(__file__).resolve().parent
 LIBRARY = GAME_DIR / "library"
 FORCES = LIBRARY / "forces"
 PUBLISH = LIBRARY / "publish_files"
-OUT = Path(__file__).resolve().parents[3] / "web-sdk" / "apps" / "monkey_mayhem" / "src" / "stories" / "data" / "math_books"
+OUT = Path(__file__).resolve().parents[3] / "web-sdk" / "apps" / "kong_club" / "src" / "stories" / "data" / "math_books"
 
 
 def read_book(mode: str) -> dict[int, dict]:

@@ -1,4 +1,4 @@
-"""Monkey Mayhem math configuration — classic 3-tier tiles + Jul 2 cascade.
+"""Kong Club math configuration — classic 3-tier tiles + Jul 2 cascade.
 
 Symbol IDs align with the art pipeline:
 T/J/Q/K/A, LE/CO/OR/GR/BA, MW, ST, CB/CS/CG.
@@ -27,7 +27,7 @@ from game_criteria import (
 )
 
 
-STAKE_SLUG = "monkey-mayhem"
+STAKE_SLUG = "kong-club"
 
 # Organic bonus entry — same pattern as Football Fiesta:
 # quota picks "freegame" criteria → force N scatters from weighted table → no organic land on base strips.
@@ -49,7 +49,7 @@ GAMBLE_DEAD_BAIT_RATE = 1.0
 
 
 class GameConfig(Config):
-    """Source-of-truth configuration for Monkey Mayhem (3-tier tiles)."""
+    """Source-of-truth configuration for Kong Club (3-tier tiles)."""
 
     _instance = None
 
@@ -60,10 +60,10 @@ class GameConfig(Config):
 
     def __init__(self):
         super().__init__()
-        self.game_id = "monkey_mayhem"
+        self.game_id = "kong_club"
         self.provider_name = "Trifecta"
         self.provider_number = 0
-        self.working_name = "Monkey Mayhem"
+        self.working_name = "Kong Club"
         self.rtp = 0.9601
         self.wincap = 25000.0
         self.win_type = "cluster"

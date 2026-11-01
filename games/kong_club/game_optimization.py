@@ -1,4 +1,4 @@
-"""Set Monkey Mayhem optimization parameters."""
+"""Set Kong Club optimization parameters."""
 
 from optimization_program.optimization_config import (
     ConstructScaling,
@@ -10,7 +10,7 @@ from optimization_program.optimization_config import (
 
 
 class OptimizationSetup:
-    """Optimization scaffolding for all Monkey Mayhem modes."""
+    """Optimization scaffolding for all Kong Club modes."""
 
     def __init__(self, game_config):
         self.game_config = game_config

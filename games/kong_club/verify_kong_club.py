@@ -1,4 +1,4 @@
-"""Monkey Mayhem lightweight math verification.
+"""Kong Club lightweight math verification.
 
 This script is intentionally separate from the SDK optimizer. It gives fast
 feedback on mechanic invariants before expensive book generation.
@@ -105,7 +105,7 @@ def run_mode(config, mode, sims):
 
 def write_report(results, config):
     lines = [
-        "# Monkey Mayhem PAR Smoke Report",
+        "# Kong Club PAR Smoke Report",
         "",
         "This is a pre-optimizer smoke report. Final PAR requires 100k+ simulations per mode after Python 3.12 dependency setup is complete.",
         "",

@@ -190,7 +190,7 @@ def smoke_bonus_gamble() -> None:
             assert "setTotalWin" in types, f"{label}: missing setTotalWin"
             assert_no_leftover_clusters(gs, book, label)
             if "freeSpinTrigger" in types or any(
-                event.get("type") == "monkeyMayhemMode"
+                event.get("type") == "kongClubMode"
                 and str(event.get("state", "")).startswith("start_bonus_")
                 for event in book.events
             ):

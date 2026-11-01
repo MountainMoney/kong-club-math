@@ -38,7 +38,7 @@ def cvar_weighted(rows, pct: float, cost: float) -> float:
 def main() -> None:
     summary = []
     lines = [
-        "# Monkey Mayhem PAR Report — 250k Weighted",
+        "# Kong Club PAR Report — 250k Weighted",
         "",
         "Generated from `library/publish_files/lookUpTable_*_0.csv` after reweight pass.",
         "Book/LUT payout parity verified via `execute_all_tests`.",
@@ -87,7 +87,7 @@ def main() -> None:
             ]
         )
 
-    zip_path = GAME_DIR.parents[2] / "stake_uploads" / "monkey_mayhem_math_v0_4_0_250k.zip"
+    zip_path = GAME_DIR.parents[2] / "stake_uploads" / "kong_club_math_v0_4_0_250k.zip"
     sha_path = zip_path.with_suffix(".sha256.txt")
     lines.extend(
         [

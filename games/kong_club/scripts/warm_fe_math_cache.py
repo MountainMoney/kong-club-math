@@ -1,4 +1,4 @@
-﻿"""Generate local FE math-books cache for Monkey Mayhem (Phase A).
+﻿"""Generate local FE math-books cache for Kong Club (Phase A).
 
 Base / Extra Chance include freegame samples at certified quotas so Extra Chance
 actually triggers local bonuses (warm cache previously forced criteria=basegame only).
@@ -20,7 +20,7 @@ WEB_CACHE = (
     Path(__file__).resolve().parents[4]
     / "web-sdk"
     / "apps"
-    / "monkey_mayhem"
+    / "kong_club"
     / ".cache"
     / "math-books"
 )
@@ -99,7 +99,7 @@ def book_is_freegame(book: dict) -> bool:
     return any(
         event.get("type") == "freeSpinTrigger"
         or (
-            event.get("type") == "monkeyMayhemMode"
+            event.get("type") == "kongClubMode"
             and (
                 str(event.get("state", "")).startswith("organic_bonus_")
                 or str(event.get("state", "")).startswith("start_bonus_")

@@ -1,4 +1,4 @@
-"""Generate Monkey Mayhem math artifacts."""
+"""Generate Kong Club math artifacts."""
 
 from pathlib import Path
 import os
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         "run_format_checks": False,
     }
 
-    print(f"Monkey Mayhem sims per mode: {sims_per_mode} (batch={batching_size}, threads={num_threads})")
+    print(f"Kong Club sims per mode: {sims_per_mode} (batch={batching_size}, threads={num_threads})")
 
     config = GameConfig()
     gamestate = GameState(config)

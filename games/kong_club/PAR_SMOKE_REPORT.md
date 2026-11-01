@@ -1,4 +1,4 @@
-# Monkey Mayhem PAR Smoke Report
+# Kong Club PAR Smoke Report
 
 This is a pre-optimizer smoke report. Final PAR requires 100k+ simulations per mode after Python 3.12 dependency setup is complete.
 
@@ -66,7 +66,7 @@ Observed events:
 - boardActivation: 371
 - finalWin: 175
 - freeSpinEnd: 50
-- monkeyMayhemMode: 50
+- kongClubMode: 50
 - progressFill: 1074
 - reveal: 625
 - setTotalWin: 625

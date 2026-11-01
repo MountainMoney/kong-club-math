@@ -1,6 +1,6 @@
-# Monkey Mayhem — Stake Review Event IDs
+# Kong Club — Stake Review Event IDs
 
-Game slug: `monkey-mayhem`
+Game slug: `kong-club`
 Math version: `v0_4_0_250k`
 
 Replace `YOUR_FRONTEND_URL` and `YOUR_RGS_URL` with staging values.
@@ -14,7 +14,7 @@ Replace `YOUR_FRONTEND_URL` and `YOUR_RGS_URL` with staging values.
 Replay URL template:
 
 ```
-https://YOUR_FRONTEND_URL/?replay=true&game=monkey-mayhem&version=v0_4_0_250k&mode=base&event=1086&amount=1000000&currency=USD&lang=en&rgs_url=YOUR_RGS_URL
+https://YOUR_FRONTEND_URL/?replay=true&game=kong-club&version=v0_4_0_250k&mode=base&event=1086&amount=1000000&currency=USD&lang=en&rgs_url=YOUR_RGS_URL
 ```
 
 ## base_ante (cost 1.4×)
@@ -26,7 +26,7 @@ https://YOUR_FRONTEND_URL/?replay=true&game=monkey-mayhem&version=v0_4_0_250k&mo
 Replay URL template:
 
 ```
-https://YOUR_FRONTEND_URL/?replay=true&game=monkey-mayhem&version=v0_4_0_250k&mode=base_ante&event=1874&amount=1000000&currency=USD&lang=en&rgs_url=YOUR_RGS_URL
+https://YOUR_FRONTEND_URL/?replay=true&game=kong-club&version=v0_4_0_250k&mode=base_ante&event=1874&amount=1000000&currency=USD&lang=en&rgs_url=YOUR_RGS_URL
 ```
 
 ## bonus_see (cost 100.0×)
@@ -38,7 +38,7 @@ https://YOUR_FRONTEND_URL/?replay=true&game=monkey-mayhem&version=v0_4_0_250k&mo
 Replay URL template:
 
 ```
-https://YOUR_FRONTEND_URL/?replay=true&game=monkey-mayhem&version=v0_4_0_250k&mode=bonus_see&event=6&amount=1000000&currency=USD&lang=en&rgs_url=YOUR_RGS_URL
+https://YOUR_FRONTEND_URL/?replay=true&game=kong-club&version=v0_4_0_250k&mode=bonus_see&event=6&amount=1000000&currency=USD&lang=en&rgs_url=YOUR_RGS_URL
 ```
 
 ## bonus_hear (cost 200.0×)
@@ -50,5 +50,5 @@ https://YOUR_FRONTEND_URL/?replay=true&game=monkey-mayhem&version=v0_4_0_250k&mo
 Replay URL template:
 
 ```
-https://YOUR_FRONTEND_URL/?replay=true&game=monkey-mayhem&version=v0_4_0_250k&mode=bonus_hear&event=2&amount=1000000&currency=USD&lang=en&rgs_url=YOUR_RGS_URL
+https://YOUR_FRONTEND_URL/?replay=true&game=kong-club&version=v0_4_0_250k&mode=bonus_hear&event=2&amount=1000000&currency=USD&lang=en&rgs_url=YOUR_RGS_URL
 ```

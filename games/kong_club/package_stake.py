@@ -1,4 +1,4 @@
-"""Package Monkey Mayhem publish_files for Stake Engine upload."""
+"""Package Kong Club publish_files for Stake Engine upload."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ WORKSPACE_ROOT = GAME_DIR.parents[2]
 SOURCE_PUBLISH = GAME_DIR / "library" / "publish_files"
 OUT_ROOT = WORKSPACE_ROOT / "stake_uploads"
 VERSION = "v0_4_0_250k"
-PACKAGE_NAME = f"monkey_mayhem_math_{VERSION}"
+PACKAGE_NAME = f"kong_club_math_{VERSION}"
 PACKAGE_DIR = OUT_ROOT / PACKAGE_NAME
 ZIP_PATH = OUT_ROOT / f"{PACKAGE_NAME}.zip"
 
@@ -30,7 +30,7 @@ REQUIRED_MODES = [
     "bonus_gamble",
 ]
 MIN_ROWS = 250_000
-STAKE_SLUG = "monkey-mayhem"
+STAKE_SLUG = "kong-club"
 
 
 def count_lut_rows(path: Path) -> int:

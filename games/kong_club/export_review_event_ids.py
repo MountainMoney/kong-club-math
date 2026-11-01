@@ -10,7 +10,7 @@ from reweight_lut import MODE_COSTS, PUBLISH, read_lut
 
 GAME_DIR = Path(__file__).resolve().parent
 MODES = list(MODE_COSTS.keys())
-GAME_SLUG = "monkey-mayhem"
+GAME_SLUG = "kong-club"
 VERSION = "v0_4_0_250k"
 MAX_WIN_PAYOUT = 1_000_000
 
@@ -64,7 +64,7 @@ def main() -> None:
     report = {mode: pick_event_ids(mode) for mode in MODES}
     out = GAME_DIR / "STAKE_REVIEW_EVENT_IDS.md"
     lines = [
-        "# Monkey Mayhem — Stake Review Event IDs",
+        "# Kong Club — Stake Review Event IDs",
         "",
         f"Game slug: `{GAME_SLUG}`",
         f"Math version: `{VERSION}`",

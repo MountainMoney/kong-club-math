@@ -1,4 +1,4 @@
-"""Scratch Monkey Mayhem book events."""
+"""Scratch Kong Club book events."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ BOARD_ACTIVATION = "boardActivation"
 COIN_SEED = "coinSeed"
 SCATTER_PAYOUT = "scatterPayout"
 STICKY_WILDS = "stickyWilds"
-MODE_STATE = "monkeyMayhemMode"
+MODE_STATE = "kongClubMode"
 
 
 def update_tile_event(gamestate):

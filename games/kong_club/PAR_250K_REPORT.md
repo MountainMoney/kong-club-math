@@ -1,4 +1,4 @@
-# Monkey Mayhem PAR Report — 250k Weighted
+# Kong Club PAR Report — 250k Weighted
 
 Generated from `library/publish_files/lookUpTable_*_0.csv` after reweight pass.
 Book/LUT payout parity verified via `execute_all_tests`.
@@ -30,8 +30,8 @@ Per Lessons Learned §4.7: buy modes carry highest tail risk; document CVaR95/CV
 
 ## Upload package
 
-- Zip: `C:\Users\Cole\Desktop\Slots\Monkey Mayhem\stake_uploads\monkey_mayhem_math_v0_4_0_250k.zip`
-- SHA256: `737e7ee86cc9d7553398ca48c519ce4a354605d8b6de6d983d1e8a1439e9dd98  monkey_mayhem_math_v0_4_0_250k.zip`
+- Zip: `stake_uploads/kong_club_math_v0_4_0_250k.zip`
+- SHA256: `737e7ee86cc9d7553398ca48c519ce4a354605d8b6de6d983d1e8a1439e9dd98  kong_club_math_v0_4_0_250k.zip`
 
 ## Pass criteria checklist
 

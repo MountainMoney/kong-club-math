@@ -1,4 +1,4 @@
-"""Scratch Monkey Mayhem SDK overrides."""
+"""Scratch Kong Club SDK overrides."""
 
 from game_executables import GameExecutables
 

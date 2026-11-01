@@ -1,4 +1,4 @@
-"""Scratch Monkey Mayhem spin router — Jul 2 Le Bandit Phase A."""
+"""Scratch Kong Club spin router — Jul 2 Le Bandit Phase A."""
 
 from src.events.events import freespin_end_event, fs_trigger_event
 
