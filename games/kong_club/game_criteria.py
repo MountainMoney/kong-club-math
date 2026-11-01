@@ -11,28 +11,31 @@ Brief role → repo name (do not rename modes):
 from __future__ import annotations
 
 # Feature Spin (50×): always connects, and can reach the 25,000× cap.
-FEATURE_DEAD_QUOTA = 0.0
-FEATURE_RUN_QUOTA = 0.375
+FEATURE_DEAD_QUOTA = 0.55
+FEATURE_RUN_QUOTA = 0.20
 FEATURE_NIBBLE_MAX = 25.0
 
-# PEAK / summit (1000×): cap ~1/5000 of books.
-PEAK_DEAD_QUOTA = 0.50
-PEAK_NIBBLE_QUOTA = 0.28
-PEAK_RUN_QUOTA = 0.16
-PEAK_CLIP_QUOTA = 0.055
-PEAK_TEASE_QUOTA = 0.0048
-PEAK_CAP_QUOTA = 0.0002
+# TRIFECTA (1000×): dead about 65%. Cap about 1/4000, distinct from every other mode.
+PEAK_DEAD_QUOTA = 0.65
+PEAK_NIBBLE_QUOTA = 0.20
+PEAK_RUN_QUOTA = 0.10
+PEAK_CLIP_QUOTA = 0.04
+PEAK_TEASE_QUOTA = 0.00975
+PEAK_CAP_QUOTA = 0.00025
+
+BASE_CAP_QUOTA = 1 / 1_000_000
+ANTE_CAP_QUOTA = 1 / 700_000
+FEATURE_CAP_QUOTA = 1 / 80_000
+SEE_CAP_QUOTA = 1 / 40_000
+HEAR_CAP_QUOTA = 1 / 20_000
+GAMBLE_CAP_QUOTA = 1 / 4_500
+FEATURE_NIBBLE_QUOTA = 1.0 - FEATURE_DEAD_QUOTA - FEATURE_RUN_QUOTA - FEATURE_CAP_QUOTA
 # Brief 10–80 / 80–500 assumes a single toy, not 30 gold virtual coins.
 # PEAK lights every cell gold; a connect pays ~30× gold faces (min ~750).
 PEAK_NIBBLE = (1.0, 2000.0)
 PEAK_RUN = (2000.0, 8000.0)
 PEAK_CLIP = (8000.0, 16000.0)
 PEAK_TEASE = (16000.0, 24999.0)
-
-# Base cap: 25k at 1/250000 ≈ 10 RTP points. Feature uses the same cap book.
-BASE_CAP_QUOTA = 1 / 250_000
-FEATURE_CAP_QUOTA = BASE_CAP_QUOTA
-FEATURE_NIBBLE_QUOTA = 0.625 - FEATURE_CAP_QUOTA
 
 LEGACY_FEATURE = "feature_spin"
 LEGACY_PEAK = "peak_spin"
@@ -65,8 +68,7 @@ def peak_bucket_ok(bucket: str, pay: float, tumbles: int, wincap: float) -> bool
     if bucket == "dead_juicy":
         return pay <= 1e-9 and tumbles <= 0
     if bucket in ("nibble", "run", "clip", "tease"):
-        # Gold-board coins cannot hit the brief's 10–80 band; accept a real connect.
-        return tumbles >= 1 and pay > 0
+        return pay > 0
     if bucket == "cap":
         return abs(pay - wincap) < 1e-6
     return True

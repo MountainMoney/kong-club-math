@@ -36,19 +36,19 @@ class GameState(GameStateOverride):
     def run_base_spin(self):
         self.board_activation_fired_this_spin = False
         self.gametype = self.config.basegame_type
-        self.reelstrip_id = self.config.initial_reelstrip_id(self.betmode, self.gametype)
-        self.reelstrip = self.config.reels[self.reelstrip_id]
-        self.refill_strip = self.config.reels[
-            self.config.tumble_refill_reel_ids.get(self.reelstrip_id, "REFILL_BASE")
-        ]
+        self.use_reel_family("base")
+        if self.reel_set_name == "base_teaser" and (
+            self.should_force_initial_scatters() or self.outcome_bucket() == "cap"
+        ):
+            self.use_reel_family("gamble_dead")
         if self.outcome_bucket() == "cap":
             self.seed_peak_gold_tiles()
         self.draw_prepared_board()
         if self.outcome_bucket() == "cap" and not GameCluster.find_winning_clusters(self.board, self.config):
             self._force_feature_spin_connection()
             self._finalize_initial_board()
-        scatter_count = self.count_special_symbols("scatter")
         self.resolve_cascade_loop()
+        scatter_count = self.count_special_symbols("scatter")
         bonus_hit = (
             scatter_count >= 3
             and not self.wincap_triggered
@@ -83,11 +83,7 @@ class GameState(GameStateOverride):
     def run_feature_spin(self):
         self.board_activation_fired_this_spin = False
         self.gametype = self.config.basegame_type
-        self.reelstrip_id = self.config.initial_reelstrip_id(self.betmode, self.gametype)
-        self.reelstrip = self.config.reels[self.reelstrip_id]
-        self.refill_strip = self.config.reels[
-            self.config.tumble_refill_reel_ids.get(self.reelstrip_id, "FEATURE_SPIN_REFILL")
-        ]
+        self.use_reel_family("feature")
         self.reset_progress()
         # Bar starts full; every spin connects, then coin game waits for cascade idle.
         progress_fill_event(self)
@@ -101,20 +97,25 @@ class GameState(GameStateOverride):
         self.evaluate_finalwin()
 
     def run_peak_spin(self):
-        """1000× PEAK: gold chrome/coins, Feature strips; dead land, silent cluster trigger."""
+        """1000× TRIFECTA: dead pays 0, otherwise the whole board is gold and the coin game runs."""
         self.board_activation_fired_this_spin = False
+        self.tumbles_this_spin = 0
         self.gametype = self.config.basegame_type
-        self.reelstrip_id = self.config.initial_reelstrip_id(self.betmode, self.gametype)
-        self.reelstrip = self.config.reels[self.reelstrip_id]
-        self.refill_strip = self.config.reels[
-            self.config.tumble_refill_reel_ids.get(self.reelstrip_id, "REFILL_BASE")
-        ]
+        self.use_reel_family("peak")
         self.reset_progress()
         mode_state_event(self, "peak_spin")
-        self.seed_peak_gold_tiles()
-        progress_fill_event(self)
-        self.draw_peak_board()
-        self.resolve_cascade_loop()
+        bucket = self.outcome_bucket()
+        if bucket == "dead_juicy":
+            self.reset_grid_mults()
+            self.draw_prepared_board()
+            self.win_data = {"totalWin": 0.0, "wins": []}
+        else:
+            self.seed_peak_gold_tiles()
+            self.progress_value = self.progress_threshold
+            progress_fill_event(self)
+            self.draw_prepared_board()
+            self.tumbles_this_spin = 1
+            self.execute_board_activation(refill_after=False)
         if self.outcome_bucket() == "cap":
             self.apply_cap_topup()
         self.set_end_tumble_event()
@@ -133,11 +134,7 @@ class GameState(GameStateOverride):
         self.board_activation_fired_this_spin = False
         self.tumbles_this_spin = 0
         self.gametype = self.config.basegame_type
-        self.reelstrip_id = self.config.initial_reelstrip_id(self.betmode, self.gametype)
-        self.reelstrip = self.config.reels[self.reelstrip_id]
-        self.refill_strip = self.config.reels[
-            self.config.tumble_refill_reel_ids.get(self.reelstrip_id, "REFILL_BASE")
-        ]
+        self.use_reel_family("gamble_dead")
         self.draw_gamble_dead_board()
         self.win_data = {"totalWin": 0.0, "wins": []}
         self.set_end_tumble_event()
@@ -148,10 +145,13 @@ class GameState(GameStateOverride):
     def run_bonus_buy(self, variant: str):
         self.triggered_freegame = True
         self.bonus_variant = variant
-        self.criteria = f"bonus_{variant}"
+        if self.outcome_bucket() != "cap":
+            self.criteria = f"bonus_{variant}"
         self.tot_fs = self.config.bonus_spins
         mode_state_event(self, f"start_bonus_{variant}")
         self.run_freespin()
+        if self.outcome_bucket() == "cap":
+            self.apply_cap_topup()
         self.evaluate_finalwin()
 
     def run_freespin(self):
@@ -177,21 +177,37 @@ class GameState(GameStateOverride):
             self.board_activation_fired_this_spin = False
             self.board_activations_this_spin = 0
             self.tumbles_this_spin = 0
-            self.reelstrip_id = self.config.initial_reelstrip_id(
-                self.betmode,
-                self.gametype,
-                getattr(self, "bonus_variant", None),
-            )
-            self.reelstrip = self.config.reels[self.reelstrip_id]
-            self.refill_strip = self.config.reels[self.config.tumble_refill_reel_ids[self.reelstrip_id]]
+            variant = getattr(self, "bonus_variant", None) or "see"
+            family = variant if variant in ("see", "hear", "madness") else "see"
+            self.use_reel_family(family)
             self.draw_prepared_board()
             self.resolve_cascade_loop()
+            self._apply_bonus_scatter_followup()
             if self.is_madness_bonus() and getattr(self, "board_activations_this_spin", 0) == 0:
                 self.execute_board_activation(refill_after=True)
             self.set_end_tumble_event()
             self.log_spin_end("bonus")
             self.win_manager.update_gametype_wins(self.gametype)
         freespin_end_event(self)
+
+    def _apply_bonus_scatter_followup(self):
+        """Retriggers, and See's 4-scatter upgrade to Hear. No end-of-bonus coin game."""
+        if self.wincap_triggered:
+            return
+        count = self.count_special_symbols("scatter")
+        if count < 2:
+            return
+        extra = 0
+        if self.is_see_bonus() and count >= 4:
+            self.bonus_variant = "hear"
+            extra = 4
+            mode_state_event(self, "upgrade_bonus_hear")
+        elif count >= 3:
+            extra = 4
+        else:
+            extra = 2
+        self.tot_fs += extra
+        fs_trigger_event(self, basegame_trigger=False, freegame_trigger=True)
 
     def assert_bonus_spin_activation_invariant(self):
         """Phase A: Hear no longer guarantees activation every tumble spin."""

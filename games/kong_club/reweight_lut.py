@@ -1,4 +1,4 @@
-"""Retarget publish LUT weights to 96.01% RTP while preserving book/LUT payout parity."""
+"""Retarget publish LUT weights to 96.50% RTP while preserving book/LUT payout parity."""
 
 from __future__ import annotations
 
@@ -17,10 +17,10 @@ MODE_COSTS = {
     "peak_spin": 1000.0,
     "bonus_see": 100.0,
     "bonus_hear": 200.0,
-    "bonus_gamble": 1567.0,
+    "bonus_gamble": 260.0,
 }
 
-TARGET_RTP = 0.9601
+TARGET_RTP = 0.965
 MODE_TARGET_RTP = {mode: TARGET_RTP for mode in MODE_COSTS}
 # LUT payouts are in bet-hundredths. 25,000× = 2,500,000.
 MAX_WIN_PAYOUT = 2_500_000

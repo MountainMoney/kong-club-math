@@ -43,3 +43,6 @@ class GameStateOverride(GameExecutables):
             self.repeat = True
         elif bucket == "cap" and abs(pay - float(self.config.wincap)) > 1e-6:
             self.repeat = True
+        elif getattr(self, "bonus_variant", None) == "madness" and pay < 2000:
+            # Floor is a reject, not a top-up. Cap books at 25,000× stay.
+            self.repeat = True

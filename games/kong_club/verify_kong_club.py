@@ -47,9 +47,11 @@ def get_smoke_distribution(config, mode):
     preferred = {
         "base": "basegame",
         "base_ante": "basegame",
-        "feature_spin": "feature_spin",
+        "feature_spin": "nibble",
+        "peak_spin": "nibble",
         "bonus_see": "bonus_see",
         "bonus_hear": "bonus_hear",
+        "bonus_gamble": "gamble_hear",
     }[mode]
     for bet_mode in config.bet_modes:
         if bet_mode.get_name() == mode:
@@ -174,8 +176,13 @@ def main():
         "bonus_gamble": 25,
     }
     results = [run_mode(config, mode, sims_by_mode[mode]) for mode in modes]
+    assert abs(config.rtp - 0.965) < 1e-9, config.rtp
+    assert config.coin_game_max_reruns == 10
+    assert config.max_board_activations_hear == 1
     for result in results:
         assert result["max_seen"] <= config.wincap, f"{result['mode']} exceeded max win cap"
+        for event_type in result["event_counts"]:
+            assert "monkeyMayhem" not in event_type
     write_report(results, config)
     print(f"Wrote {Path(__file__).with_name('PAR_SMOKE_REPORT.md')}")
 

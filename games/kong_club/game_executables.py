@@ -183,11 +183,60 @@ class GameExecutables(GameCalculations):
         self.get_special_symbols_on_board()
         self.prepare_landed_specials(initial_fill=True)
         reveal_event(self)
+        if self.book.events:
+            self.book.events[-1]["reelSet"] = getattr(self, "reel_set_name", self.reelstrip_id)
+
+    def use_reel_family(self, family: str) -> None:
+        """Pick one weighted strip set for this spin and point the refill at its pair."""
+        name = self.config.pick_reel_set(family)
+        self.reel_set_name = name
+        self.reelstrip_id = name
+        self.reelstrip = self.config.reels[name]
+        refill_id = self.config.tumble_refill_reel_ids.get(name, f"{name}_REFILL")
+        self.refill_strip = self.config.reels[refill_id]
 
     def draw_prepared_board(self):
         """Initial fill: choose a random start per column and read 5 symbols downward."""
+        if getattr(self, "reel_set_name", "") == "base_teaser":
+            self._plant_dead_teaser()
+            self._finalize_initial_board()
+            return
         self._fill_initial_board()
         self._finalize_initial_board()
+
+    def _plant_dead_teaser(self) -> None:
+        """Exactly 2 scatters, one size-4 near-miss, and 3 or 4 paying clusters.
+
+        Each paying cluster is one full column (5 high). Columns do not share a symbol,
+        so they cannot merge. The size-4 column is one short of a win.
+        """
+        cluster_count = 4 if random.random() < 0.5 else 3
+        symbols = ["Q", "K", "A", "LE"]
+        grid = [["" for _ in range(5)] for _ in range(6)]
+        for reel in range(cluster_count):
+            for row in range(5):
+                grid[reel][row] = symbols[reel]
+        for row in range(4):
+            grid[4][row] = "CO"
+        grid[4][4] = self.config.scatter_symbol
+        grid[5][4] = self.config.scatter_symbol
+        fillers = ["T", "J", "OR", "GR", "BA"]
+        cursor = 0
+        for row in range(4):
+            grid[5][row] = fillers[cursor]
+            cursor += 1
+        for reel in range(6):
+            for row in range(5):
+                if not grid[reel][row]:
+                    grid[reel][row] = fillers[cursor % len(fillers)]
+                    cursor += 1
+        self.board = [
+            [self.create_symbol(grid[reel][row]) for row in range(5)] for reel in range(6)
+        ]
+        self.top_symbols = [self.create_symbol("T") for _ in range(6)]
+        self.bottom_symbols = [self.create_symbol("J") for _ in range(6)]
+        self.reel_positions = [0] * 6
+        self.anticipation = [0] * 6
 
     def outcome_bucket(self) -> str:
         return normalize_bucket(getattr(self, "betmode", ""), getattr(self, "criteria", ""))
@@ -541,8 +590,8 @@ class GameExecutables(GameCalculations):
             tumble_board_event(self)
 
     def _hear_activation_cap_reached(self) -> bool:
-        cap = getattr(self.config, "max_board_activations_hear", 3)
-        return self.is_hear_bonus() and getattr(self, "board_activations_this_spin", 0) >= cap
+        """One coin game per spin in every mode. The old Hear 3-cap is gone."""
+        return False
 
     def advance_progress(self, tumble_steps: int = 1, *, activate: bool = True):
         if tumble_steps <= 0:
@@ -576,17 +625,15 @@ class GameExecutables(GameCalculations):
             self.execute_board_activation(refill_after=True)
 
     def execute_board_activation(self, refill_after: bool = False):
-        # Base + Feature + Madness: one board activation per spin.
-        if self.board_activation_fired_this_spin and (
-            self.gametype == self.config.basegame_type or self.is_madness_bonus()
-        ):
-            return
-        if self._hear_activation_cap_reached():
+        # One coin game per spin in every mode.
+        if self.board_activation_fired_this_spin:
             return
         self.board_activation_fired_this_spin = True
         self.board_activations_this_spin = getattr(self, "board_activations_this_spin", 0) + 1
         trigger_progress = self.progress_value
         total, items, rounds = resolve_coin_game(self)
+        if getattr(self, "coin_game_cap_hit", False):
+            total = float(self.config.wincap)
         self.progress_activation_count += 1
         spin_trace(
             f"[BOARD ACTIVATION TRIGGERED] progress={trigger_progress} "
@@ -601,15 +648,16 @@ class GameExecutables(GameCalculations):
             update_tumble_win_event(self)
 
         removed = remove_coins_from_board(self)
+        # See clears ranks after a coin game. Hear and Madness keep them.
+        # One coin game per spin — the bar does not arm a second one.
+        if self.is_see_bonus():
+            self.reset_grid_mults()
+            update_tile_event(self)
         self.progress_value = 0
         progress_fill_event(self)
         if self.is_madness_bonus():
-            # Stay full (Feature-like). Do not unlock a second coin game on later tumbles.
             self.progress_value = self.progress_threshold
             progress_fill_event(self)
-        elif self.is_bonus_mode():
-            # Hear / See may chain multiple activations in one spin; base stays capped at one.
-            self.board_activation_fired_this_spin = False
         if refill_after and removed:
             self.gravity_and_refill(emit_event=True)
         elif removed:
@@ -646,7 +694,7 @@ class GameExecutables(GameCalculations):
                     mode_state_event(self, "max_tumble_safety_stop")
                     break
                 winning_types = {cluster.symbol for cluster in clusters}
-                # Light connected cells first, then pay base × sum of those 2/5/10 multipliers.
+                # Light the connected cells, then pay the plain paytable. Tiles do not multiply.
                 self.mark_level_up_tiles(clusters)
                 self.award_clusters(clusters)
                 self.mark_removed_symbols(winning_types, clusters)
@@ -654,13 +702,10 @@ class GameExecutables(GameCalculations):
                 update_tumble_win_event(self)
                 if self.wincap_triggered:
                     break
-                # Base: +1 per tumble. See/Hear: +1 per cluster connection.
-                if self.is_bonus_mode():
-                    for _ in clusters:
-                        if self.progress_value >= self.progress_threshold:
-                            break
-                        self.advance_progress(1, activate=False)
-                else:
+                # +1 per winning cluster. Overflow past 5 is ignored. Coin game waits until idle.
+                for _ in clusters:
+                    if self.progress_value >= self.progress_threshold:
+                        break
                     self.advance_progress(1, activate=False)
                 self.gravity_and_refill(emit_event=True)
             if self.wincap_triggered:
