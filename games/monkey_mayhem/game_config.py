@@ -512,12 +512,12 @@ class GameConfig(Config):
                 self._distribution("freegame", bonus_ante, **freegame_ante),
                 self._distribution("cap", BASE_CAP_QUOTA, force_wincap=True),
             ]),
-            BetMode("feature_spin", 50.0, self.rtp, self.wincap, False, True, True, [
+            BetMode("feature_spin", 50.0, self.rtp, self.wincap, False, True, False, [
                 self._distribution("nibble", FEATURE_NIBBLE_QUOTA),
                 self._distribution("run", FEATURE_RUN_QUOTA),
                 self._distribution("cap", FEATURE_CAP_QUOTA, force_wincap=True),
             ]),
-            BetMode("peak_spin", self.peak_spin_cost, self.rtp, self.wincap, False, True, True, [
+            BetMode("peak_spin", self.peak_spin_cost, self.rtp, self.wincap, False, True, False, [
                 self._distribution("dead_juicy", PEAK_DEAD_QUOTA),
                 self._distribution("nibble", PEAK_NIBBLE_QUOTA),
                 self._distribution("run", PEAK_RUN_QUOTA),
@@ -531,7 +531,7 @@ class GameConfig(Config):
             BetMode("bonus_hear", 200.0, self.rtp, self.wincap, False, True, True, [
                 self._distribution("bonus_hear", 1.0, bonus_variant="hear"),
             ]),
-            BetMode("bonus_gamble", self.gamble_buy_cost, self.rtp, self.wincap, False, True, True, [
+            BetMode("bonus_gamble", self.gamble_buy_cost, self.rtp, self.wincap, False, True, False, [
                 self._distribution("gamble_dead", GAMBLE_DEAD_QUOTA),
                 self._distribution(
                     "gamble_hear",
