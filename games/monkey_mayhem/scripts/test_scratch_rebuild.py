@@ -363,9 +363,9 @@ def test_bonus_hit_rate_and_ante_cost():
     ante_dists = {d.get_criteria(): d.get_quota() for d in ante_mode.get_distributions()}
     assert base_dists["freegame"] == config.bonus_hit_rate_base
     assert ante_dists["freegame"] == config.bonus_hit_rate_ante
-    # Ante uplift vs base (cost is only 1.4×, so ~1.5–2.5× access — not a diluted FS fork).
-    ratio = ante_dists["freegame"] / base_dists["freegame"]
-    assert 1.4 <= ratio <= 2.5
+    assert ante_dists["freegame"] == 2 * base_dists["freegame"]
+    assert ante_dists["cap"] == base_dists["cap"]
+    assert config.scatter_triggers_ante == config.scatter_triggers
     assert ante_mode.get_cost() == 1.4
 
 

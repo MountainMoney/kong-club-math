@@ -31,11 +31,10 @@ STAKE_SLUG = "monkey-mayhem"
 # Organic bonus entry — same pattern as Football Fiesta:
 # quota picks "freegame" criteria → force N scatters from weighted table → no organic land on base strips.
 SCATTER_TRIGGERS = {3: 70, 4: 25, 5: 5}
-# Ante: 2× weight on higher scatter counts (more Hear bonuses when forced).
-SCATTER_TRIGGERS_ANTE = {3: 140, 4: 50, 5: 10}
-# 2× ante trigger rate (same ratio as Football Fiesta base vs ante).
-BASE_FREEGAME_QUOTA = 1 / 220  # ~0.45%
-ANTE_FREEGAME_QUOTA = 1 / 128  # ~0.78% (~1.7× base access)
+# Ante keeps the same 3/4/5 mix. Only the bonus-force rate doubles.
+SCATTER_TRIGGERS_ANTE = {3: 70, 4: 25, 5: 5}
+BASE_FREEGAME_QUOTA = 1 / 220
+ANTE_FREEGAME_QUOTA = 1 / 110  # exactly 2× base
 
 # Gamble buy — 50% dead / 40% 4 ST Hear / 10% 5 ST Monkey Madness.
 # Cost is a working placeholder until the RTP pass (Cole 2026-09-01).
@@ -508,8 +507,9 @@ class GameConfig(Config):
                 self._distribution("cap", BASE_CAP_QUOTA, force_wincap=True),
             ]),
             BetMode("base_ante", self.ante_bet_cost, self.rtp, self.wincap, False, True, False, [
-                self._distribution("basegame", 1.0 - bonus_ante),
+                self._distribution("basegame", 1.0 - bonus_ante - BASE_CAP_QUOTA),
                 self._distribution("freegame", bonus_ante, **freegame_ante),
+                self._distribution("cap", BASE_CAP_QUOTA, force_wincap=True),
             ]),
             BetMode("feature_spin", 50.0, self.rtp, self.wincap, False, True, True, [
                 self._distribution("nibble", FEATURE_NIBBLE_QUOTA),
