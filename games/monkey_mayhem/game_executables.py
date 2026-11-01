@@ -660,10 +660,9 @@ class GameExecutables(GameCalculations):
                     mode_state_event(self, "max_tumble_safety_stop")
                     break
                 winning_types = {cluster.symbol for cluster in clusters}
-                # Pay with tiles visible on the board, then grow tiles for the next cascade.
-                # (Jul2 text said mark→award; that made first hits pay ×N and miss the Info table.)
-                self.award_clusters(clusters)
+                # Light connected cells first, then pay base × sum of those 2/5/10 multipliers.
                 self.mark_level_up_tiles(clusters)
+                self.award_clusters(clusters)
                 self.mark_removed_symbols(winning_types, clusters)
                 win_info_event(self)
                 update_tumble_win_event(self)

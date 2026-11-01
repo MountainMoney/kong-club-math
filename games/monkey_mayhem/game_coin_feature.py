@@ -404,6 +404,14 @@ def _roll_prizes(
     collectors: list[tuple[int, int]] = []
     for reel, row in positions:
         tile_level = int(gamestate.tile_levels[reel][row])
+        physical = _physical_coin_payout(gamestate, reel, row, tile_level)
+        if physical is not None:
+            symbol, value = physical
+            item = _build_coin_reveal(reel, row, symbol, tile_level, value, round_index=round_index)
+            if reactivate:
+                item["reactivate"] = True
+            round_items.append(item)
+            continue
         kind = _pick_cell_kind(gamestate, rng, tile_level, reactivate=reactivate)
         if kind == "multiplier":
             multi = _pick_multi_value(gamestate, rng)
@@ -658,9 +666,36 @@ def _mode_coin_cap(gamestate: "GameExecutables") -> int | None:
     return caps.get(mode)
 
 
+def _physical_coins_land(gamestate: "GameExecutables") -> bool:
+    """Feature Spin and free spins land CB/CS/CG. Base and TRIFECTA stay virtual."""
+    if getattr(gamestate, "betmode", None) == "feature_spin":
+        return True
+    freegame = getattr(gamestate.config, "freegame_type", "freegame")
+    return getattr(gamestate, "gametype", None) == freegame
+
+
+def _physical_coin_payout(
+    gamestate: "GameExecutables", reel: int, row: int, tile_level: int
+) -> tuple[str, float] | None:
+    """Landed coin pays its face × the tile multiplier (2 / 5 / 10)."""
+    if not _physical_coins_land(gamestate):
+        return None
+    board = getattr(gamestate, "board", None) or []
+    if reel >= len(board) or row >= len(board[reel]):
+        return None
+    symbol = getattr(board[reel][row], "name", None)
+    if symbol not in set(getattr(gamestate.config, "coin_symbols", ()) or ()):
+        return None
+    stored = (getattr(gamestate, "board_coin_values", None) or {}).get((reel, row))
+    if stored is None:
+        return None
+    mult = gamestate.level_to_multiplier(tile_level) if tile_level > 0 else 1
+    return str(symbol), float(stored) * max(int(mult), 1)
+
+
 def _use_virtual_coins(gamestate: "GameExecutables") -> bool:
-    """Always virtual — physical CB/CS/CG never land on strips."""
-    return True
+    """False when this spin can pay landed bronze/silver/gold coins."""
+    return not _physical_coins_land(gamestate)
 
 
 def _coin_game_rng(gamestate: "GameExecutables") -> random.Random:

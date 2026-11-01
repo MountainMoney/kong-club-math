@@ -19,26 +19,23 @@ class GameCalculations(Executables):
         return 1
 
     def cluster_tile_multiplier_sum(self, cluster) -> float:
-        """Jul 2: naked cluster pays table ×1; each active tile adds (mult - 1).
+        """Rules: cluster pay = base × sum of lit tile multipliers (2 / 5 / 10).
 
-        Spec: payout = paytable[size] × bet, then for each active Level-Up tile
-        on the cluster: payout += base × (tileMultiplier - 1).
-        Equivalent factor: 1 + Σ(mult - 1) over lit cells.
+        Connected cells are lit before this pay, so each cell in the cluster
+        contributes its current rank. Unlit cells add nothing.
 
-        PEAK gold is chrome + coin faces only.
-        Cluster pay uses connection ranks (start 0, +1 per connected tumble).
-        Feature Spin pays tile levels like base (no bronze seed).
+        PEAK gold is chrome + coin faces only. Cluster pay, if evaluated, uses
+        connection ranks (start 0, +1 per connected tumble), not the gold seed.
         """
         levels = self.tile_levels
         if getattr(self, "betmode", None) == "peak_spin":
             levels = getattr(self, "peak_connection_levels", self.tile_levels)
-        factor = 1.0
+        total = 0.0
         for reel, row in cluster.positions:
             level = levels[reel][row]
             if level > 0:
-                mult = self.level_to_multiplier(level)
-                factor += max(0, mult - 1)
-        return factor
+                total += self.level_to_multiplier(level)
+        return total
 
     def evaluate_clusters(self, winning_clusters) -> dict:
         return_data = {"totalWin": 0.0, "wins": []}

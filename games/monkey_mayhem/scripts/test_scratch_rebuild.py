@@ -65,7 +65,7 @@ def test_reel_strips_are_run_based_and_refill_rules():
         symbol == config.scatter_symbol for strip in config.reels["INITIAL_BASE"] for symbol in strip
     )
 
-    # Bonus uses INITIAL_BONUS only (no HEAR/SEE weights); no physical coins.
+    # Bonus uses INITIAL_BONUS only (no HEAR/SEE weights). Free spins land physical coins.
     assert "INITIAL_BONUS_HEAR" not in config.reels
     assert "INITIAL_BONUS_SEE" not in config.reels
     assert config.initial_reelstrip_id("bonus_hear", config.freegame_type) == "INITIAL_BONUS"
@@ -78,22 +78,25 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert not any(
         symbol == config.scatter_symbol for strip in config.reels["INITIAL_BONUS"] for symbol in strip
     )
-    assert not any(
+    assert any(
         symbol in config.coin_symbols for strip in config.reels["INITIAL_BONUS"] for symbol in strip
-    ), "bonus initial must NOT include coins"
+    ), "bonus initial must include physical coins"
     assert config.tumble_refill_reel_ids["INITIAL_BONUS"] == "REFILL_BONUS"
+    assert any(
+        symbol in config.coin_symbols for strip in config.reels["REFILL_BONUS"] for symbol in strip
+    ), "bonus refill must include physical coins"
     assert not any(
         symbol in config.coin_symbols for strip in config.reels["FEATURE"] for symbol in strip
-    ), "feature initial must NOT include coins"
+    ), "TRIFECTA strips must NOT include coins"
     assert not any(
         symbol in config.coin_symbols for strip in config.reels["FEATURE_REFILL"] for symbol in strip
-    ), "feature refill must NOT include coins"
-    assert not any(
+    ), "TRIFECTA refill must NOT include coins"
+    assert any(
         symbol in config.coin_symbols for strip in config.reels["FEATURE_SPIN"] for symbol in strip
-    ), "feature spin initial must NOT include coins"
-    assert not any(
+    ), "feature spin initial must include physical coins"
+    assert any(
         symbol in config.coin_symbols for strip in config.reels["FEATURE_SPIN_REFILL"] for symbol in strip
-    ), "feature spin refill must NOT include coins"
+    ), "feature spin refill must include physical coins"
 
     assert not any(symbol == config.scatter_symbol for strip in config.reels["FEATURE"] for symbol in strip)
     assert not any(
@@ -1278,12 +1281,13 @@ def test_base_clusters_still_pay():
         ],
     )
     clusters = GameCluster.find_winning_clusters(gs.board, gs.config)
+    gs.mark_level_up_tiles(clusters)
     gs.award_clusters(clusters)
     assert gs.win_data["totalWin"] > 0.0
     assert gs.win_manager.spin_win > 0.0
     scale = float(getattr(gs.config, "paytable_scale", 1.0))
-    # Naked size-5 BA: table × 1 (inactive tiles do not multiply by cluster size).
-    assert gs.win_data["totalWin"] == round(1.0 * scale * 1.0, 6)
+    # Size-5 BA lights five bronze tiles: base × (2+2+2+2+2).
+    assert gs.win_data["totalWin"] == round(1.0 * scale * 10.0, 6)
 
 
 def test_cluster_payout_uses_tile_sum():
@@ -1304,7 +1308,7 @@ def test_cluster_payout_uses_tile_sum():
     ba = [c for c in clusters if c.symbol == "BA"][0]
     assert ba.size == 5
     win_data = gs.evaluate_clusters([ba])
-    # factor = 1 + (2 - 1) = 2; payout = base * 2
+    # One lit bronze tile: base × 2. Unlit cells add nothing.
     scale = float(getattr(gs.config, "paytable_scale", 1.0))
     assert abs(win_data["totalWin"] - round(1.0 * scale * 2.0, 6)) < 1e-9
     assert win_data["wins"][0]["meta"]["clusterMult"] == 2.0
@@ -1906,18 +1910,16 @@ def test_feature_spin_cluster_pays_tile_levels_like_base():
         ],
     )
     clusters = GameCluster.find_winning_clusters(gs.board, gs.config)
+    gs.mark_level_up_tiles(clusters)
     gs.award_clusters(clusters)
     scale = float(getattr(gs.config, "paytable_scale", 1.0))
-    assert gs.win_data["totalWin"] == round(1.0 * scale * 1.0, 6)
-    gs.activate_tiles_from_clusters(clusters)
     assert all(gs.tile_levels[reel][row] == 1 for reel, row in clusters[0].positions)
-    assert all(gs.peak_connection_levels[reel][row] == 0 for reel, row in clusters[0].positions)
-    win_data = gs.evaluate_clusters(clusters)
-    assert abs(win_data["totalWin"] - round(1.0 * scale * 6.0, 6)) < 1e-9
+    # Five bronze tiles: base × (2×5).
+    assert gs.win_data["totalWin"] == round(1.0 * scale * 10.0, 6)
 
 
 def test_peak_cluster_pays_from_connections_not_gold_seed():
-    """PEAK gold is chrome/coins. First cluster still pays the naked table (same as Feature Spin)."""
+    """PEAK gold is chrome/coins. A connection pays base × sum of the new bronze multipliers."""
     gs = state()
     gs.betmode = "peak_spin"
     gs.reset_grid_mults()
@@ -1936,14 +1938,15 @@ def test_peak_cluster_pays_from_connections_not_gold_seed():
     clusters = GameCluster.find_winning_clusters(gs.board, gs.config)
     gs.award_clusters(clusters)
     scale = float(getattr(gs.config, "paytable_scale", 1.0))
-    assert gs.win_data["totalWin"] == round(1.0 * scale * 1.0, 6)
+    # Gold seed is not a cluster multiplier. No connection yet → sum of lit ranks is 0.
+    assert gs.win_data["totalWin"] == round(0.0, 6)
     gs.activate_tiles_from_clusters(clusters)
     assert all(
         gs.peak_connection_levels[reel][row] == 1 for reel, row in clusters[0].positions
     )
     win_data = gs.evaluate_clusters(clusters)
-    # After one connection those five cells are bronze for pay: factor = 1 + 5×(2-1) = 6
-    assert abs(win_data["totalWin"] - round(1.0 * scale * 6.0, 6)) < 1e-9
+    # Five connection-bronze cells: base × (2×5).
+    assert abs(win_data["totalWin"] - round(1.0 * scale * 10.0, 6)) < 1e-9
 
 
 def test_peak_spin_can_miss_connections():
@@ -2065,8 +2068,8 @@ def test_organic_bonus_entry_resets_progress():
     raise AssertionError("no organic bonus sample found")
 
 
-def test_organic_freegame_uses_virtual_coin_collect():
-    """Organic FS keeps betmode=base but still virtual-fills every lit tile."""
+def test_organic_freegame_pays_physical_coins():
+    """Organic free spins land physical coins. Face × tile multiplier is the pay."""
     from game_coin_feature import _use_virtual_coins, resolve_coin_game
 
     gs = state()
@@ -2074,7 +2077,7 @@ def test_organic_freegame_uses_virtual_coin_collect():
     gs.betmode = "base"
     gs.gametype = gs.config.freegame_type
     gs.bonus_variant = "hear"
-    assert _use_virtual_coins(gs) is True
+    assert _use_virtual_coins(gs) is False
 
     gs.board = board_from_rows(
         gs,
@@ -2088,11 +2091,13 @@ def test_organic_freegame_uses_virtual_coin_collect():
     )
     gs.board_coin_values = {(0, 0): 4.0}
     gs.seed_tile_to_level(0, 0, 2)
-    gs.seed_tile_to_level(1, 0, 3)  # lit tile without coin — still pays virtually
+    gs.seed_tile_to_level(1, 0, 3)  # lit tile without a coin — still a virtual prize
     total, items, rounds = resolve_coin_game(gs)
     assert rounds == 1
-    # Organic See virtual-fills every lit tile (uncapped).
     assert len(items) == 2
+    coin = next(item for item in items if item["reel"] == 0 and item["row"] == 0)
+    # Silver tile is 5×, so the landed 4 pays 20.
+    assert coin["payout"] == 20.0
     assert total > 0
     assert all(item["displayValue"] == item["payout"] for item in items)
     assert all(float(item["displayValue"]).is_integer() for item in items)
@@ -2224,7 +2229,7 @@ def main():
     test_peak_land_cluster_activates_without_cascade()
     test_peak_dead_land_does_not_activate()
     test_organic_bonus_entry_resets_progress()
-    test_organic_freegame_uses_virtual_coin_collect()
+    test_organic_freegame_pays_physical_coins()
     test_cascade_emits_tumble_before_board_activation()
     test_activation_waits_until_cascade_idle()
     test_bonus_freespin_reveals_have_no_scatters()

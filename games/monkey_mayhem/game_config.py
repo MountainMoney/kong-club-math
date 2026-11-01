@@ -226,8 +226,9 @@ class GameConfig(Config):
             "BA": 5.0,
             "MW": 2.0,
             "ST": 1.0,
-            # No physical CB/CS/CG — Board Activation always virtual-fills lit tiles.
         }
+        # Feature Spin and free-spin strips. Base and TRIFECTA stay virtual-only.
+        self.physical_coin_weights = {"CB": 2.0, "CS": 1.2, "CG": 0.5}
         # Refill: exclude MW / ST / three_monkeys / coins.
         self.symbol_weights_refill = {
             symbol: weight
@@ -246,7 +247,7 @@ class GameConfig(Config):
             for symbol, weight in self.symbol_weights_initial.items()
             if symbol != self.scatter_symbol
         }
-        # Feature / bonus: no physical coins (virtual collect only).
+        # TRIFECTA (FEATURE) stays virtual. Feature Spin strips add physical coins below.
         self.symbol_weights_feature_initial = dict(self.symbol_weights_no_scatter_initial)
         self.symbol_weights_feature_refill = dict(self.symbol_weights_base_refill)
         # Base initial: NO coins; ST forced-only (exclude from strips).
@@ -264,6 +265,14 @@ class GameConfig(Config):
         # Phase A: sticky HEAR / SEE weights unused — bonus uses INITIAL_BONUS only.
         self.symbol_weights_bonus_hear_initial = dict(self.symbol_weights_bonus_initial)
         self.max_sticky_wilds = 0
+        # Free spins and Feature Spin can land CB/CS/CG. Base and TRIFECTA cannot.
+        self.symbol_weights_bonus_initial.update(self.physical_coin_weights)
+        self.symbol_weights_bonus_refill = dict(self.symbol_weights_base_refill)
+        self.symbol_weights_bonus_refill.update(self.physical_coin_weights)
+        self.symbol_weights_feature_spin_initial = dict(self.symbol_weights_feature_initial)
+        self.symbol_weights_feature_spin_initial.update(self.physical_coin_weights)
+        self.symbol_weights_feature_spin_refill = dict(self.symbol_weights_feature_refill)
+        self.symbol_weights_feature_spin_refill.update(self.physical_coin_weights)
 
         self.paytable = self._build_paytable()
         self.reels = {
@@ -291,7 +300,7 @@ class GameConfig(Config):
                 run_weights=(45, 45, 10),
             ),
             "REFILL_BONUS": self.build_reel_strips(
-                self.symbol_weights_base_refill,
+                self.symbol_weights_bonus_refill,
                 seed=222,
                 run_weights=(45, 45, 10),
             ),
@@ -308,12 +317,12 @@ class GameConfig(Config):
             ),
             # 50× Feature Spin: denser runs so boards connect and cascade more often.
             "FEATURE_SPIN": self.build_reel_strips(
-                self.symbol_weights_feature_initial,
+                self.symbol_weights_feature_spin_initial,
                 seed=323,
                 run_weights=(10, 35, 55),
             ),
             "FEATURE_SPIN_REFILL": self.build_reel_strips(
-                self.symbol_weights_feature_refill,
+                self.symbol_weights_feature_spin_refill,
                 seed=333,
                 run_weights=(10, 35, 55),
             ),
