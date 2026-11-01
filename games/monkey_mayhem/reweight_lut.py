@@ -1,4 +1,4 @@
-"""Retarget publish LUT weights to ~96% RTP while preserving book/LUT payout parity."""
+"""Retarget publish LUT weights to 96.01% RTP while preserving book/LUT payout parity."""
 
 from __future__ import annotations
 
@@ -11,21 +11,18 @@ LOOKUP = GAME_DIR / "library" / "lookup_tables"
 
 MODE_COSTS = {
     "base": 1.0,
-    "base_ante": 2.0,
+    "base_ante": 1.4,
     "feature_spin": 50.0,
+    "peak_spin": 1000.0,
     "bonus_see": 100.0,
     "bonus_hear": 200.0,
+    "bonus_gamble": 1567.0,
 }
 
-TARGET_RTP = 0.96
-MODE_TARGET_RTP = {
-    "base": 0.968,
-    "base_ante": 0.96,
-    "feature_spin": 0.96,
-    "bonus_see": 0.96,
-    "bonus_hear": 0.96,
-}
-MAX_WIN_PAYOUT = 1_000_000
+TARGET_RTP = 0.9601
+MODE_TARGET_RTP = {mode: TARGET_RTP for mode in MODE_COSTS}
+# LUT payouts are in bet-hundredths. 25,000× = 2,500,000.
+MAX_WIN_PAYOUT = 2_500_000
 PAYOUT_5K = 500_000
 TOTAL_WEIGHT = 10_000_000_000
 MAX_TAIL_RTP_SHARE_5K = 0.010

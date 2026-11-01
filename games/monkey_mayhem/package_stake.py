@@ -20,7 +20,15 @@ PACKAGE_NAME = f"monkey_mayhem_math_{VERSION}"
 PACKAGE_DIR = OUT_ROOT / PACKAGE_NAME
 ZIP_PATH = OUT_ROOT / f"{PACKAGE_NAME}.zip"
 
-REQUIRED_MODES = ["base", "base_ante", "feature_spin", "bonus_hear"]
+REQUIRED_MODES = [
+    "base",
+    "base_ante",
+    "feature_spin",
+    "peak_spin",
+    "bonus_see",
+    "bonus_hear",
+    "bonus_gamble",
+]
 MIN_ROWS = 250_000
 STAKE_SLUG = "monkey-mayhem"
 

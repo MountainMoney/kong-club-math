@@ -46,10 +46,19 @@ def export_mode(mode: str, force_path: Path) -> None:
 
 
 def main() -> None:
-    for mode in ["base", "base_ante", "feature_spin", "bonus_see", "bonus_hear"]:
+    modes = [
+        "base",
+        "base_ante",
+        "feature_spin",
+        "peak_spin",
+        "bonus_see",
+        "bonus_hear",
+        "bonus_gamble",
+    ]
+    for mode in modes:
         export_mode(mode, FORCES / f"force_record_{mode}.json")
     index = {
-        "modes": ["base", "base_ante", "feature_spin", "bonus_see", "bonus_hear"],
+        "modes": modes,
         "outputDir": str(OUT),
     }
     OUT.mkdir(parents=True, exist_ok=True)

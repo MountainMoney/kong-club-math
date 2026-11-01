@@ -71,7 +71,7 @@ def main() -> None:
         ]
     )
 
-    for mode in ("bonus_hear",):
+    for mode in ("bonus_see", "bonus_hear"):
         cost = MODE_COSTS[mode]
         rows = read_lut(PUBLISH / f"lookUpTable_{mode}_0.csv")
         c95 = cvar_weighted(rows, 95, cost)

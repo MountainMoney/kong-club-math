@@ -155,8 +155,24 @@ def write_report(results, config):
 
 def main():
     config = GameConfig()
-    modes = ["base", "base_ante", "feature_spin", "bonus_see", "bonus_hear"]
-    sims_by_mode = {"base": 50, "base_ante": 50, "feature_spin": 25, "bonus_see": 25, "bonus_hear": 25}
+    modes = [
+        "base",
+        "base_ante",
+        "feature_spin",
+        "peak_spin",
+        "bonus_see",
+        "bonus_hear",
+        "bonus_gamble",
+    ]
+    sims_by_mode = {
+        "base": 50,
+        "base_ante": 50,
+        "feature_spin": 25,
+        "peak_spin": 25,
+        "bonus_see": 25,
+        "bonus_hear": 25,
+        "bonus_gamble": 25,
+    }
     results = [run_mode(config, mode, sims_by_mode[mode]) for mode in modes]
     for result in results:
         assert result["max_seen"] <= config.wincap, f"{result['mode']} exceeded max win cap"
