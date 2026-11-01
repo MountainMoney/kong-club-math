@@ -1,0 +1,7 @@
+self.coin_tile_scale_by_mode = {
+            "base": 0.250,
+            "base_ante": 0.500,
+            "feature_spin": 0.0437,
+            "bonus_see": 0.175,
+            "bonus_hear": 0.222,
+        }
