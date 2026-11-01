@@ -15,6 +15,7 @@ from src.config.config import Config
 from src.config.distributions import Distribution
 from game_criteria import (
     BASE_CAP_QUOTA,
+    FEATURE_CAP_QUOTA,
     FEATURE_NIBBLE_QUOTA,
     FEATURE_RUN_QUOTA,
     PEAK_CAP_QUOTA,
@@ -514,6 +515,7 @@ class GameConfig(Config):
             BetMode("feature_spin", 50.0, self.rtp, self.wincap, False, True, True, [
                 self._distribution("nibble", FEATURE_NIBBLE_QUOTA),
                 self._distribution("run", FEATURE_RUN_QUOTA),
+                self._distribution("cap", FEATURE_CAP_QUOTA, force_wincap=True),
             ]),
             BetMode("peak_spin", self.peak_spin_cost, self.rtp, self.wincap, False, True, True, [
                 self._distribution("dead_juicy", PEAK_DEAD_QUOTA),

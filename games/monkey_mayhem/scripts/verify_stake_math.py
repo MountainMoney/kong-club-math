@@ -12,7 +12,7 @@ sys.path.insert(0, str(SDK_ROOT))
 sys.path.insert(0, str(GAME_DIR))
 
 from game_config import GameConfig
-from game_criteria import BASE_CAP_QUOTA, FEATURE_MAX_PAY, PEAK_CAP_QUOTA
+from game_criteria import BASE_CAP_QUOTA, PEAK_CAP_QUOTA
 
 LOOKUP = GAME_DIR / "library" / "lookup_tables"
 PUBLISH = GAME_DIR / "library" / "publish_files"
@@ -111,13 +111,8 @@ def summarize(mode: str, cost: float, rows: list[tuple[int, int, float]], crit: 
 def fail_checks(rows_by_mode: dict[str, dict], cfg: GameConfig) -> list[str]:
     fails = []
     feature = rows_by_mode.get("feature_spin")
-    if feature:
-        if feature["max_payout"] >= 25000 - 1e-6:
-            fails.append("feature_spin: max payout includes 25000 (cap not allowed)")
-        if feature["p_cap"] > 0:
-            fails.append("feature_spin: P(cap) > 0")
-        if feature["max_payout"] > FEATURE_MAX_PAY + 1e-6:
-            fails.append(f"feature_spin: max {feature['max_payout']} > {FEATURE_MAX_PAY}")
+    if feature and feature["max_payout"] > float(cfg.wincap) + 1e-6:
+        fails.append(f"feature_spin: max {feature['max_payout']} above wincap {cfg.wincap}")
     peak = rows_by_mode.get("peak_spin")
     if peak and peak["n_books"] >= 2000:
         if not (0.90 <= peak["e_pay_over_cost"] <= 0.98):

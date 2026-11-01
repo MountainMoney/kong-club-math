@@ -95,6 +95,8 @@ class GameState(GameStateOverride):
         progress_fill_event(self)
         self.draw_feature_spin_board()
         self.resolve_cascade_loop()
+        if self.outcome_bucket() == "cap":
+            self.apply_cap_topup()
         self.set_end_tumble_event()
         self.log_spin_end("feature_spin")
         self.win_manager.update_gametype_wins(self.gametype)

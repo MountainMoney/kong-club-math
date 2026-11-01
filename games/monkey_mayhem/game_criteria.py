@@ -10,11 +10,9 @@ Brief role → repo name (do not rename modes):
 
 from __future__ import annotations
 
-# Feature Spin (50×): always connects. No 25k row. Ceiling is a hard reject, not a cap book.
+# Feature Spin (50×): always connects, and can reach the 25,000× cap.
 FEATURE_DEAD_QUOTA = 0.0
-FEATURE_NIBBLE_QUOTA = 0.625
 FEATURE_RUN_QUOTA = 0.375
-FEATURE_MAX_PAY = 400.0
 FEATURE_NIBBLE_MAX = 25.0
 
 # PEAK / summit (1000×): cap ~1/5000 of books.
@@ -31,8 +29,10 @@ PEAK_RUN = (2000.0, 8000.0)
 PEAK_CLIP = (8000.0, 16000.0)
 PEAK_TEASE = (16000.0, 24999.0)
 
-# Base cap: 25k at 1/250000 ≈ 10 RTP points.
+# Base cap: 25k at 1/250000 ≈ 10 RTP points. Feature uses the same cap book.
 BASE_CAP_QUOTA = 1 / 250_000
+FEATURE_CAP_QUOTA = BASE_CAP_QUOTA
+FEATURE_NIBBLE_QUOTA = 0.625 - FEATURE_CAP_QUOTA
 
 LEGACY_FEATURE = "feature_spin"
 LEGACY_PEAK = "peak_spin"
@@ -52,12 +52,12 @@ def payout_in_range(pay: float, lo: float, hi: float) -> bool:
 
 
 def feature_bucket_ok(bucket: str, pay: float, tumbles: int) -> bool:
-    if pay > FEATURE_MAX_PAY + 1e-6:
-        return False
     if bucket == "dead_juicy":
         return pay <= 1e-9 and tumbles <= 0
+    if bucket == "cap":
+        return True
     if bucket in ("nibble", "run"):
-        return tumbles >= 1 and pay > 0 and pay <= FEATURE_MAX_PAY
+        return tumbles >= 1 and pay > 0
     return True
 
 
