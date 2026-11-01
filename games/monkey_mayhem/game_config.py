@@ -79,16 +79,8 @@ class GameConfig(Config):
         self.standard_wild = "MW"
         self.scatter_symbol = "ST"
         self.coin_symbols = ["CB", "CS", "CG"]
-        self.see_wild_symbol = "SEE"
-        self.sticky_wild_symbol = "HEAR"
-        self.speak_wild_symbol = "SPEAK"
-        self.three_monkeys = [
-            self.see_wild_symbol,
-            self.sticky_wild_symbol,
-            self.speak_wild_symbol,
-        ]
 
-        # Phase A: only MW is a cluster wild (SEE/HEAR parked).
+        # Phase A: only MW is a cluster wild.
         self.special_symbols = {
             "wild": [self.standard_wild],
             "scatter": [self.scatter_symbol],
@@ -183,8 +175,6 @@ class GameConfig(Config):
         }
         # Dead once Hear is uncapped.
         self.hear_coin_cap_boost_chance = 0.0
-        # Feature Spin: bronze floor; ranks still only grow on connected clusters.
-        self.feature_spin_seed_tiles = 24
         # PEAK: light every cell gold (level 3) before the drop. Progress still starts at 0.
         self.peak_spin_seed_gold = True
         self.peak_spin_cost = 1000.0
@@ -229,7 +219,7 @@ class GameConfig(Config):
         }
         # Feature Spin and free-spin strips. Base and TRIFECTA stay virtual-only.
         self.physical_coin_weights = {"CB": 2.0, "CS": 1.2, "CG": 0.5}
-        # Refill: exclude MW / ST / three_monkeys / coins.
+        # Refill: exclude MW / ST.
         self.symbol_weights_refill = {
             symbol: weight
             for symbol, weight in self.symbol_weights_initial.items()
@@ -237,7 +227,6 @@ class GameConfig(Config):
             not in {
                 self.standard_wild,
                 self.scatter_symbol,
-                *self.three_monkeys,
             }
         }
         # Base refill: NO coins (same as generic refill now).

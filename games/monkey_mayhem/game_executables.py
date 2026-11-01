@@ -340,20 +340,6 @@ class GameExecutables(GameCalculations):
             return "see"
         return "hear"
 
-    def seed_feature_spin_tiles(self):
-        """Light bronze seeds so the 50× Feature Spin can reach target EV (hard coin faces)."""
-        rng = random.Random(getattr(self, "simulation_seed", 0) + 17)
-        positions = [
-            (reel, row)
-            for reel in range(self.config.num_reels)
-            for row in range(self.config.num_rows[reel])
-        ]
-        rng.shuffle(positions)
-        seed_count = int(getattr(self.config, "feature_spin_seed_tiles", 24))
-        for reel, row in positions[:seed_count]:
-            self.seed_tile_to_level(reel, row, 1)
-        update_tile_event(self)
-
     def seed_peak_gold_tiles(self):
         """PEAK: every cell starts gold (level 3). Clusters still have to connect."""
         if not getattr(self.config, "peak_spin_seed_gold", True):

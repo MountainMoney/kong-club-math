@@ -47,7 +47,7 @@ def test_reel_strips_are_run_based_and_refill_rules():
         assert all(len(strip) == 50 for strip in strips)
 
     # Refill excludes MW / ST / monkeys / coins (no physical landings anywhere).
-    banned_refill = {config.standard_wild, config.scatter_symbol, *config.three_monkeys}
+    banned_refill = {config.standard_wild, config.scatter_symbol}
     assert not any(symbol in banned_refill for strip in config.reels["REFILL"] for symbol in strip)
     assert not any(
         symbol in config.coin_symbols for strip in config.reels["REFILL"] for symbol in strip
@@ -133,7 +133,6 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert abs(quotas["gamble_dead"] - 0.50) < 1e-9
     assert abs(quotas["gamble_hear"] - 0.40) < 1e-9
     assert abs(quotas["gamble_madness"] - 0.10) < 1e-9
-    assert config.feature_spin_seed_tiles == 24
     assert config.peak_spin_seed_gold is True
     assert config.peak_spin_cost == 1000.0
     assert config.progress_thresholds["peak_spin"] == 1
@@ -145,8 +144,9 @@ def test_reel_strips_are_run_based_and_refill_rules():
     feature_mode = next(mode for mode in config.bet_modes if mode.get_name() == "feature_spin")
     feature_q = {d.get_criteria(): d.get_quota() for d in feature_mode.get_distributions()}
     assert "dead_juicy" not in feature_q
-    assert abs(feature_q["nibble"] - 0.625) < 1e-9
+    assert abs(feature_q["nibble"] - (0.625 - 1 / 250_000)) < 1e-9
     assert abs(feature_q["run"] - 0.375) < 1e-9
+    assert abs(feature_q["cap"] - 1 / 250_000) < 1e-9
     peak_q = {d.get_criteria(): d.get_quota() for d in peak_mode.get_distributions()}
     assert abs(peak_q["dead_juicy"] - 0.50) < 1e-9
     assert abs(peak_q["cap"] - 0.0002) < 1e-9
@@ -341,7 +341,7 @@ def test_gravity_refill_no_empty_and_no_refill_specials():
     gs.mark_removed_symbols({"BA"}, [])
     gs.gravity_and_refill(emit_event=False)
     assert_full_board(gs)
-    banned = {gs.config.standard_wild, gs.config.scatter_symbol, *gs.config.three_monkeys}
+    banned = {gs.config.standard_wild, gs.config.scatter_symbol}
     assert not any(sym.name in banned for reel in gs.new_symbols_from_tumble for sym in reel)
 
 
@@ -1224,10 +1224,7 @@ def test_bonus_freespin_reveals_have_no_scatters():
             for reel in event.get("newSymbols", []):
                 for sym in reel:
                     assert sym.get("name") != gs.config.scatter_symbol
-                    assert sym.get("name") not in {
-                        gs.config.standard_wild,
-                        *gs.config.three_monkeys,
-                    }
+                    assert sym.get("name") != gs.config.standard_wild
 
 
 def test_force_scatter_skipped_when_already_in_bonus():
@@ -1259,6 +1256,7 @@ def test_bonus_clusters_apply_pay_scale():
     )
     clusters = GameCluster.find_winning_clusters(gs.board, gs.config)
     assert clusters, "fixture must contain a paying cluster"
+    gs.mark_level_up_tiles(clusters)
     raw_total = gs.evaluate_clusters(clusters)["totalWin"]
     gs.award_clusters(clusters)
     scale = float(gs.config.bonus_cluster_pay_scale)
@@ -1822,7 +1820,7 @@ def test_feature_spin_starts_full_without_seeded_tiles():
     assert gs.progress_value == gs.progress_threshold
     gs.draw_prepared_board()
     lit = sum(1 for reel in gs.tile_levels for level in reel if level > 0)
-    assert lit < gs.config.feature_spin_seed_tiles, "must not stamp the 24-tile bronze seed"
+    assert lit == 0
     before = gs.board_activations_this_spin
     gs.ensure_feature_spin_coin_game()
     assert gs.board_activations_this_spin == before

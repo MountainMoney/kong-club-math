@@ -26,8 +26,6 @@ class GameState(GameStateOverride):
                 self.run_bonus_buy("see")
             elif self.betmode == "bonus_hear":
                 self.run_bonus_buy("hear")
-            elif self.betmode == "bonus_madness":
-                self.run_bonus_buy("madness")
             elif self.betmode == "bonus_gamble":
                 self.run_gamble_spin()
             else:
