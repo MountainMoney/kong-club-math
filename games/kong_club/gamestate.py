@@ -124,6 +124,9 @@ class GameState(GameStateOverride):
         self.evaluate_finalwin()
 
     def run_gamble_spin(self):
+        if self.outcome_bucket() == "cap":
+            self.run_base_spin()
+            return
         if self.should_force_initial_scatters():
             self.run_base_spin()
             return

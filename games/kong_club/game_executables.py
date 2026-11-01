@@ -201,8 +201,41 @@ class GameExecutables(GameCalculations):
             self._plant_dead_teaser()
             self._finalize_initial_board()
             return
+        if getattr(self, "reel_set_name", "") == "base_hot" and random.random() < 0.55:
+            self._plant_short_chain()
+            self._finalize_initial_board()
+            return
         self._fill_initial_board()
         self._finalize_initial_board()
+
+    def _plant_short_chain(self) -> None:
+        """One column wins, refills into two more single-column wins, then stops.
+
+        Three tumbles, bar stays under 5, cluster pays stay small.
+        """
+        grid = [["" for _ in range(5)] for _ in range(6)]
+        for row in range(5):
+            grid[0][row] = "T"
+        side = ["LE", "CO", "OR", "GR", "BA"]
+        for reel in range(1, 6):
+            for row in range(5):
+                grid[reel][row] = side[(reel + row) % 5]
+        self.board = [
+            [self.create_symbol(grid[reel][row]) for row in range(5)] for reel in range(6)
+        ]
+        self.top_symbols = [self.create_symbol("A") for _ in range(6)]
+        self.bottom_symbols = [self.create_symbol("K") for _ in range(6)]
+        self.reel_positions = [0] * 6
+        self.anticipation = [0] * 6
+        self.refill_strip = [list(column) for column in self.refill_strip]
+        # About 1 in 1,500 spins keeps the chain going long enough for an 8+ tumble.
+        long = random.random() < 0.006
+        symbols = ["J", "Q", "K", "A", "LE", "CO", "OR", "GR"] if long else ["J", "Q"]
+        strip = []
+        for symbol in symbols:
+            strip.extend([symbol] * 5)
+        strip.extend(["BA", "LE", "CO", "OR", "GR"] * 6)
+        self.refill_strip[0] = strip[:50]
 
     def _plant_dead_teaser(self) -> None:
         """Exactly 2 scatters, one size-4 near-miss, and 3 or 4 paying clusters.

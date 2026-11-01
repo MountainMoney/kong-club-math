@@ -10,90 +10,89 @@ Payout units: book/LUT payouts are hundredths of stake, so 9600 means 96.00x.
 
 ### base
 - Spins: 50
-- Mean payout / EV: 3.1220x
-- Hit rate: 54.00%
-- Std dev: 19.5248
-- Max observed: 139.70x
+- Mean payout / EV: 2.3640x
+- Hit rate: 62.00%
+- Std dev: 14.3249
+- Max observed: 102.60x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 1.50x / 139.70x
-- CVaR95 / CVaR99: 29.74x / 139.70x
+- P95 / P99: 1.50x / 102.60x
+- CVaR95 / CVaR99: 35.23x / 102.60x
 
 ### base_ante
 - Spins: 50
-- Mean payout / EV: 3.1220x
-- Hit rate: 54.00%
-- Std dev: 19.5248
-- Max observed: 139.70x
+- Mean payout / EV: 2.3640x
+- Hit rate: 62.00%
+- Std dev: 14.3249
+- Max observed: 102.60x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 1.50x / 139.70x
-- CVaR95 / CVaR99: 29.74x / 139.70x
+- P95 / P99: 1.50x / 102.60x
+- CVaR95 / CVaR99: 35.23x / 102.60x
 
 ### feature_spin
 - Spins: 25
-- Mean payout / EV: 37.2240x
+- Mean payout / EV: 42.6800x
 - Hit rate: 100.00%
-- Std dev: 26.4451
-- Max observed: 101.30x
+- Std dev: 52.1050
+- Max observed: 219.60x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 95.60x / 101.30x
-- CVaR95 / CVaR99: 98.45x / 101.30x
+- P95 / P99: 161.00x / 219.60x
+- CVaR95 / CVaR99: 190.30x / 219.60x
 
 ### peak_spin
 - Spins: 25
-- Mean payout / EV: 2776.0000x
+- Mean payout / EV: 1890.8000x
 - Hit rate: 100.00%
-- Std dev: 1482.5903
-- Max observed: 7500.00x
+- Std dev: 1045.9805
+- Max observed: 5218.00x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 5225.00x / 7500.00x
-- CVaR95 / CVaR99: 6362.50x / 7500.00x
+- P95 / P99: 4120.00x / 5218.00x
+- CVaR95 / CVaR99: 4669.00x / 5218.00x
 
 ### bonus_see
 - Spins: 25
-- Mean payout / EV: 206.5800x
-- Hit rate: 100.00%
-- Std dev: 228.7481
-- Max observed: 775.10x
+- Mean payout / EV: 87.3560x
+- Hit rate: 96.00%
+- Std dev: 139.4581
+- Max observed: 629.40x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 695.70x / 775.10x
-- CVaR95 / CVaR99: 735.40x / 775.10x
+- P95 / P99: 304.90x / 629.40x
+- CVaR95 / CVaR99: 467.15x / 629.40x
 
 ### bonus_hear
 - Spins: 25
-- Mean payout / EV: 206.5800x
+- Mean payout / EV: 495.3040x
 - Hit rate: 100.00%
-- Std dev: 228.7481
-- Max observed: 775.10x
+- Std dev: 795.8379
+- Max observed: 3591.60x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 695.70x / 775.10x
-- CVaR95 / CVaR99: 735.40x / 775.10x
+- P95 / P99: 2289.70x / 3591.60x
+- CVaR95 / CVaR99: 2940.65x / 3591.60x
 
 ### bonus_gamble
 - Spins: 25
-- Mean payout / EV: 106.3480x
+- Mean payout / EV: 243.4280x
 - Hit rate: 100.00%
-- Std dev: 178.1616
-- Max observed: 692.00x
+- Std dev: 263.7248
+- Max observed: 992.40x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 474.50x / 692.00x
-- CVaR95 / CVaR99: 583.25x / 692.00x
+- P95 / P99: 925.70x / 992.40x
+- CVaR95 / CVaR99: 959.05x / 992.40x
 
 ## Event Coverage
 
 Missing required smoke events: none
 
 Observed events:
-- boardActivation: 92
-- coinSeed: 492
+- boardActivation: 118
 - finalWin: 225
 - freeSpinEnd: 75
 - kongClubMode: 100
-- progressFill: 675
+- progressFill: 838
 - reveal: 925
 - setTotalWin: 925
-- setWin: 395
-- tumbleBoard: 511
+- setWin: 414
+- tumbleBoard: 513
 - updateFreeSpin: 750
-- updateLevelUpTiles: 1070
-- updateTumbleWin: 555
-- winInfo: 463
+- updateLevelUpTiles: 626
+- updateTumbleWin: 631
+- winInfo: 513

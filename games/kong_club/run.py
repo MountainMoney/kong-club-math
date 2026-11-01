@@ -28,17 +28,20 @@ if __name__ == "__main__":
     import os
 
     smoke = os.environ.get("MM_SMOKE", "").lower() in ("1", "true", "yes")
-    sims_per_mode = int(os.environ.get("MM_SIMS", "10000"))
+    sims_per_mode = int(os.environ.get("MM_SIMS", "20000"))
     if smoke:
         sims_per_mode = min(sims_per_mode, 1_000)
+    base_sims = int(os.environ.get("MM_BASE_SIMS", str(sims_per_mode)))
+    if smoke:
+        base_sims = min(base_sims, 1_000)
     num_threads = 4 if sims_per_mode <= 10_000 else 10
     rust_threads = 4
     batching_size = min(2_500, max(250, sims_per_mode // 4))
     compression = True
     profiling = False
     num_sim_args = {
-        "base": int(sims_per_mode),
-        "base_ante": int(sims_per_mode),
+        "base": int(base_sims),
+        "base_ante": int(base_sims),
         "feature_spin": int(sims_per_mode),
         "peak_spin": int(sims_per_mode),
         "bonus_see": int(sims_per_mode),
@@ -56,7 +59,7 @@ if __name__ == "__main__":
         "run_format_checks": False,
     }
 
-    print(f"Kong Club sims per mode: {sims_per_mode} (batch={batching_size}, threads={num_threads})")
+    print(f"Kong Club sims: base/ante {base_sims}, other modes {sims_per_mode} (batch={batching_size}, threads={num_threads})")
 
     config = GameConfig()
     gamestate = GameState(config)

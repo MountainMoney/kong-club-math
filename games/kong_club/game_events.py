@@ -55,6 +55,7 @@ def board_activation_event(gamestate, payout, items, rounds=1):
                 "totalPayout": round(payout, 2),
                 "rounds": int(rounds),
                 "items": deepcopy(items),
+                "capHit": bool(getattr(gamestate, "coin_game_cap_hit", False)),
             },
         }
     )

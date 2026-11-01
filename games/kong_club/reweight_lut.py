@@ -17,7 +17,7 @@ MODE_COSTS = {
     "peak_spin": 1000.0,
     "bonus_see": 100.0,
     "bonus_hear": 200.0,
-    "bonus_gamble": 260.0,
+    "bonus_gamble": 262.0,
 }
 
 TARGET_RTP = 0.965
@@ -28,7 +28,33 @@ PAYOUT_5K = 500_000
 TOTAL_WEIGHT = 10_000_000_000
 MAX_TAIL_RTP_SHARE_5K = 0.010
 MAX_TAIL_RTP_SHARE_10K = 0.008
-TARGET_WEIGHTED_STD = {}
+MODE_MAX_P = {
+    "base": 1 / 1_000_000,
+    "base_ante": 1 / 700_000,
+    "feature_spin": 1 / 80_000,
+    "peak_spin": 1 / 4_000,
+    "bonus_see": 1 / 40_000,
+    "bonus_hear": 1 / 20_000,
+    "bonus_gamble": 1 / 4_500,
+}
+MODE_ZERO_BAND = {
+    "base": (0.45, 0.60),
+    "base_ante": (0.45, 0.60),
+    "feature_spin": (0.50, 0.62),
+    "peak_spin": (0.55, 0.75),
+    "bonus_see": (0.0, 0.04),
+    "bonus_hear": (0.0, 0.04),
+    "bonus_gamble": (0.47, 0.53),
+}
+MODE_PROFIT_MIN = {
+    "base": 0.15,
+    "base_ante": 0.12,
+    "feature_spin": 0.20,
+    "peak_spin": 0.20,
+    "bonus_see": 0.30,
+    "bonus_hear": 0.30,
+    "bonus_gamble": 0.15,
+}
 MID_PAYOUT_LO = 1_500
 MID_PAYOUT_HI = 4_500
 
@@ -331,6 +357,92 @@ def restore_from_lookup(mode: str) -> None:
         write_lut(dst, read_lut(src))
 
 
+def shape_reweight(
+    rows: list[tuple[int, int, int]],
+    cost: float,
+    target_rtp: float,
+    max_p: float,
+    zero_band: tuple[float, float],
+    profit_min: float,
+) -> list[tuple[int, int, int]]:
+    """Hit the RTP target while keeping the simulated zero rate and a profit floor.
+
+    Max-win rows are pinned to ``max_p``. Weight moves among paying rows. It is not
+    dumped onto misses.
+    """
+    payouts = [payout for _, _, payout in rows]
+    count = len(rows)
+    profit_line = cost * 100.0
+    zero_idx = [i for i, payout in enumerate(payouts) if payout <= 0]
+    max_idx = [i for i, payout in enumerate(payouts) if payout >= MAX_WIN_PAYOUT]
+    profit_idx = [i for i, payout in enumerate(payouts) if profit_line < payout < MAX_WIN_PAYOUT]
+    small_idx = [i for i, payout in enumerate(payouts) if 0 < payout <= profit_line]
+    natural_zero = len(zero_idx) / count
+    natural_profit = len(profit_idx) / count
+    lo, hi = zero_band
+    zero_rate = natural_zero if lo <= natural_zero <= hi else min(max(natural_zero, lo), hi)
+    if not zero_idx:
+        zero_rate = 0.0
+    if not max_idx:
+        max_p = 0.0
+    profit_rate = max(natural_profit, profit_min if profit_idx else 0.0)
+    if not profit_idx:
+        profit_rate = 0.0
+    profit_rate = min(profit_rate, max(0.0, 1.0 - zero_rate - max_p))
+    small_rate = max(0.0, 1.0 - zero_rate - max_p - profit_rate)
+    if not small_idx:
+        profit_rate += small_rate
+        small_rate = 0.0
+
+    def masses(gamma: float) -> dict[int, float]:
+        raw: dict[int, float] = {}
+
+        def fill(indexes: list[int], rate: float, tilt: bool) -> None:
+            if not indexes or rate <= 0:
+                return
+            if tilt:
+                logs = [math.exp(-gamma * math.log(max(payouts[i], 1))) for i in indexes]
+                scale = sum(logs) or 1.0
+                for index, shaped in zip(indexes, logs):
+                    raw[index] = rate * shaped / scale
+            else:
+                share = rate / len(indexes)
+                for index in indexes:
+                    raw[index] = share
+
+        fill(max_idx, max_p, False)
+        fill(zero_idx, zero_rate, False)
+        fill(profit_idx, profit_rate, True)
+        fill(small_idx, small_rate, True)
+        return raw
+
+    def rtp_of(gamma: float) -> float:
+        raw = masses(gamma)
+        return sum(raw[i] * payouts[i] for i in raw) / 100.0 / cost
+
+    low_gamma, high_gamma = -4.0, 12.0
+    if rtp_of(0.0) > target_rtp:
+        for _ in range(40):
+            mid = (low_gamma + high_gamma) / 2.0
+            if rtp_of(mid) > target_rtp:
+                low_gamma = mid
+            else:
+                high_gamma = mid
+        gamma = high_gamma
+    else:
+        for _ in range(40):
+            mid = (low_gamma + high_gamma) / 2.0
+            if rtp_of(mid) < target_rtp:
+                high_gamma = mid
+            else:
+                low_gamma = mid
+        gamma = low_gamma
+    raw = masses(gamma)
+    weighted = [(rows[i][0], max(1, int(round(raw.get(i, 0.0) * TOTAL_WEIGHT))), payouts[i]) for i in range(count)]
+    target_sum = target_rtp * cost * 100.0 * TOTAL_WEIGHT
+    return _nudge_to_target(weighted, target_sum)
+
+
 def reweight_mode(mode: str, restore: bool = False) -> dict:
     cost = MODE_COSTS[mode]
     if restore:
@@ -341,9 +453,14 @@ def reweight_mode(mode: str, restore: bool = False) -> dict:
     rows = read_lut(lut_path)
     before = rtp_from_rows(rows, cost)
     target = MODE_TARGET_RTP.get(mode, TARGET_RTP)
-    target_std = TARGET_WEIGHTED_STD.get(mode)
-    max_gamma = 40.0 if before > target * 2 else 12.0
-    weighted = assign_weights(rows, cost, target_rtp=target, target_std=target_std, max_gamma=max_gamma)
+    weighted = shape_reweight(
+        rows,
+        cost,
+        target,
+        MODE_MAX_P.get(mode, 0.0),
+        MODE_ZERO_BAND.get(mode, (0.0, 1.0)),
+        MODE_PROFIT_MIN.get(mode, 0.0),
+    )
     write_lut(lut_path, weighted)
     after = rtp_from_rows(weighted, cost)
     return {"mode": mode, "cost": cost, "rows": len(rows), "rtp_before": before, "rtp_after": after}

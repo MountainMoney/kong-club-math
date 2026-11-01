@@ -45,7 +45,7 @@ ANTE_FREEGAME_QUOTA = 1 / 110  # exactly 2× base
 
 # Gamble — 50% dead / 45% Hear / 5% Madness.
 # Cost = (0.45·E[Hear] + 0.05·E[Madness]) / 0.965, filled in after the bonus sample.
-GAMBLE_BUY_COST = 260.0
+GAMBLE_BUY_COST = 262.0
 SEE_BUY_COST = 100.0
 GAMBLE_DEAD_QUOTA = 0.50
 GAMBLE_HEAR_QUOTA = 0.45
@@ -103,13 +103,13 @@ class GameConfig(Config):
         # and a Hear bonus stays in the mid-100s. Gold > silver > bronze.
         self.coin_values = {
             "CB": [1, 2, 3, 5],
-            "CS": [4, 7, 10, 16, 24],
-            "CG": [16, 24, 36, 50, 68],
+            "CS": [3, 5, 8, 12, 18],
+            "CG": [18, 28, 40, 56, 74],
         }
         self.coin_value_weights = {
             "CB": [55, 28, 12, 5],
             "CS": [40, 30, 18, 8, 4],
-            "CG": [46, 28, 16, 7, 3],
+            "CG": [44, 28, 16, 8, 4],
         }
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
         self.activation_coin_value_pools = self._build_activation_coin_pools()
@@ -481,43 +481,56 @@ class GameConfig(Config):
                 "MW": wild,
             }
 
-        specs: dict[str, tuple[dict[str, float], tuple[int, int, int], int]] = {
-            "base_quiet": (even(MW=0.25), (62, 30, 8), 411),
-            "base_normal": (even(LE=10, CO=10, OR=14, GR=14, BA=18, MW=2.0), (30, 44, 26), 422),
-            "base_hot": (hot(2.2), (34, 44, 22), 433),
-            "base_teaser": (even(MW=0.2), (80, 18, 2), 444),
-            "see_slow": (even(MW=0.3), (70, 24, 6), 511),
-            "see_steady": (even(MW=0.8), (52, 36, 12), 522),
-            "see_burst": (even(Q=12, K=12, BA=12, MW=1.6), (36, 42, 22), 533),
-            "hear_slow": (even(MW=0.6), (58, 32, 10), 611),
-            "hear_steady": (even(OR=11, GR=11, BA=13, MW=1.6), (36, 42, 22), 622),
-            "hear_burst": (even(Q=14, BA=16, MW=2.8), (22, 40, 38), 633),
-            "madness_low": (even(MW=0.8), (55, 32, 13), 711),
-            "madness_mid": (even(OR=11, GR=11, BA=13, MW=2.0), (32, 42, 26), 722),
-            "madness_high": (hot(3.5), (16, 36, 48), 733),
-            "feature_mild": (even(BA=14, MW=3.0), (22, 40, 38), 811),
-            "feature_rich": (hot(7.0), (6, 20, 74), 822),
-            "peak_a": (even(MW=1.0), (40, 40, 20), 911),
-            "peak_b": (hot(2.0), (20, 40, 40), 922),
+        # (weights, initial run lengths, seed, refill run lengths)
+        # Base hot connects, then a quiet refill so most chains stop at 3–4 clusters
+        # and do not fill the coin-game bar.
+        specs: dict[str, tuple] = {
+            "base_quiet": (even(MW=0.2), (70, 24, 6), 411, (78, 18, 4)),
+            "base_normal": (even(OR=11, GR=11, BA=11, MW=1.5), (40, 40, 20), 422, (58, 32, 10)),
+            "base_hot": (even(Q=12, K=12, BA=10, MW=2.6), (16, 36, 48), 433, (28, 36, 36)),
+            "base_teaser": (even(MW=0.2), (80, 18, 2), 444, (85, 12, 3)),
+            "see_slow": (even(MW=0.4), (64, 28, 8), 511, (70, 24, 6)),
+            "see_steady": (even(BA=10, MW=1.0), (46, 38, 16), 522, (60, 30, 10)),
+            "see_burst": (even(Q=12, K=12, BA=12, MW=1.8), (28, 40, 32), 533, (40, 38, 22)),
+            "hear_slow": (even(MW=0.7), (52, 34, 14), 611, (62, 28, 10)),
+            "hear_steady": (even(OR=11, GR=11, BA=12, MW=1.8), (32, 40, 28), 622, (48, 36, 16)),
+            "hear_burst": (even(Q=14, BA=16, MW=3.2), (16, 36, 48), 633, (28, 40, 32)),
+            "madness_low": (even(MW=0.4), (72, 22, 6), 711, (78, 18, 4)),
+            "madness_mid": (even(BA=12, MW=1.6), (40, 40, 20), 722, (50, 34, 16)),
+            "madness_high": (hot(2.4), (22, 40, 38), 733, (36, 40, 24)),
+            "feature_mild": (even(BA=12, MW=2.4), (28, 42, 30), 811, (36, 40, 24)),
+            "feature_rich": (hot(6.5), (8, 22, 70), 822, (8, 22, 70)),
+            "peak_a": (even(MW=1.0), (40, 40, 20), 911, (50, 36, 14)),
+            "peak_b": (hot(2.0), (20, 40, 40), 922, (30, 40, 30)),
         }
         self.reel_set_weights = {
-            "base": {"base_quiet": 48, "base_normal": 36, "base_hot": 8, "base_teaser": 8},
-            "see": {"see_slow": 42, "see_steady": 40, "see_burst": 18},
-            "hear": {"hear_slow": 72, "hear_steady": 23, "hear_burst": 5},
-            "madness": {"madness_low": 82, "madness_mid": 16, "madness_high": 2},
-            "feature": {"feature_mild": 25, "feature_rich": 75},
+            "base": {"base_quiet": 36, "base_normal": 36, "base_hot": 20, "base_teaser": 8},
+            "see": {"see_slow": 58, "see_steady": 30, "see_burst": 12},
+            "hear": {"hear_slow": 78, "hear_steady": 18, "hear_burst": 4},
+            "madness": {"madness_low": 88, "madness_mid": 11, "madness_high": 1},
+            "feature": {"feature_mild": 30, "feature_rich": 70},
             "peak": {"peak_a": 55, "peak_b": 45},
             "gamble_dead": {"base_quiet": 1},
         }
         self.reel_set_weights_flat = set(specs)
-        for name, (weights, runs, seed) in specs.items():
+        for name, (weights, runs, seed, refill_runs) in specs.items():
             self.reels[name] = self.build_reel_strips(weights, seed=seed, run_weights=runs)
             refill = {symbol: weight for symbol, weight in weights.items() if symbol not in {"MW", "ST"}}
             self.reels[f"{name}_REFILL"] = self.build_reel_strips(
-                refill, seed=seed + 17, run_weights=runs
+                refill, seed=seed + 17, run_weights=refill_runs
             )
         # Teaser refills stay quiet so the planted 3–4 clusters do not chain to 5.
         self.reels["base_teaser_REFILL"] = self.reels["base_quiet_REFILL"]
+        # Hot refills drop short runs so a win often continues for a few tumbles.
+        chain_symbols = ["T", "J", "Q", "K", "A", "LE", "CO", "OR", "GR", "BA"]
+        for reel_index in range(self.num_reels):
+            reel_rng = random.Random(9000 + reel_index)
+            strip: list[str] = []
+            while len(strip) < 50:
+                reel_rng.shuffle(chain_symbols)
+                for symbol in chain_symbols:
+                    strip.extend([symbol] * 3)
+            self.reels["base_hot_REFILL"][reel_index] = strip[:50]
 
     def pick_reel_set(self, family: str) -> str:
         weights = self.reel_set_weights[family]
@@ -610,7 +623,7 @@ class GameConfig(Config):
                 self._distribution("cap", HEAR_CAP_QUOTA, force_wincap=True, bonus_variant="hear"),
             ]),
             BetMode("bonus_gamble", self.gamble_buy_cost, self.rtp, self.wincap, False, True, False, [
-                self._distribution("gamble_dead", GAMBLE_DEAD_QUOTA),
+                self._distribution("gamble_dead", GAMBLE_DEAD_QUOTA - GAMBLE_CAP_QUOTA),
                 self._distribution(
                     "gamble_hear",
                     GAMBLE_HEAR_QUOTA,
@@ -619,16 +632,10 @@ class GameConfig(Config):
                 ),
                 self._distribution(
                     "gamble_madness",
-                    GAMBLE_MADNESS_QUOTA - GAMBLE_CAP_QUOTA,
+                    GAMBLE_MADNESS_QUOTA,
                     force_freegame=True,
                     scatter_triggers={5: 1},
                 ),
-                self._distribution(
-                    "cap",
-                    GAMBLE_CAP_QUOTA,
-                    force_wincap=True,
-                    force_freegame=True,
-                    scatter_triggers={5: 1},
-                ),
+                self._distribution("cap", GAMBLE_CAP_QUOTA, force_wincap=True),
             ]),
         ]
