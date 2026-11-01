@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections import deque
 from dataclasses import dataclass
 
@@ -131,4 +132,10 @@ class GameCluster:
     @staticmethod
     def log_winning_clusters(clusters: list[ClusterConnection]) -> None:
         for cluster in clusters:
-            print(GameCluster.format_cluster_log(cluster))
+            spin_trace(GameCluster.format_cluster_log(cluster))
+
+
+def spin_trace(message: str) -> None:
+    """Per-spin debug. Off during bulk sims; set MM_SPIN_TRACE=1 to print."""
+    if os.environ.get("MM_SPIN_TRACE") == "1":
+        print(message)

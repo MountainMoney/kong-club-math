@@ -14,7 +14,7 @@ from src.events.events import (
 )
 
 from game_calculations import GameCalculations
-from game_cluster import GameCluster
+from game_cluster import GameCluster, spin_trace
 from game_coin_feature import remove_coins_from_board, resolve_coin_game
 from game_criteria import normalize_bucket
 from src.calculations.statistics import get_random_outcome
@@ -485,7 +485,7 @@ class GameExecutables(GameCalculations):
                     sym.explode = True
                     self.removed_symbols.append({"reel": reel, "row": row, "symbol": sym.name})
         if self.removed_symbols:
-            print(f"Removed symbols: {self.removed_symbols}")
+            spin_trace(f"Removed symbols: {self.removed_symbols}")
 
     def award_clusters(self, clusters):
         self.win_data = self.evaluate_clusters(clusters)
@@ -543,7 +543,7 @@ class GameExecutables(GameCalculations):
                 sym.explode = False
             self.board[reel] = new_column
             if gap_count:
-                print(
+                spin_trace(
                     f"Refill column {reel}: "
                     f"{[sym.name for sym in self.new_symbols_from_tumble[reel]]}"
                 )
@@ -566,7 +566,7 @@ class GameExecutables(GameCalculations):
         if self._hear_activation_cap_reached():
             return
         self.progress_value = min(self.progress_value + tumble_steps, self.progress_threshold)
-        print(
+        spin_trace(
             f"Progress: {self.progress_value}/{self.progress_threshold} "
             f"(+{tumble_steps} tumble{'s' if tumble_steps != 1 else ''})"
         )
@@ -602,7 +602,7 @@ class GameExecutables(GameCalculations):
         trigger_progress = self.progress_value
         total, items, rounds = resolve_coin_game(self)
         self.progress_activation_count += 1
-        print(
+        spin_trace(
             f"[BOARD ACTIVATION TRIGGERED] progress={trigger_progress} "
             f"reveals={len(items)} rounds={rounds} totalPayout={round(total, 2)}x"
         )

@@ -2,7 +2,7 @@
 
 from src.events.events import freespin_end_event, fs_trigger_event
 
-from game_cluster import GameCluster
+from game_cluster import GameCluster, spin_trace
 from game_events import mode_state_event, progress_fill_event, update_tile_event
 from game_override import GameStateOverride
 
@@ -200,7 +200,7 @@ class GameState(GameStateOverride):
         return
 
     def log_spin_end(self, mode: str):
-        print(
+        spin_trace(
             f"[SPIN END] mode={mode} progress={self.progress_value}/{self.progress_threshold} "
             f"boardActivationFired={str(self.board_activation_fired_this_spin).lower()} "
             f"totalPayout={round(self.win_manager.spin_win, 2)}x"

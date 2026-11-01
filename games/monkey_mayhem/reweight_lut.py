@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 GAME_DIR = Path(__file__).resolve().parent
@@ -83,6 +84,68 @@ def uniform_weights(rows: list[tuple[int, int, int]]) -> list[tuple[int, int, in
     return weighted
 
 
+def _allocate(raw: list[float], budget: int, floor: int = 1) -> list[int]:
+    """Largest-remainder split of budget. Each entry stays at least `floor` when it fits."""
+    if not raw:
+        return []
+    budget = max(budget, floor * len(raw))
+    total = sum(raw) or 1.0
+    exact = [weight / total * budget for weight in raw]
+    weights = [max(floor, int(math.floor(weight))) for weight in exact]
+    short = budget - sum(weights)
+    order = sorted(range(len(exact)), key=lambda i: exact[i] - math.floor(exact[i]), reverse=True)
+    cursor = 0
+    while short > 0 and order:
+        weights[order[cursor % len(order)]] += 1
+        short -= 1
+        cursor += 1
+    while short < 0:
+        donor = max(range(len(weights)), key=lambda i: weights[i])
+        if weights[donor] <= floor:
+            break
+        weights[donor] -= 1
+        short += 1
+    return weights
+
+
+def _nudge_to_target(
+    weighted: list[tuple[int, int, int]],
+    target_sum: float,
+) -> list[tuple[int, int, int]]:
+    """Move weight between two rows until the weighted payout sum matches the target."""
+    total_w = sum(weight for _, weight, _ in weighted)
+    current_sum = sum(weight * payout for _, weight, payout in weighted)
+    delta = target_sum * (total_w / TOTAL_WEIGHT) - current_sum
+    if abs(delta) < 1:
+        return weighted
+    zeros = [i for i, (_, weight, payout) in enumerate(weighted) if payout <= 0 and weight > 1]
+    hits = [i for i, (_, weight, payout) in enumerate(weighted) if payout > 0 and weight > 1]
+    if not hits:
+        return weighted
+    if zeros:
+        source = zeros[0]
+        dest = min(hits, key=lambda i: weighted[i][2])
+        payout = weighted[dest][2]
+        move = int(round(delta / payout))
+        move = max(-(weighted[dest][1] - 1), min(move, weighted[source][1] - 1))
+    else:
+        ordered = sorted(hits, key=lambda i: weighted[i][2])
+        source = ordered[0]
+        dest = ordered[-1]
+        gap = weighted[dest][2] - weighted[source][2]
+        if gap <= 0:
+            return weighted
+        move = int(round(delta / gap))
+        move = max(-(weighted[dest][1] - 1), min(move, weighted[source][1] - 1))
+    if move == 0:
+        return weighted
+    s_id, s_w, s_p = weighted[source]
+    d_id, d_w, d_p = weighted[dest]
+    weighted[source] = (s_id, s_w - move, s_p)
+    weighted[dest] = (d_id, d_w + move, d_p)
+    return weighted
+
+
 def assign_weights(
     rows: list[tuple[int, int, int]],
     cost: float,
@@ -90,8 +153,36 @@ def assign_weights(
     target_std: float | None = None,
     max_gamma: float = 12.0,
 ) -> list[tuple[int, int, int]]:
+    del target_std
     target_avg_hundredths = target_rtp * cost * 100.0
     payouts = [payout for _, _, payout in rows]
+    uniform_rtp = (sum(payouts) / len(payouts) / 100.0 / cost) if payouts else 0.0
+    zero_count = sum(1 for payout in payouts if payout <= 0)
+    # Already near the target: only move weight between misses and hits.
+    # Crushing the tail here would delete the 50/40/10 gamble mix.
+    if zero_count and abs(uniform_rtp - target_rtp) / target_rtp <= 0.05:
+        hit_idx = [i for i, payout in enumerate(payouts) if payout > 0]
+        zero_idx = [i for i, payout in enumerate(payouts) if payout <= 0]
+        hit_mean = sum(payouts[i] for i in hit_idx) / len(hit_idx)
+        target_sum = target_avg_hundredths * TOTAL_WEIGHT
+        need = target_sum / hit_mean
+        pos_budget = int(round(min(max(need, len(hit_idx)), TOTAL_WEIGHT - len(zero_idx))))
+        per_hit, extra = divmod(pos_budget, len(hit_idx))
+        per_hit = max(1, per_hit)
+        zero_budget = TOTAL_WEIGHT - (per_hit * len(hit_idx) + extra)
+        per_zero, zero_extra = divmod(max(zero_budget, len(zero_idx)), len(zero_idx))
+        weighted: list[tuple[int, int, int]] = []
+        h_seen = 0
+        z_seen = 0
+        for idx, (sim_id, _, payout) in enumerate(rows):
+            if payout <= 0:
+                weight = per_zero + (1 if z_seen < zero_extra else 0)
+                z_seen += 1
+            else:
+                weight = per_hit + (1 if h_seen < extra else 0)
+                h_seen += 1
+            weighted.append((sim_id, max(1, weight), payout))
+        return _nudge_to_target(weighted, target_sum)
 
     max_indices = {i for i, p in enumerate(payouts) if p >= MAX_WIN_PAYOUT}
     high_5k_indices = {i for i, p in enumerate(payouts) if PAYOUT_5K <= p < MAX_WIN_PAYOUT}
@@ -128,95 +219,103 @@ def assign_weights(
     zero_indices = {i for i in non_max_indices if payouts[i] <= 0}
     positive_indices = [i for i in non_max_indices if i not in zero_indices]
 
-    non_max_payouts = [max(payouts[i], 1) for i in non_max_indices]
+    max_contrib = per_max_weight * MAX_WIN_PAYOUT * len(max_indices)
+    high_contrib = per_5k_weight * sum(payouts[i] for i in high_5k_indices)
+    tail_sum = max_contrib + high_contrib
+    target_sum = target_avg_hundredths * TOTAL_WEIGHT
 
-    lo, hi = 0.0, max_gamma
-    for _ in range(80):
-        gamma = (lo + hi) / 2.0
-        raw = [(target_avg_hundredths / payout) ** gamma for payout in non_max_payouts]
-        total_raw = sum(raw)
-        avg_non_max = sum(r * p for r, p in zip(raw, non_max_payouts)) / total_raw
-        max_contrib = per_max_weight * MAX_WIN_PAYOUT * len(max_indices)
-        high_contrib = per_5k_weight * sum(payouts[i] for i in high_5k_indices)
-        blended = (remaining_budget * avg_non_max + max_contrib + high_contrib) / TOTAL_WEIGHT
-        if blended > target_avg_hundredths:
-            lo = gamma
+    def positive_mean(gamma: float) -> float:
+        if not positive_indices:
+            return 0.0
+        logs = [-gamma * math.log(payouts[i]) for i in positive_indices]
+        peak = max(logs)
+        shaped = [math.exp(value - peak) for value in logs]
+        total = sum(shaped)
+        return sum(weight * payouts[i] for weight, i in zip(shaped, positive_indices)) / total
+
+    def gamma_for_mean(desired: float) -> float:
+        """Tilt positive rows until their weighted mean matches desired hundredths."""
+        if not positive_indices:
+            return 0.0
+        lo, hi = -6.0, max(max_gamma, 40.0)
+        for _ in range(60):
+            mid = (lo + hi) / 2.0
+            if positive_mean(mid) > desired:
+                lo = mid
+            else:
+                hi = mid
+        return (lo + hi) / 2.0
+
+    if positive_indices:
+        if zero_indices:
+            # Keep the simulated win shape. Move weight between misses and hits
+            # until the average matches the target. Tilt only if equal weights
+            # on the winning rows cannot reach it.
+            equal_mean = positive_mean(0.0)
+            need = (target_sum - tail_sum) / equal_mean if equal_mean else remaining_budget
+            if 0 < need <= remaining_budget:
+                gamma = 0.0
+                pos_budget = int(round(need))
+            elif need > remaining_budget:
+                desired = (target_sum - tail_sum) / remaining_budget
+                gamma = gamma_for_mean(desired)
+                pos_budget = remaining_budget
+            else:
+                gamma = gamma_for_mean(max(min(payouts[i] for i in positive_indices), 1))
+                pos_budget = max(len(positive_indices), int(round(max(need, 0))))
         else:
-            hi = gamma
+            desired = (target_sum - tail_sum) / remaining_budget
+            gamma = gamma_for_mean(max(desired, 1.0))
+            pos_budget = remaining_budget
+        pos_budget = min(max(pos_budget, len(positive_indices)), remaining_budget - (len(zero_indices) if zero_indices else 0))
+        pos_budget = max(pos_budget, len(positive_indices))
+        logs = [-gamma * math.log(payouts[i]) for i in positive_indices]
+        peak = max(logs)
+        shaped = [math.exp(value - peak) for value in logs]
+        total_shaped = sum(shaped) or 1.0
+        raw_pos = [weight / total_shaped * pos_budget for weight in shaped]
+        pos_weights = [max(1, int(math.floor(weight))) for weight in raw_pos]
+        short = pos_budget - sum(pos_weights)
+        order = sorted(range(len(raw_pos)), key=lambda i: raw_pos[i] - math.floor(raw_pos[i]), reverse=True)
+        cursor = 0
+        while short > 0 and order:
+            pos_weights[order[cursor % len(order)]] += 1
+            short -= 1
+            cursor += 1
+        while short < 0:
+            donor = max(range(len(pos_weights)), key=lambda i: pos_weights[i])
+            if pos_weights[donor] <= 1:
+                break
+            pos_weights[donor] -= 1
+            short += 1
+        pos_weight_by_index = {index: weight for index, weight in zip(positive_indices, pos_weights)}
+    else:
+        pos_weight_by_index = {}
+        pos_budget = 0
 
-    gamma = (lo + hi) / 2.0
-    raw = [(target_avg_hundredths / payout) ** gamma for payout in non_max_payouts]
-    total_raw = sum(raw)
-    non_max_weights = [int(round(w / total_raw * remaining_budget)) for w in raw]
-    for i, w in enumerate(non_max_weights):
-        if w < 1:
-            non_max_weights[i] = 1
-
-    if target_std is not None and zero_indices and positive_indices:
-        pos_payout_values = [payouts[i] for i in positive_indices]
-        spike_payout = 1_500
-        best_weights = list(non_max_weights)
-        best_std = 0.0
-        for zero_share in (0.10, 0.12, 0.14, 0.16, 0.18):
-            for mid_boost in (2.0, 3.0, 4.0, 5.0, 6.0):
-                for spike_share in (0.01, 0.015, 0.02, 0.025):
-                    zero_budget = max(len(zero_indices), int(remaining_budget * zero_share))
-                    spike_budget = max(1, int(remaining_budget * spike_share))
-                    positive_budget = remaining_budget - zero_budget - spike_budget
-                    if positive_budget <= len(positive_indices):
-                        continue
-                    per_zero = max(1, zero_budget // len(zero_indices))
-                    spike_indices = [i for i in positive_indices if payouts[i] == spike_payout]
-                    other_indices = [i for i in positive_indices if payouts[i] != spike_payout]
-                    per_spike = max(1, spike_budget // max(len(spike_indices), 1)) if spike_indices else 0
-                    raw = []
-                    for i in other_indices:
-                        p = max(payouts[i], 1)
-                        boost = mid_boost if MID_PAYOUT_LO <= p <= MID_PAYOUT_HI else 1.0
-                        raw.append((p**0.35) * boost)
-                    total_raw = sum(raw) or 1.0
-                    other_weights = {
-                        i: max(1, int(round(w / total_raw * positive_budget)))
-                        for i, w in zip(other_indices, raw)
-                    }
-                    trial_rows: list[tuple[int, int, int]] = []
-                    for idx, (sim_id, _, payout) in enumerate(rows):
-                        if idx in max_indices:
-                            trial_rows.append((sim_id, per_max_weight, payout))
-                        elif idx in high_5k_indices:
-                            trial_rows.append((sim_id, per_5k_weight, payout))
-                        elif idx in zero_indices:
-                            trial_rows.append((sim_id, per_zero, payout))
-                        elif payout == spike_payout and spike_indices:
-                            trial_rows.append((sim_id, per_spike, payout))
-                        else:
-                            trial_rows.append((sim_id, other_weights[idx], payout))
-                    std = weighted_std(trial_rows, cost)
-                    rtp = rtp_from_rows(trial_rows, cost)
-                    if abs(rtp - target_rtp) <= 0.008 and std > best_std:
-                        best_std = std
-                        rebuilt: list[int] = []
-                        for idx in non_max_indices:
-                            if idx in zero_indices:
-                                rebuilt.append(per_zero)
-                            elif payouts[idx] == spike_payout and spike_indices:
-                                rebuilt.append(per_spike)
-                            else:
-                                rebuilt.append(other_weights[idx])
-                        best_weights = rebuilt
-        non_max_weights = best_weights
+    zero_budget = remaining_budget - sum(pos_weight_by_index.values())
+    if zero_indices:
+        per_zero = max(1, zero_budget // len(zero_indices))
+        zero_extra = zero_budget - per_zero * len(zero_indices)
+    else:
+        per_zero = 0
+        zero_extra = 0
 
     weighted: list[tuple[int, int, int]] = []
-    non_ptr = 0
+    zero_seen = 0
     for idx, (sim_id, _, payout) in enumerate(rows):
         if idx in max_indices:
-            weighted.append((sim_id, per_max_weight, payout))
+            weight = per_max_weight
         elif idx in high_5k_indices:
-            weighted.append((sim_id, per_5k_weight, payout))
+            weight = per_5k_weight
+        elif idx in zero_indices:
+            weight = per_zero + (1 if zero_seen < zero_extra else 0)
+            zero_seen += 1
         else:
-            weighted.append((sim_id, non_max_weights[non_ptr], payout))
-            non_ptr += 1
-    return weighted
+            weight = pos_weight_by_index.get(idx, 1)
+        weighted.append((sim_id, max(1, weight), payout))
+
+    return _nudge_to_target(weighted, target_sum)
 
 
 def write_lut(path: Path, rows: list[tuple[int, int, int]]) -> None:
@@ -242,11 +341,6 @@ def reweight_mode(mode: str, restore: bool = False) -> dict:
     rows = read_lut(lut_path)
     before = rtp_from_rows(rows, cost)
     target = MODE_TARGET_RTP.get(mode, TARGET_RTP)
-    if abs(before - target) <= max(0.02, target * 0.025) and before >= target * 0.97:
-        weighted = uniform_weights(rows)
-        write_lut(lut_path, weighted)
-        after = rtp_from_rows(weighted, cost)
-        return {"mode": mode, "cost": cost, "rows": len(rows), "rtp_before": before, "rtp_after": after}
     target_std = TARGET_WEIGHTED_STD.get(mode)
     max_gamma = 40.0 if before > target * 2 else 12.0
     weighted = assign_weights(rows, cost, target_rtp=target, target_std=target_std, max_gamma=max_gamma)

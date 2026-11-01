@@ -1,0 +1,86 @@
+[
+  {
+    "mode": "base",
+    "cost": 1.0,
+    "sims": 250000,
+    "rtp": 0.9600999999500001,
+    "max_win_x": 25000.0,
+    "hit_rate": 0.0672472781,
+    "raw_hit_rate": 0.496032,
+    "std_payout_x": 28.766900596201936,
+    "std_return_on_stake": 28.766900596201936,
+    "cap_probability": 3.058e-07
+  },
+  {
+    "mode": "base_ante",
+    "cost": 1.4,
+    "sims": 250000,
+    "rtp": 0.9601000000214287,
+    "max_win_x": 25000.0,
+    "hit_rate": 0.0751058983,
+    "raw_hit_rate": 0.498396,
+    "std_payout_x": 37.22576569362649,
+    "std_return_on_stake": 26.589832638305978,
+    "cap_probability": 3.06e-07
+  },
+  {
+    "mode": "feature_spin",
+    "cost": 50.0,
+    "sims": 250000,
+    "rtp": 0.9600999984062,
+    "max_win_x": 25000.0,
+    "hit_rate": 1.0,
+    "raw_hit_rate": 1.0,
+    "std_payout_x": 135.00201433519567,
+    "std_return_on_stake": 2.700040286704069,
+    "cap_probability": 2.887e-07
+  },
+  {
+    "mode": "peak_spin",
+    "cost": 1000.0,
+    "sims": 250000,
+    "rtp": 0.960100000015,
+    "max_win_x": 25000.0,
+    "hit_rate": 0.3510197222,
+    "raw_hit_rate": 0.5,
+    "std_payout_x": 1463.1192572698424,
+    "std_return_on_stake": 1.4631192572702911,
+    "cap_probability": 1.2909e-06
+  },
+  {
+    "mode": "bonus_see",
+    "cost": 100.0,
+    "sims": 250000,
+    "rtp": 0.9601000247718998,
+    "max_win_x": 25000.0,
+    "hit_rate": 0.2108146504,
+    "raw_hit_rate": 0.992012,
+    "std_payout_x": 398.6620691914438,
+    "std_return_on_stake": 3.9866206919145446,
+    "cap_probability": 2.488e-07
+  },
+  {
+    "mode": "bonus_hear",
+    "cost": 200.0,
+    "sims": 250000,
+    "rtp": 0.96010000000005,
+    "max_win_x": 25000.0,
+    "hit_rate": 0.4216669692,
+    "raw_hit_rate": 0.992012,
+    "std_payout_x": 546.9674616205319,
+    "std_return_on_stake": 2.7348373081028052,
+    "cap_probability": 2.488e-07
+  },
+  {
+    "mode": "bonus_gamble",
+    "cost": 1567.0,
+    "sims": 250000,
+    "rtp": 0.9600999993944288,
+    "max_win_x": 25000.0,
+    "hit_rate": 0.4993327935,
+    "raw_hit_rate": 0.497812,
+    "std_payout_x": 4468.379741564762,
+    "std_return_on_stake": 2.851550568965913,
+    "cap_probability": 0.0164178723
+  }
+]
