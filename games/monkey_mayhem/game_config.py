@@ -61,7 +61,7 @@ class GameConfig(Config):
     def __init__(self):
         super().__init__()
         self.game_id = "monkey_mayhem"
-        self.provider_name = "Summit Slots"
+        self.provider_name = "Trifecta"
         self.provider_number = 0
         self.working_name = "Monkey Mayhem"
         self.rtp = 0.9601
