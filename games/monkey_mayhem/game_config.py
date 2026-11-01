@@ -37,9 +37,9 @@ SCATTER_TRIGGERS_ANTE = {3: 70, 4: 25, 5: 5}
 BASE_FREEGAME_QUOTA = 1 / 220
 ANTE_FREEGAME_QUOTA = 1 / 110  # exactly 2× base
 
-# Gamble buy — 50% dead / 40% 4 ST Hear / 10% 5 ST Monkey Madness.
-# Cost is a working placeholder until the RTP pass (Cole 2026-09-01).
-GAMBLE_BUY_COST = 100.0
+# Gamble — 50% dead / 40% Hear / 10% Madness.
+# Cost = sampled E[payout] / 0.9601 (300 Hear + 150 Madness draws).
+GAMBLE_BUY_COST = 1567.0
 SEE_BUY_COST = 100.0
 GAMBLE_DEAD_QUOTA = 0.50
 GAMBLE_HEAR_QUOTA = 0.40
