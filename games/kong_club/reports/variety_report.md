@@ -2,40 +2,40 @@
 
 | mode | strip sets | unique sig | top sig | top-10 | eff books | dups | tumble 3+ / 8+ | bar 3-4 | coin-only / clover / 3+ pots / 5+ reruns | arcs e/m/l | gaps |
 |---|---:|---:|---:|---:|---:|---:|---|---:|---|---|---|
-| base | 4 | 4796 | 15.1% | 0.2% | 43480 | 18700 | 10.1% / 0.05% | 19.9% | 68%/0%/0%/0% |  | top sig 15.1%, bar 3-4 19.9%, clover-heavy/pots/reruns ~0 |
+| base | 4 | 68543 | 0.0% | 0.1% | 19479 | 3117 | 19.4% / 0.45% | 9.7% | 71%/0%/0%/0% |  | ok |
 
-<!-- base reels base_normal:40%,base_quiet:37%,base_hot:17%,base_teaser:6% -->
-<!-- base bonus split organic_bonus_see:0.4373%, organic_bonus_hear:0.0173% -->
-<!-- base clovers 2:63.1%, 3:13.5%, 4:17.5%, 5:5.8% -->
-<!-- base scatters==2 5.69% big10x books 103 -->
-| base_ante | 4 | 4912 | 15.3% | 0.3% | 38693 | 18597 | 10.4% / 0.05% | 19.4% | 77%/0%/0%/0% |  | top sig 15.3%, bar 3-4 19.4%, clover-heavy/pots/reruns ~0 |
+<!-- base reels base_hot:46%,base_quiet:38%,base_normal:11%,base_teaser:5% -->
+<!-- base bonus split organic_bonus_see:0.4337%, organic_bonus_hear:0.0209% -->
+<!-- base clovers 2:45.2%, 3:35.8%, 4:16.0%, 5:2.9% -->
+<!-- base scatters==2 4.77% big10x books 436 -->
+| base_ante | 4 | 68484 | 0.0% | 0.1% | 27593 | 3076 | 23.3% / 0.32% | 10.7% | 84%/0%/0%/0% |  | ok |
 
-<!-- base_ante reels base_normal:40%,base_quiet:37%,base_hot:17%,base_teaser:6% -->
-<!-- base_ante bonus split organic_bonus_see:0.8790%, organic_bonus_hear:0.0301% -->
-<!-- base_ante clovers 2:64.6%, 3:27.8%, 4:7.6% -->
-<!-- base_ante scatters==2 5.74% big10x books 433 -->
-| feature_spin | 2 | 4809 | 0.9% | 0.5% | 4701 | 0 | 16.1% / 0.07% | 0.0% | 47%/2%/0%/0% |  | clover-heavy 2%, pots/reruns ~0 |
+<!-- base_ante reels base_hot:46%,base_quiet:38%,base_normal:11%,base_teaser:5% -->
+<!-- base_ante bonus split organic_bonus_see:0.9090%, organic_bonus_hear:0.0001% -->
+<!-- base_ante clovers 2:54.5%, 3:30.1%, 4:5.3%, 5:10.0%, 20:0.1% -->
+<!-- base_ante scatters==2 4.84% big10x books 600 -->
+| feature_spin | 2 | 86576 | 0.1% | 0.0% | 38130 | 0 | 16.1% / 0.09% | 0.0% | 49%/3%/0%/0% |  | ok |
 
-<!-- feature_spin reels feature_rich:74%,feature_mild:26% -->
-<!-- feature_spin clovers 2:34.2%, 3:28.6%, 4:15.6%, 5:13.0%, 10:6.1%, 20:2.4% -->
+<!-- feature_spin reels feature_rich:77%,feature_mild:23% -->
+<!-- feature_spin clovers 2:33.4%, 3:27.7%, 4:18.8%, 5:12.3%, 10:5.8%, 20:2.1% -->
 <!-- feature_spin scatters==2 0.00% big10x books 0 -->
-| peak_spin | 2 | 1125 | 3.6% | 0.3% | 4925 | 0 | 0.0% / 0.00% | 0.0% | 4%/44%/7%/0% |  | coin-only 4% (gold boards), 5+ reruns 0 |
+| peak_spin | 2 | 73884 | 0.0% | 0.0% | 47514 | 0 | 0.0% / 0.00% | 0.0% | 3%/45%/6%/0% |  | ok |
 
-<!-- peak_spin reels peak_a:56%,peak_b:44% -->
-<!-- peak_spin clovers 2:35.1%, 3:28.7%, 4:18.1%, 5:12.2%, 10:4.8%, 20:1.2% -->
+<!-- peak_spin reels peak_a:55%,peak_b:45% -->
+<!-- peak_spin clovers 2:34.9%, 3:28.5%, 4:18.6%, 5:12.3%, 10:4.6%, 20:0.9% -->
 <!-- peak_spin scatters==2 0.00% big10x books 0 -->
-| bonus_see | 3 | 18907 | 0.0% | 0.5% | 4284 | 0 | 93.9% / 4.80% | 7.3% | 63%/1%/0%/0% | 10%/32%/58% | arc early 10%, clover-heavy 1%, pots/reruns ~0 |
+| bonus_see | 3 | 225719 | 0.0% | 0.0% | 45173 | 0 | 92.5% / 2.80% | 6.1% | 60%/1%/0%/0% | 15%/33%/52% | ok |
 
-<!-- bonus_see reels see_slow:57%,see_steady:31%,see_burst:12% -->
-<!-- bonus_see clovers 2:49.6%, 3:27.4%, 4:13.4%, 5:8.0%, 10:1.4%, 20:0.3% -->
+<!-- bonus_see reels see_steady:57%,see_slow:36%,see_burst:7% -->
+<!-- bonus_see clovers 2:47.9%, 3:28.4%, 4:14.2%, 5:7.8%, 10:1.5%, 20:0.2% -->
 <!-- bonus_see scatters==2 0.00% big10x books 0 -->
-| bonus_hear | 3 | 19643 | 0.0% | 0.2% | 7400 | 0 | 96.7% / 9.67% | 4.8% | 33%/3%/0%/0% | 9%/33%/58% | arc early 9%, clover-heavy 3%, pots/reruns ~0 |
+| bonus_hear | 3 | 243410 | 0.0% | 0.0% | 89236 | 0 | 96.2% / 7.78% | 4.8% | 35%/3%/0%/0% | 21%/35%/44% | ok |
 
-<!-- bonus_hear reels hear_slow:78%,hear_steady:18%,hear_burst:4% -->
-<!-- bonus_hear clovers 2:38.5%, 3:29.2%, 4:18.2%, 5:10.6%, 10:2.9%, 20:0.7% -->
+<!-- bonus_hear reels hear_steady:40%,hear_slow:39%,hear_burst:20% -->
+<!-- bonus_hear clovers 2:39.4%, 3:29.2%, 4:17.2%, 5:10.7%, 10:2.9%, 20:0.6% -->
 <!-- bonus_hear scatters==2 0.00% big10x books 0 -->
-| bonus_gamble | 3 | 9310 | 0.0% | 0.3% | 5670 | 0 | 47.3% / 6.26% | 5.5% | 28%/15%/6%/0% |  | 5+ reruns 0 |
+| bonus_gamble | 3 | 116250 | 0.0% | 0.0% | 66603 | 0 | 47.0% / 6.41% | 4.6% | 26%/17%/6%/0% |  | ok |
 
-<!-- bonus_gamble reels base_quiet:72%,base_normal:18%,base_hot:10% -->
-<!-- bonus_gamble clovers 2:37.2%, 3:28.8%, 4:18.4%, 5:10.5%, 10:3.7%, 20:1.4% -->
+<!-- bonus_gamble reels base_quiet:75%,base_hot:18%,base_normal:6% -->
+<!-- bonus_gamble clovers 2:36.5%, 3:28.8%, 4:17.8%, 5:11.5%, 10:4.2%, 20:1.3% -->
 <!-- bonus_gamble scatters==2 49.98% big10x books 0 -->

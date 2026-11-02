@@ -77,6 +77,7 @@ class GameExecutables(GameCalculations):
         self.reset_progress()
         self.board_activation_fired_this_spin = False
         self.board_activations_this_spin = 0
+        self.progress_cap_override = None
         self.board_coin_values: dict[tuple[int, int], float] = {}
         self.sticky_wild_positions = []
         betmode = getattr(self, "betmode", "base")
@@ -186,14 +187,31 @@ class GameExecutables(GameCalculations):
         if self.book.events:
             self.book.events[-1]["reelSet"] = getattr(self, "reel_set_name", self.reelstrip_id)
 
-    def use_reel_family(self, family: str) -> None:
+    def use_reel_family(self, family: str, name: str | None = None) -> None:
         """Pick one weighted strip set for this spin and point the refill at its pair."""
-        name = self.config.pick_reel_set(family)
+        if name is None:
+            name = self.config.pick_reel_set(family)
         self.reel_set_name = name
         self.reelstrip_id = name
         self.reelstrip = self.config.reels[name]
         refill_id = self.config.tumble_refill_reel_ids.get(name, f"{name}_REFILL")
         self.refill_strip = self.config.reels[refill_id]
+
+    def _bonus_reel_name(self, variant: str) -> str | None:
+        """Put the hot spin in a random third so See / Hear arcs are not all late."""
+        if variant not in ("see", "hear"):
+            return None
+        window = getattr(self, "arc_window", None)
+        if window is None:
+            return None
+        span = max(int(self.config.bonus_spins), 1)
+        third = min(2, (int(self.fs) - 1) * 3 // span)
+        if third == window:
+            hot = f"{variant}_burst"
+            mid = f"{variant}_steady"
+            hot_p = 0.40 if variant == "hear" else 0.12
+            return hot if random.random() < hot_p else mid
+        return f"{variant}_slow" if random.random() < 0.82 else f"{variant}_steady"
 
     def draw_prepared_board(self):
         """Initial fill: choose a random start per column and read 5 symbols downward."""
@@ -201,73 +219,191 @@ class GameExecutables(GameCalculations):
             self._plant_dead_teaser()
             self._finalize_initial_board()
             return
-        if getattr(self, "reel_set_name", "") == "base_hot" and random.random() < 0.55:
-            self._plant_short_chain()
+        if getattr(self, "reel_set_name", "") in ("base_quiet", "base_normal") and getattr(self, "gametype", None) != self.config.freegame_type:
+            # Natural stops were collapsing onto one size-5 symbol. These sets miss on purpose,
+            # except a rare 8-tumble chain that stays in the body of the pay table.
+            if random.random() < (1 / 220):
+                self.progress_cap_override = 2
+                # Lows only: 8 × 0.10 stays under 1x, inside the weighted body, not the drained tail.
+                self._plant_short_chain(steps=8, vary_size=False, pool=list(self.config.low_symbols))
+            else:
+                self._plant_quiet_miss()
+            self._finalize_initial_board()
+            return
+        if getattr(self, "reel_set_name", "") == "base_hot":
+            # Hot spins are scripted so winning shapes do not collapse onto one symbol.
+            # ~22% cascade three times (tumble-3, bar 3). The rest are one or two tumbles.
+            roll = random.random()
+            if roll < 0.12:
+                self._plant_short_chain(steps=3, vary_size=True)
+            elif roll < 0.48:
+                # Three tumbles, but the bar stops at 2 so tumble-3 does not crowd bar 3–4.
+                self.progress_cap_override = 2
+                self._plant_short_chain(steps=3, vary_size=True)
+            elif roll < 0.74:
+                self._plant_two_step()
+            else:
+                self._plant_pair()
             self._finalize_initial_board()
             return
         self._fill_initial_board()
         self._finalize_initial_board()
 
-    def _plant_short_chain(self) -> None:
-        """One column wins, refills into two more single-column wins, then stops.
+    def _plant_quiet_miss(self) -> None:
+        """No 5-cluster and no scatter. Symbol layout still changes every spin."""
+        pays = list(self.config.paying_symbols)
+        random.shuffle(pays)
+        grid = [
+            [pays[(reel * 3 + row + (reel * row)) % len(pays)] for row in range(5)]
+            for reel in range(6)
+        ]
+        self._install_planted_grid(grid, pays[0], pays[1])
 
-        Three tumbles, bar stays under 5, cluster pays stay small.
+    def _plant_two_step(self) -> None:
+        """Two single-column tumbles with varying sizes. Bar stops at 2."""
+        self._plant_short_chain(steps=2, vary_size=True)
+
+    def _plant_pair(self) -> None:
+        """Two separated clusters, sizes 5–7. One tumble, bar stops at 2."""
+        pays = list(self.config.paying_symbols)
+        random.shuffle(pays)
+        left, right = pays[0], pays[1]
+        reels = list(range(self.config.num_reels))
+        random.shuffle(reels)
+        pair = None
+        for a, b in ((reels[i], reels[j]) for i in range(6) for j in range(i + 1, 6)):
+            if abs(a - b) >= 2:
+                pair = (a, b)
+                break
+        reel_a, reel_b = pair or (0, 3)
+        fillers = [symbol for symbol in pays[2:] if symbol not in (left, right)]
+        if len(fillers) < 2:
+            fillers = [symbol for symbol in pays if symbol not in (left, right)]
+        grid = [[fillers[(reel + row) % len(fillers)] for row in range(5)] for reel in range(6)]
+
+        def paint(reel: int, other: int, symbol: str) -> None:
+            size = random.choice((5, 5, 6, 6, 7))
+            for row in range(5):
+                grid[reel][row] = symbol
+            extra = size - 5
+            if extra <= 0:
+                return
+            side = reel - 1 if reel < other and reel > 0 else reel + 1
+            if not 0 <= side < 6 or side == other:
+                side = reel + 1 if reel < 5 else reel - 1
+            if side == other or not 0 <= side < 6:
+                return
+            rows = list(range(5))
+            random.shuffle(rows)
+            for row in rows[:extra]:
+                grid[side][row] = symbol
+
+        paint(reel_a, reel_b, left)
+        paint(reel_b, reel_a, right)
+        self._install_planted_grid(grid, fillers[0], fillers[-1])
+
+    def _plant_short_chain(self, steps: int = 3, vary_size: bool = False, pool: list[str] | None = None) -> None:
+        """One column wins, then refills into more single-column wins, then stops.
+
+        Symbol, reel, and (optionally) cluster size vary so books do not share a signature.
         """
+        win_reel = random.randrange(self.config.num_reels)
+        chain = list(pool or self.config.paying_symbols)
+        random.shuffle(chain)
+        winner = chain[0]
+        others = [symbol for symbol in self.config.paying_symbols if symbol not in chain] or chain[1:]
+        if len(others) < 2:
+            others = [symbol for symbol in self.config.paying_symbols if symbol != winner]
         grid = [["" for _ in range(5)] for _ in range(6)]
         for row in range(5):
-            grid[0][row] = "T"
-        side = ["LE", "CO", "OR", "GR", "BA"]
-        for reel in range(1, 6):
+            grid[win_reel][row] = winner
+        for reel in range(6):
+            if reel == win_reel:
+                continue
             for row in range(5):
-                grid[reel][row] = side[(reel + row) % 5]
+                grid[reel][row] = others[(reel + row) % len(others)]
+                if grid[reel][row] == winner:
+                    grid[reel][row] = others[(reel + row + 1) % len(others)]
+        if vary_size:
+            self._extend_cluster(grid, win_reel, winner, forbid=set())
+        self._install_planted_grid(grid, others[0], others[1])
+        self.refill_strip = [list(column) for column in self.refill_strip]
+        follow = [symbol for symbol in chain[1:]] or [winner]
+        random.shuffle(follow)
+        symbols: list[str] = []
+        while len(symbols) < max(1, steps - 1):
+            random.shuffle(follow)
+            symbols.extend(follow)
+        symbols = symbols[: max(1, steps - 1)]
+        strip: list[str] = []
+        # Exactly five of each symbol. A longer run mixes the next symbol into the window and the chain stops.
+        for symbol in symbols:
+            strip.extend([symbol] * 5)
+        pad = [symbol for symbol in others if symbol != symbols[0]]
+        while len(strip) < 50:
+            strip.extend(pad)
+        self.refill_strip[win_reel] = strip[:50]
+
+    def _extend_cluster(self, grid, reel: int, symbol: str, forbid: set[int]) -> None:
+        """Grow a size-5 column into a size-6 or size-7 so the pay band changes."""
+        extra = random.choice((0, 1, 1, 2))
+        if extra <= 0:
+            return
+        sides = [side for side in (reel - 1, reel + 1) if 0 <= side < 6 and side not in forbid]
+        if not sides:
+            return
+        side = random.choice(sides)
+        rows = list(range(5))
+        random.shuffle(rows)
+        for row in rows[:extra]:
+            grid[side][row] = symbol
+
+    def _install_planted_grid(self, grid, top: str, bottom: str) -> None:
         self.board = [
             [self.create_symbol(grid[reel][row]) for row in range(5)] for reel in range(6)
         ]
-        self.top_symbols = [self.create_symbol("A") for _ in range(6)]
-        self.bottom_symbols = [self.create_symbol("K") for _ in range(6)]
+        self.top_symbols = [self.create_symbol(top) for _ in range(6)]
+        self.bottom_symbols = [self.create_symbol(bottom) for _ in range(6)]
         self.reel_positions = [0] * 6
         self.anticipation = [0] * 6
-        self.refill_strip = [list(column) for column in self.refill_strip]
-        # About 1 in 1,500 spins keeps the chain going long enough for an 8+ tumble.
-        long = random.random() < 0.006
-        symbols = ["J", "Q", "K", "A", "LE", "CO", "OR", "GR"] if long else ["J", "Q"]
-        strip = []
-        for symbol in symbols:
-            strip.extend([symbol] * 5)
-        strip.extend(["BA", "LE", "CO", "OR", "GR"] * 6)
-        self.refill_strip[0] = strip[:50]
 
     def _plant_dead_teaser(self) -> None:
         """Exactly 2 scatters, one size-4 near-miss, and 3 or 4 paying clusters.
 
-        Each paying cluster is one full column (5 high). Columns do not share a symbol,
-        so they cannot merge. The size-4 column is one short of a win.
+        Each paying cluster is one full column. Columns do not share a symbol,
+        so they cannot merge. Positions and symbols change every spin.
         """
         cluster_count = 4 if random.random() < 0.5 else 3
-        symbols = ["Q", "K", "A", "LE"]
+        symbols = list(self.config.paying_symbols)
+        random.shuffle(symbols)
+        order = list(range(self.config.num_reels))
+        random.shuffle(order)
+        cluster_reels = order[:cluster_count]
+        near_reel = order[cluster_count]
+        filler_reels = order[cluster_count + 1 :]
         grid = [["" for _ in range(5)] for _ in range(6)]
-        for reel in range(cluster_count):
+        for index, reel in enumerate(cluster_reels):
             for row in range(5):
-                grid[reel][row] = symbols[reel]
-        for row in range(4):
-            grid[4][row] = "CO"
-        grid[4][4] = self.config.scatter_symbol
-        grid[5][4] = self.config.scatter_symbol
-        fillers = ["T", "J", "OR", "GR", "BA"]
-        cursor = 0
-        for row in range(4):
-            grid[5][row] = fillers[cursor]
-            cursor += 1
-        for reel in range(6):
+                grid[reel][row] = symbols[index]
+        near_symbol = symbols[cluster_count]
+        near_rows = list(range(5))
+        random.shuffle(near_rows)
+        for row in near_rows[:4]:
+            grid[near_reel][row] = near_symbol
+        scatter = self.config.scatter_symbol
+        grid[near_reel][near_rows[4]] = scatter
+        filler_pool = [symbol for symbol in symbols if symbol != near_symbol]
+        second_scatter_reel = filler_reels[0]
+        for reel in filler_reels:
             for row in range(5):
-                if not grid[reel][row]:
-                    grid[reel][row] = fillers[cursor % len(fillers)]
-                    cursor += 1
+                grid[reel][row] = filler_pool[(reel + row) % len(filler_pool)]
+        scatter_row = random.randrange(5)
+        grid[second_scatter_reel][scatter_row] = scatter
         self.board = [
             [self.create_symbol(grid[reel][row]) for row in range(5)] for reel in range(6)
         ]
-        self.top_symbols = [self.create_symbol("T") for _ in range(6)]
-        self.bottom_symbols = [self.create_symbol("J") for _ in range(6)]
+        self.top_symbols = [self.create_symbol(filler_pool[0]) for _ in range(6)]
+        self.bottom_symbols = [self.create_symbol(filler_pool[-1]) for _ in range(6)]
         self.reel_positions = [0] * 6
         self.anticipation = [0] * 6
 
@@ -301,6 +437,8 @@ class GameExecutables(GameCalculations):
                 if not GameCluster.find_winning_clusters(self.board, self.config):
                     break
                 self._break_winning_clusters()
+        # Reel stops alone repeat at 250k. Nudge two cells so dead books stay unique.
+        self._jitter_nonwinning_cells()
         self._finalize_initial_board()
 
     def draw_peak_board(self):
@@ -338,6 +476,20 @@ class GameExecutables(GameCalculations):
             for row in range(self.config.num_rows[reel]):
                 if self.board[reel][row].name == scatter:
                     self.board[reel][row] = self.create_symbol(filler)
+
+    def _jitter_nonwinning_cells(self) -> None:
+        """Swap a few cells without creating a 5-cluster. Breaks exact board repeats."""
+        pays = list(self.config.paying_symbols)
+        for _ in range(6):
+            reel = random.randrange(self.config.num_reels)
+            row = random.randrange(self.config.num_rows[reel])
+            current = self.board[reel][row].name
+            if current == self.config.scatter_symbol:
+                continue
+            alt = random.choice([symbol for symbol in pays if symbol != current])
+            self.board[reel][row] = self.create_symbol(alt)
+            if GameCluster.find_winning_clusters(self.board, self.config):
+                self.board[reel][row] = self.create_symbol(current)
 
     def _break_winning_clusters(self) -> None:
         clusters = GameCluster.find_winning_clusters(self.board, self.config)
@@ -629,6 +781,9 @@ class GameExecutables(GameCalculations):
     def advance_progress(self, tumble_steps: int = 1, *, activate: bool = True):
         if tumble_steps <= 0:
             return
+        cap = getattr(self, "progress_cap_override", None)
+        if cap is not None and self.progress_value >= cap:
+            return
         if self.board_activation_fired_this_spin and self.gametype == self.config.basegame_type:
             return
         if self._hear_activation_cap_reached():
@@ -653,6 +808,8 @@ class GameExecutables(GameCalculations):
             return
         # Dead Feature / PEAK spins must not fire empty boardActivation after reveal.
         if self.betmode in ("feature_spin", "peak_spin") and getattr(self, "tumbles_this_spin", 0) <= 0:
+            return
+        if getattr(self, "progress_cap_override", None) is not None:
             return
         if self.progress_value >= self.progress_threshold and not self.board_activation_fired_this_spin:
             self.execute_board_activation(refill_after=True)

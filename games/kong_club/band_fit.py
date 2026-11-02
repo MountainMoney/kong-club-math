@@ -175,14 +175,15 @@ def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float]
         probs.update(
             {
                 "zero": 0.48,
-                "small": 0.354455,
+                "small": 0.366455,
                 "profit": 0.145,
-                "kicker": 0.016,
+                "kicker": 0.004,
                 "fg_low": 0.0023,
                 "fg_high": 1 / 220 - 0.0023,
             }
         )
-        donor, recv = "small", "kicker"
+        # Profit, not the thin kicker band, is what can still move base RTP down to 96.50%.
+        donor, recv = "profit", "small"
     elif mode == "base_ante":
         probs.update(
             {
