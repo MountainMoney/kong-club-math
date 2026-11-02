@@ -144,7 +144,7 @@ class OptimizationSetup:
                 ).return_dict(),
                 "parameters": params([10, 50, 100]),
             },
-            "bonus_gamble": {
+            "bonus_pick": {
                 "conditions": {
                     "gamble_dead": ConstructConditions(rtp=0.0, av_win=0, hr="x", search_conditions=0).return_dict(),
                     "gamble_hear": ConstructConditions(rtp=0.6401, hr="x").return_dict(),

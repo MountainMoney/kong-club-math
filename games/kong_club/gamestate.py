@@ -28,7 +28,7 @@ class GameState(GameStateOverride):
                 self.run_bonus_buy("see")
             elif self.betmode == "bonus_hear":
                 self.run_bonus_buy("hear")
-            elif self.betmode == "bonus_gamble":
+            elif self.betmode == "bonus_pick":
                 self.run_gamble_spin()
             else:
                 self.run_base_spin()
@@ -59,12 +59,12 @@ class GameState(GameStateOverride):
         if bonus_hit:
             self.triggered_freegame = True
             self.bonus_variant = self.resolve_bonus_variant_from_scatters(scatter_count)
-            if self.betmode != "bonus_gamble":
+            if self.betmode != "bonus_pick":
                 self.criteria = "freegame"
             # Mode before setWin so FE starts See/Hear/Madness on the landed ST board.
             mode_name = (
                 f"start_bonus_{self.bonus_variant}"
-                if self.betmode == "bonus_gamble"
+                if self.betmode == "bonus_pick"
                 else f"organic_bonus_{self.bonus_variant}"
             )
             mode_state_event(self, mode_name)
@@ -76,7 +76,7 @@ class GameState(GameStateOverride):
         self.win_manager.update_gametype_wins(self.gametype)
 
         if bonus_hit:
-            if self.betmode != "bonus_gamble":
+            if self.betmode != "bonus_pick":
                 fs_trigger_event(self, basegame_trigger=True, freegame_trigger=False)
             self.run_freespin()
 

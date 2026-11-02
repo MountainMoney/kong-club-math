@@ -5,7 +5,7 @@ Brief role → repo name (do not rename modes):
   feature → feature_spin (cost 50)
   summit → peak_spin (cost 1000)
   bonus_3 / bonus_4 / bonus_5 → bonus_see / bonus_hear / bonus_madness
-  gamble_scat / gamble_4 / gamble_5 → bonus_gamble / gamble_hear / gamble_madness
+  gamble_scat / gamble_4 / gamble_5 → bonus_pick / gamble_hear / gamble_madness
 """
 
 from __future__ import annotations

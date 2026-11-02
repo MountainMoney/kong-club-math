@@ -319,7 +319,7 @@ def main(publish: Path) -> None:
                 gaps.append(f"top10 {top10:.1%}")
         if eff < 2000 or (win_books and eff < 0.05 * win_books):
             gaps.append(f"eff {eff:.0f}")
-        if name in ("bonus_see", "bonus_hear", "bonus_gamble", "feature_spin", "peak_spin") and dups:
+        if name in ("bonus_see", "bonus_hear", "bonus_pick", "feature_spin", "peak_spin") and dups:
             gaps.append(f"dups {dups}")
         if cap_books:
             gaps.append(f"cap books {cap_books}")
