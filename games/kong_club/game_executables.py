@@ -209,9 +209,9 @@ class GameExecutables(GameCalculations):
         if third == window:
             hot = f"{variant}_burst"
             mid = f"{variant}_steady"
-            hot_p = 0.40 if variant == "hear" else 0.12
+            hot_p = 0.24 if variant == "hear" else 0.08
             return hot if random.random() < hot_p else mid
-        return f"{variant}_slow" if random.random() < 0.82 else f"{variant}_steady"
+        return f"{variant}_slow" if random.random() < 0.88 else f"{variant}_steady"
 
     def draw_prepared_board(self):
         """Initial fill: choose a random start per column and read 5 symbols downward."""
@@ -222,28 +222,27 @@ class GameExecutables(GameCalculations):
         if getattr(self, "reel_set_name", "") in ("base_quiet", "base_normal") and getattr(self, "gametype", None) != self.config.freegame_type:
             # Natural stops were collapsing onto one size-5 symbol. These sets miss on purpose,
             # except a rare 8-tumble chain that stays in the body of the pay table.
-            if random.random() < (1 / 220):
+            if random.random() < (1 / 320):
                 self.progress_cap_override = 2
-                # Lows only: 8 × 0.10 stays under 1x, inside the weighted body, not the drained tail.
-                self._plant_short_chain(steps=8, vary_size=False, pool=list(self.config.low_symbols))
+                # Two low tumbles: about 1× then 2.5× once tiles multiply. Stays in the body.
+                self._plant_short_chain(steps=2, vary_size=False, pool=list(self.config.low_symbols))
             else:
                 self._plant_quiet_miss()
             self._finalize_initial_board()
             return
         if getattr(self, "reel_set_name", "") == "base_hot":
-            # Hot spins are scripted so winning shapes do not collapse onto one symbol.
-            # ~22% cascade three times (tumble-3, bar 3). The rest are one or two tumbles.
+            # Tile multipliers are back, so hot spins stay on low faces and short chains.
+            # Most are one tumble (~1–4×). A minority cascade into the kicker band.
             roll = random.random()
-            if roll < 0.12:
-                self._plant_short_chain(steps=3, vary_size=True)
-            elif roll < 0.48:
-                # Three tumbles, but the bar stops at 2 so tumble-3 does not crowd bar 3–4.
+            lows = list(self.config.low_symbols)
+            if roll < 0.70:
+                self._plant_single_column(lows, vary_size=roll >= 0.48)
+            elif roll < 0.90:
                 self.progress_cap_override = 2
-                self._plant_short_chain(steps=3, vary_size=True)
-            elif roll < 0.74:
-                self._plant_two_step()
+                self._plant_short_chain(steps=2, vary_size=False, pool=lows)
             else:
-                self._plant_pair()
+                self.progress_cap_override = 3
+                self._plant_short_chain(steps=3, vary_size=False, pool=lows)
             self._finalize_initial_board()
             return
         self._fill_initial_board()
@@ -301,6 +300,12 @@ class GameExecutables(GameCalculations):
         paint(reel_a, reel_b, left)
         paint(reel_b, reel_a, right)
         self._install_planted_grid(grid, fillers[0], fillers[-1])
+
+    def _plant_single_column(self, pool: list[str], vary_size: bool = False) -> None:
+        """One winning column, then a quiet refill so the cascade does not continue."""
+        self._plant_short_chain(steps=2, vary_size=vary_size, pool=pool)
+        quiet = self.config.reels["base_quiet_REFILL"]
+        self.refill_strip = [list(column) for column in quiet]
 
     def _plant_short_chain(self, steps: int = 3, vary_size: bool = False, pool: list[str] | None = None) -> None:
         """One column wins, then refills into more single-column wins, then stops.
@@ -374,7 +379,8 @@ class GameExecutables(GameCalculations):
         so they cannot merge. Positions and symbols change every spin.
         """
         cluster_count = 4 if random.random() < 0.5 else 3
-        symbols = list(self.config.paying_symbols)
+        # Lows only. A bronze column pays 1× once tiles multiply, so the teaser stays a small win.
+        symbols = list(self.config.low_symbols)
         random.shuffle(symbols)
         order = list(range(self.config.num_reels))
         random.shuffle(order)
@@ -600,7 +606,9 @@ class GameExecutables(GameCalculations):
                     continue
                 seed_level = self.config.coin_seed_levels[sym.name]
                 self.seed_tile_to_level(reel, row, seed_level)
-                value = float(random.choice(self.config.coin_values[sym.name]))
+                pool = self.config.coin_values[sym.name]
+                weights = self.config.coin_value_weights[sym.name]
+                value = float(random.choices(pool, weights=weights, k=1)[0])
                 self.board_coin_values[(reel, row)] = value
                 seeds.append(self._seed_payload(reel, row, sym.name, value))
 
@@ -884,7 +892,7 @@ class GameExecutables(GameCalculations):
                     mode_state_event(self, "max_tumble_safety_stop")
                     break
                 winning_types = {cluster.symbol for cluster in clusters}
-                # Light the connected cells, then pay the plain paytable. Tiles do not multiply.
+                # Light the connected cells, then pay base × sum of those tile multipliers.
                 self.mark_level_up_tiles(clusters)
                 self.award_clusters(clusters)
                 self.mark_removed_symbols(winning_types, clusters)

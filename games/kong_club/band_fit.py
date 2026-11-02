@@ -27,8 +27,8 @@ PUBLISH = GAME_DIR / "library" / "publish_files"
 LOOKUP = GAME_DIR / "library" / "lookup_tables"
 MAX_PAY = 2_500_000
 
-# Gamble price is the 50/45/5 formula at Hear 193× and Madness 3210×.
-GAMBLE_COST = 262.0
+# Gamble price is the 50/45/5 formula, raised with the restored faces and tile multipliers.
+GAMBLE_COST = 380.0
 
 
 def _iter_books(path: Path):
@@ -70,9 +70,9 @@ def classify(mode: str, payout: int, criteria: str) -> str:
     xbet = payout / 100.0
     if mode == "base":
         if criteria == "freegame":
-            if 70 <= xbet <= 100:
+            if 6 <= xbet <= 50:
                 return "fg_low"
-            if 100 < xbet <= 118:
+            if 50 < xbet <= 280:
                 return "fg_high"
             return "fg_out"
         if xbet <= 0:
@@ -86,9 +86,9 @@ def classify(mode: str, payout: int, criteria: str) -> str:
         return "spike"
     if mode == "base_ante":
         if criteria == "freegame":
-            if 50 <= xbet <= 85:
+            if 6 <= xbet <= 50:
                 return "fg_low"
-            if 85 < xbet <= 110:
+            if 50 < xbet <= 280:
                 return "fg_high"
             return "fg_out"
         if xbet <= 0:
@@ -106,17 +106,17 @@ def classify(mode: str, payout: int, criteria: str) -> str:
         if criteria == "gamble_hear":
             if xbet <= 0:
                 return "hear_zero"
-            if xbet <= 120:
+            if xbet <= 100:
                 return "hear_low"
-            if xbet <= 160:
+            if xbet <= 200:
                 return "hear_med"
-            if xbet <= 220:
+            if xbet <= 360:
                 return "hear_bridge"
-            if xbet <= 420:
+            if xbet <= 900:
                 return "hear_profit"
             return "hear_tail"
         if criteria == "gamble_madness":
-            if 2500 <= xbet <= 4200:
+            if 2200 <= xbet <= 9000:
                 return "mad_body"
             return "mad_out"
         return "other"
@@ -125,41 +125,41 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             return "zero"
         if xbet <= 50:
             return "small"
-        if xbet <= 200:
+        if xbet <= 180:
             return "profit"
-        if xbet <= 450:
+        if xbet <= 420:
             return "upper"
         return "tail"
     if mode == "peak_spin":
         if xbet <= 0:
             return "zero"
-        if xbet <= 2800:
+        if xbet <= 5000:
             return "body"
-        if xbet <= 4500:
+        if xbet <= 12000:
             return "high"
         return "tail"
     if mode == "bonus_see":
         if xbet <= 0:
             return "zero"
-        if xbet <= 60:
+        if xbet <= 50:
             return "low"
-        if xbet <= 80:
+        if xbet <= 90:
             return "med"
-        if xbet <= 110:
+        if xbet <= 140:
             return "bridge"
-        if xbet <= 220:
+        if xbet <= 320:
             return "profit"
         return "tail"
     if mode == "bonus_hear":
         if xbet <= 0:
             return "zero"
-        if xbet <= 120:
+        if xbet <= 100:
             return "low"
-        if xbet <= 160:
+        if xbet <= 200:
             return "med"
-        if xbet <= 210:
+        if xbet <= 360:
             return "bridge"
-        if xbet <= 420:
+        if xbet <= 900:
             return "profit"
         return "tail"
     raise KeyError(mode)
@@ -174,12 +174,12 @@ def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float]
     if mode == "base":
         probs.update(
             {
-                "zero": 0.48,
-                "small": 0.366455,
-                "profit": 0.145,
-                "kicker": 0.004,
+                "zero": 0.55,
+                "small": 0.284,
+                "profit": 0.152,
+                "kicker": 0.006,
                 "fg_low": 0.0023,
-                "fg_high": 1 / 220 - 0.0023,
+                "fg_high": 1 / 260 - 0.0023,
             }
         )
         # Profit, not the thin kicker band, is what can still move base RTP down to 96.50%.
@@ -187,27 +187,27 @@ def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float]
     elif mode == "base_ante":
         probs.update(
             {
-                "zero": 0.48,
-                "small": 0.368909,
-                "profit": 0.130,
-                "kicker": 0.012,
-                "fg_low": 0.0055,
-                "fg_high": 1 / 110 - 0.0055,
+                "zero": 0.50,
+                "small": 0.270,
+                "profit": 0.210,
+                "kicker": 0.010,
+                "fg_low": 0.0046,
+                "fg_high": 1 / 130 - 0.0046,
             }
         )
-        donor, recv = "fg_high", "fg_low"
+        donor, recv = "profit", "small"
     elif mode == "feature_spin":
-        probs.update({"zero": 0.55, "small": 0.22, "profit": 0.18, "upper": 0.05})
+        probs.update({"zero": 0.56, "small": 0.18, "profit": 0.18, "upper": 0.08})
         donor, recv = "small", "upper"
     elif mode == "peak_spin":
-        probs.update({"zero": 0.65, "body": 0.20, "high": 0.14, "tail": 0.01 - max_p})
-        donor, recv = "body", "high"
+        probs.update({"zero": 0.70, "body": 0.205, "high": 0.08, "tail": 0.015 - max_p})
+        donor, recv = "high", "body"
     elif mode == "bonus_see":
-        probs.update({"zero": 0.012, "low": 0.20, "med": 0.30, "bridge": 0.17, "profit": 0.314, "tail": 0.004 - max_p})
-        donor, recv = "low", "med"
+        probs.update({"zero": 0.02, "low": 0.24, "med": 0.28, "bridge": 0.23, "profit": 0.20, "tail": 0.03 - max_p})
+        donor, recv = "profit", "med"
     elif mode == "bonus_hear":
-        probs.update({"zero": 0.006, "low": 0.22, "med": 0.28, "bridge": 0.16, "profit": 0.328, "tail": 0.006 - max_p})
-        donor, recv = "low", "med"
+        probs.update({"zero": 0.01, "low": 0.22, "med": 0.36, "bridge": 0.23, "profit": 0.16, "tail": 0.02 - max_p})
+        donor, recv = "profit", "bridge"
     elif mode == "bonus_gamble":
         hear_p = 0.45
         mad_p = 0.05
@@ -215,15 +215,15 @@ def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float]
         probs.update(
             {
                 "dead": dead_p,
-                "hear_low": hear_p * 0.30,
-                "hear_med": hear_p * 0.28,
-                "hear_bridge": hear_p * 0.16,
-                "hear_profit": hear_p * 0.24,
-                "hear_tail": hear_p * 0.02,
+                "hear_low": hear_p * 0.22,
+                "hear_med": hear_p * 0.36,
+                "hear_bridge": hear_p * 0.23,
+                "hear_profit": hear_p * 0.16,
+                "hear_tail": hear_p * 0.03,
                 "mad_body": mad_p,
             }
         )
-        donor, recv = "hear_med", "hear_profit"
+        donor, recv = "hear_profit", "hear_med"
     else:
         raise KeyError(mode)
     total = sum(probs.values())
