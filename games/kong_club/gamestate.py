@@ -1,5 +1,7 @@
 """Scratch Kong Club spin router — Jul 2 Le Bandit Phase A."""
 
+import random
+
 from src.events.events import freespin_end_event, fs_trigger_event
 
 from game_cluster import GameCluster, spin_trace
@@ -172,6 +174,12 @@ class GameState(GameStateOverride):
             self.progress_value = self.progress_threshold
         else:
             self.progress_value = 0
+        # Which third of the 10 spins is allowed to be the big one.
+        if self.bonus_variant in ("see", "hear"):
+            # Late spins are naturally richer (tiles stick on Hear, the bar
+            # fills later on See). Bias the hot window earlier so each third
+            # still lands the best spin at least 15% of the time.
+            self.arc_window = random.choices((0, 1, 2), weights=(5, 3, 2))[0]
         progress_fill_event(self)
         self.reset_grid_mults()
         update_tile_event(self)
@@ -182,7 +190,7 @@ class GameState(GameStateOverride):
             self.tumbles_this_spin = 0
             variant = getattr(self, "bonus_variant", None) or "see"
             family = variant if variant in ("see", "hear", "madness") else "see"
-            self.use_reel_family(family)
+            self.use_reel_family(family, self._bonus_reel_name(variant))
             self.draw_prepared_board()
             self.resolve_cascade_loop()
             self._apply_bonus_scatter_followup()

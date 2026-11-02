@@ -76,7 +76,14 @@ def signature(book: dict) -> tuple:
             wins = event.get("wins") or []
             tumbles += 1
             for win in wins:
-                parts.append(("win", win.get("symbol"), size_bucket(int(win.get("clusterSize") or 0))))
+                reels = tuple(sorted({
+                    int(pos.get("reel"))
+                    for pos in (win.get("positions") or [])
+                    if isinstance(pos, dict) and pos.get("reel") is not None
+                }))
+                parts.append(
+                    ("win", win.get("symbol"), size_bucket(int(win.get("clusterSize") or 0)), reels)
+                )
         elif kind == "progressFill":
             bar = int(event.get("value") or 0)
         elif kind == "boardActivation":
@@ -86,7 +93,10 @@ def signature(book: dict) -> tuple:
             pots = sum(1 for item in items if item.get("kind") == "pot")
             clovers = sum(1 for item in items if item.get("kind") == "clover")
             clover_vals = tuple(sorted(int(item.get("value") or 0) for item in items if item.get("kind") == "clover"))
-            parts.append(("coin", pots, clovers, reruns, clover_vals))
+            # Coin faces are part of the result the player sees. Two gold boards
+            # with the same clovers are not the same spin.
+            coin_faces = tuple(sorted(int(item.get("value") or 0) for item in items if item.get("kind") == "coin"))
+            parts.append(("coin", pots, clovers, reruns, clover_vals, coin_faces))
         elif kind in ("kongClubMode", "freeSpinTrigger", "updateFreeSpin"):
             parts.append((kind, event.get("state") or event.get("total")))
         elif kind == "reveal":

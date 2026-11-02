@@ -485,30 +485,33 @@ class GameConfig(Config):
         # Base hot connects, then a quiet refill so most chains stop at 3–4 clusters
         # and do not fill the coin-game bar.
         specs: dict[str, tuple] = {
-            "base_quiet": (even(MW=0.2), (70, 24, 6), 411, (78, 18, 4)),
-            "base_normal": (even(OR=11, GR=11, BA=11, MW=1.5), (40, 40, 20), 422, (58, 32, 10)),
-            "base_hot": (even(Q=12, K=12, BA=10, MW=2.6), (16, 36, 48), 433, (28, 36, 36)),
+            "base_quiet": (even(MW=0.02), (96, 3, 1), 411, (97, 2, 1)),
+            "base_normal": (even(OR=8, GR=8, BA=7, MW=0.15), (88, 10, 2), 422, (92, 7, 1)),
+            "base_hot": (even(Q=12, K=12, BA=9, MW=1.2), (36, 40, 24), 433, (55, 32, 13)),
             "base_teaser": (even(MW=0.2), (80, 18, 2), 444, (85, 12, 3)),
-            "see_slow": (even(MW=0.4), (64, 28, 8), 511, (70, 24, 6)),
-            "see_steady": (even(BA=10, MW=1.0), (46, 38, 16), 522, (60, 30, 10)),
-            "see_burst": (even(Q=12, K=12, BA=12, MW=1.8), (28, 40, 32), 533, (40, 38, 22)),
-            "hear_slow": (even(MW=0.7), (52, 34, 14), 611, (62, 28, 10)),
-            "hear_steady": (even(OR=11, GR=11, BA=12, MW=1.8), (32, 40, 28), 622, (48, 36, 16)),
-            "hear_burst": (even(Q=14, BA=16, MW=3.2), (16, 36, 48), 633, (28, 40, 32)),
-            "madness_low": (even(MW=0.4), (72, 22, 6), 711, (78, 18, 4)),
-            "madness_mid": (even(BA=12, MW=1.6), (40, 40, 20), 722, (50, 34, 16)),
-            "madness_high": (hot(2.4), (22, 40, 38), 733, (36, 40, 24)),
-            "feature_mild": (even(BA=12, MW=2.4), (28, 42, 30), 811, (36, 40, 24)),
-            "feature_rich": (hot(6.5), (8, 22, 70), 822, (8, 22, 70)),
+            # Slow spins rarely fill the bar. Steady / burst are the spotlight third.
+            "see_slow": (even(MW=0.22), (78, 18, 4), 511, (84, 14, 2)),
+            "see_steady": (even(BA=10, MW=1.15), (40, 40, 20), 522, (50, 36, 14)),
+            "see_burst": (even(Q=12, K=12, BA=11, MW=1.7), (28, 42, 30), 533, (38, 40, 22)),
+            "hear_slow": (even(MW=0.08), (90, 8, 2), 611, (92, 7, 1)),
+            "hear_steady": (even(OR=12, GR=12, BA=14, MW=2.8), (18, 36, 46), 622, (24, 40, 36)),
+            "hear_burst": (even(Q=14, BA=16, MW=3.6), (12, 34, 54), 633, (18, 36, 46)),
+            # Madness is a coin game every spin. Keep the fill steady so the
+            # 2,000× floor does not select only the 5,000× tail.
+            "madness_low": (even(MW=0.32), (76, 20, 4), 711, (82, 16, 2)),
+            "madness_mid": (even(BA=10, MW=1.15), (48, 38, 14), 722, (58, 32, 10)),
+            "madness_high": (hot(1.6), (32, 42, 26), 733, (42, 40, 18)),
+            "feature_mild": (even(BA=12, MW=2.6), (24, 42, 34), 811, (32, 40, 28)),
+            "feature_rich": (hot(7.2), (8, 20, 72), 822, (8, 20, 72)),
             "peak_a": (even(MW=1.0), (40, 40, 20), 911, (50, 36, 14)),
             "peak_b": (hot(2.0), (20, 40, 40), 922, (30, 40, 30)),
         }
         self.reel_set_weights = {
-            "base": {"base_quiet": 36, "base_normal": 36, "base_hot": 20, "base_teaser": 8},
-            "see": {"see_slow": 58, "see_steady": 30, "see_burst": 12},
-            "hear": {"hear_slow": 78, "hear_steady": 18, "hear_burst": 4},
-            "madness": {"madness_low": 88, "madness_mid": 11, "madness_high": 1},
-            "feature": {"feature_mild": 30, "feature_rich": 70},
+            "base": {"base_quiet": 42, "base_normal": 12, "base_hot": 41, "base_teaser": 5},
+            "see": {"see_slow": 50, "see_steady": 38, "see_burst": 12},
+            "hear": {"hear_slow": 62, "hear_steady": 30, "hear_burst": 8},
+            "madness": {"madness_low": 92, "madness_mid": 7, "madness_high": 1},
+            "feature": {"feature_mild": 26, "feature_rich": 74},
             "peak": {"peak_a": 55, "peak_b": 45},
             "gamble_dead": {"base_quiet": 1},
         }
@@ -529,7 +532,7 @@ class GameConfig(Config):
             while len(strip) < 50:
                 reel_rng.shuffle(chain_symbols)
                 for symbol in chain_symbols:
-                    strip.extend([symbol] * 3)
+                    strip.extend([symbol] * 2)
             self.reels["base_hot_REFILL"][reel_index] = strip[:50]
 
     def pick_reel_set(self, family: str) -> str:
