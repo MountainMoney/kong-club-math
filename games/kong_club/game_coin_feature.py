@@ -712,8 +712,8 @@ def _neighbors(reel: int, row: int) -> list[tuple[int, int]]:
 def _flip_cell(gamestate, level: int, rng: random.Random, *, rerun: bool = False) -> dict:
     if rerun:
         table = getattr(gamestate.config, "coin_game_rerun_power_by_tile_level", None) or {}
-        weights = dict(table.get(max(1, min(3, int(level))), {"multiplier": 4, "collector": 1, "coin": 500}))
-        coin_w = int(weights.get("coin", 500) or 500)
+        weights = dict(table.get(max(1, min(3, int(level))), {"multiplier": 3, "collector": 0, "coin": 100}))
+        coin_w = int(weights.get("coin", 100) or 100)
     else:
         weights = _tile_power_weights(gamestate, level)
         coin_w = int(getattr(gamestate.config, "coin_game_coin_weight", 100) or 100)

@@ -9,7 +9,7 @@ from game_cluster import GameCluster
 
 
 class GameCalculations(Executables):
-    """Pay each cluster the plain paytable. Tiles do not multiply the win."""
+    """Pay each cluster base × sum of lit tile multipliers × monkey mult."""
 
     def cluster_base_payout(self, cluster) -> float:
         size = GameCluster.paytable_size(cluster.size)
@@ -18,12 +18,32 @@ class GameCalculations(Executables):
     def cluster_monkey_multiplier(self, cluster) -> int:
         return 1
 
+    def cluster_tile_multiplier_sum(self, cluster) -> float:
+        """Rules: cluster pay = base × sum of lit tile multipliers (2 / 5 / 10).
+
+        Connected cells are lit before this pay, so each cell in the cluster
+        contributes its current rank. Unlit cells add nothing.
+
+        PEAK gold is chrome + coin faces only. Cluster pay, if evaluated, uses
+        connection ranks (start 0, +1 per connected tumble), not the gold seed.
+        """
+        levels = self.tile_levels
+        if getattr(self, "betmode", None) == "peak_spin":
+            levels = getattr(self, "peak_connection_levels", self.tile_levels)
+        total = 0.0
+        for reel, row in cluster.positions:
+            level = levels[reel][row]
+            if level > 0:
+                total += self.level_to_multiplier(level)
+        return total
+
     def evaluate_clusters(self, winning_clusters) -> dict:
         return_data = {"totalWin": 0.0, "wins": []}
         for cluster in winning_clusters:
             base_payout = self.cluster_base_payout(cluster)
             monkey_mult = self.cluster_monkey_multiplier(cluster)
-            payout = base_payout * monkey_mult
+            tile_sum = self.cluster_tile_multiplier_sum(cluster)
+            payout = base_payout * tile_sum * monkey_mult
             return_data["totalWin"] += payout
 
             positions = [{"reel": reel, "row": row} for reel, row in cluster.positions]
@@ -36,7 +56,7 @@ class GameCalculations(Executables):
                     "positions": positions,
                     "meta": {
                         "globalMult": 1,
-                        "clusterMult": 1,
+                        "clusterMult": tile_sum,
                         "monkeyMult": monkey_mult,
                         "winWithoutMult": base_payout,
                         "overlay": {"reel": overlay[0], "row": overlay[1]},

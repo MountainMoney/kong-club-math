@@ -30,9 +30,9 @@ TOLERANCE = 0.02
 MODE_COST = {
     "base": 1.0,
     "base_ante": 1.4,
-    "feature_spin": 50.0,
-    "bonus_see": 100.0,
-    "bonus_hear": 200.0,
+    "feature_spin": 65.0,
+    "bonus_see": 115.0,
+    "bonus_hear": 250.0,
 }
 
 MODE_CRITERIA = {

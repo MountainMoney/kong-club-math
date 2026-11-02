@@ -10,17 +10,17 @@ Brief role → repo name (do not rename modes):
 
 from __future__ import annotations
 
-# Feature Spin (50×): always connects, and can reach the 25,000× cap.
-FEATURE_DEAD_QUOTA = 0.55
+# Feature Spin: a few more dead spins than the 55% build. Cap stays 1/80,000.
+FEATURE_DEAD_QUOTA = 0.56
 FEATURE_RUN_QUOTA = 0.20
 FEATURE_NIBBLE_MAX = 25.0
 
-# TRIFECTA (1000×): dead about 65%. Cap about 1/4000, distinct from every other mode.
-PEAK_DEAD_QUOTA = 0.65
-PEAK_NIBBLE_QUOTA = 0.20
-PEAK_RUN_QUOTA = 0.10
-PEAK_CLIP_QUOTA = 0.04
-PEAK_TEASE_QUOTA = 0.00975
+# TRIFECTA: somewhat more dead than 65%. Cap stays 1/4,000.
+PEAK_DEAD_QUOTA = 0.72
+PEAK_NIBBLE_QUOTA = 0.15
+PEAK_RUN_QUOTA = 0.08
+PEAK_CLIP_QUOTA = 0.035
+PEAK_TEASE_QUOTA = 0.01475
 PEAK_CAP_QUOTA = 0.00025
 
 BASE_CAP_QUOTA = 1 / 1_000_000

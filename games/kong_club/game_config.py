@@ -40,13 +40,18 @@ STAKE_SLUG = "kong-club"
 # does not blow base or ante RTP. Ante uses the same mix; only the rate doubles.
 SCATTER_TRIGGERS = {3: 989, 4: 10, 5: 1}
 SCATTER_TRIGGERS_ANTE = {3: 989, 4: 10, 5: 1}
-BASE_FREEGAME_QUOTA = 1 / 220
-ANTE_FREEGAME_QUOTA = 1 / 110  # exactly 2× base
+# Somewhat rarer than the 1/220 · 1/110 pair. Ante stays exactly twice base.
+# Scatter faces stay {3: 989, 4: 10, 5: 1} — not a balancing lever.
+BASE_FREEGAME_QUOTA = 1 / 260
+ANTE_FREEGAME_QUOTA = 1 / 130
 
 # Gamble — 50% dead / 45% Hear / 5% Madness.
-# Cost = (0.45·E[Hear] + 0.05·E[Madness]) / 0.965, filled in after the bonus sample.
-GAMBLE_BUY_COST = 262.0
-SEE_BUY_COST = 100.0
+# Cost = (0.45·E[Hear] + 0.05·E[Madness] + 25000/4500) / 0.965.
+# Raised with the restored coin faces and tile multipliers. Still under the old 1,567×.
+GAMBLE_BUY_COST = 380.0
+SEE_BUY_COST = 115.0
+HEAR_BUY_COST = 250.0
+FEATURE_BUY_COST = 65.0
 GAMBLE_DEAD_QUOTA = 0.50
 GAMBLE_HEAR_QUOTA = 0.45
 GAMBLE_MADNESS_QUOTA = 0.05
@@ -98,18 +103,17 @@ class GameConfig(Config):
         self.tile_level_multipliers = self.multiplier_table
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}
-        # Integer bet-multiples only — same face pools, heavily skewed to the low end.
-        # Faces sized so a 30-gold TRIFECTA hit lands near 2,500–3,000×
-        # and a Hear bonus stays in the mid-100s. Gold > silver > bronze.
+        # Frontend hard faces. Books may only reveal these values.
+        # Weights lean low so a gold board does not print the 250 / 500 faces.
         self.coin_values = {
-            "CB": [1, 2, 3, 5],
-            "CS": [3, 5, 8, 12, 18],
-            "CG": [18, 28, 40, 56, 74],
+            "CB": [1, 2, 3, 4],
+            "CS": [5, 7, 10, 15, 20],
+            "CG": [25, 50, 100, 250, 500],
         }
         self.coin_value_weights = {
-            "CB": [55, 28, 12, 5],
-            "CS": [40, 30, 18, 8, 4],
-            "CG": [44, 28, 16, 8, 4],
+            "CB": [70, 20, 7, 3],
+            "CS": [60, 24, 10, 4, 2],
+            "CG": [82, 12, 4, 1, 1],
         }
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
         self.activation_coin_value_pools = self._build_activation_coin_pools()
@@ -144,12 +148,11 @@ class GameConfig(Config):
         }
         # PEAK uses the gold table. Regen cannot spawn pots, so 8/3 stays finite.
         self.coin_game_power_peak_gold = {"multiplier": 8, "collector": 3, "tier_shift": 0}
-        # Rerun flips. Approved: opening stays 100/3/0, 100/6/2, 100/8/3.
-        # Reruns use coin 500 so a full gold board does not hit the 10-rerun cap.
+        # Reruns use the same opening rates: coin 100 vs bronze 3/0, silver 6/2, gold 8/3.
         self.coin_game_rerun_power_by_tile_level = {
-            1: {"coin": 500, "multiplier": 3, "collector": 0, "tier_shift": 0},
-            2: {"coin": 500, "multiplier": 4, "collector": 1, "tier_shift": 0},
-            3: {"coin": 500, "multiplier": 4, "collector": 1, "tier_shift": 0},
+            1: {"coin": 100, "multiplier": 3, "collector": 0, "tier_shift": 0},
+            2: {"coin": 100, "multiplier": 6, "collector": 2, "tier_shift": 0},
+            3: {"coin": 100, "multiplier": 8, "collector": 3, "tier_shift": 0},
         }
         # Mode fallback matches bronze so Extra Chance / unknown modes do not invent pots.
         self.coin_game_power_weights = {
@@ -193,7 +196,7 @@ class GameConfig(Config):
         self.hear_coin_cap_boost_chance = 0.0
         # PEAK: light every cell gold (level 3) before the drop. Progress still starts at 0.
         self.peak_spin_seed_gold = True
-        self.peak_spin_cost = 1000.0
+        self.peak_spin_cost = 1400.0
         self.gamble_buy_cost = GAMBLE_BUY_COST
         self.gamble_dead_bait_rate = GAMBLE_DEAD_BAIT_RATE
         self.see_buy_cost = SEE_BUY_COST
@@ -234,7 +237,8 @@ class GameConfig(Config):
             "ST": 1.0,
         }
         # Feature Spin and free-spin strips. Base and TRIFECTA stay virtual-only.
-        self.physical_coin_weights = {"CB": 2.0, "CS": 1.2, "CG": 0.5}
+        # Landed coins are rarer than the shrunk-face build, and gold is the rarest.
+        self.physical_coin_weights = {"CB": 1.0, "CS": 0.4, "CG": 0.12}
         # Refill: exclude MW / ST.
         self.symbol_weights_refill = {
             symbol: weight
@@ -490,28 +494,28 @@ class GameConfig(Config):
             "base_hot": (even(Q=12, K=12, BA=9, MW=1.2), (36, 40, 24), 433, (55, 32, 13)),
             "base_teaser": (even(MW=0.2), (80, 18, 2), 444, (85, 12, 3)),
             # Slow spins rarely fill the bar. Steady / burst are the spotlight third.
-            "see_slow": (even(MW=0.22), (78, 18, 4), 511, (84, 14, 2)),
-            "see_steady": (even(BA=10, MW=1.15), (40, 40, 20), 522, (50, 36, 14)),
-            "see_burst": (even(Q=12, K=12, BA=11, MW=1.7), (28, 42, 30), 533, (38, 40, 22)),
-            "hear_slow": (even(MW=0.08), (90, 8, 2), 611, (92, 7, 1)),
-            "hear_steady": (even(OR=12, GR=12, BA=14, MW=2.8), (18, 36, 46), 622, (24, 40, 36)),
-            "hear_burst": (even(Q=14, BA=16, MW=3.6), (12, 34, 54), 633, (18, 36, 46)),
+            "see_slow": (even(MW=0.16), (84, 13, 3), 511, (88, 10, 2)),
+            "see_steady": (even(BA=10, MW=0.9), (46, 38, 16), 522, (56, 32, 12)),
+            "see_burst": (even(Q=12, K=12, BA=11, MW=1.4), (32, 42, 26), 533, (42, 38, 20)),
+            "hear_slow": (even(MW=0.06), (92, 7, 1), 611, (94, 5, 1)),
+            "hear_steady": (even(OR=12, GR=12, BA=13, MW=2.0), (26, 40, 34), 622, (34, 40, 26)),
+            "hear_burst": (even(Q=14, BA=15, MW=2.8), (16, 38, 46), 633, (22, 40, 38)),
             # Madness is a coin game every spin. Keep the fill steady so the
             # 2,000× floor does not select only the 5,000× tail.
-            "madness_low": (even(MW=0.32), (76, 20, 4), 711, (82, 16, 2)),
-            "madness_mid": (even(BA=10, MW=1.15), (48, 38, 14), 722, (58, 32, 10)),
-            "madness_high": (hot(1.6), (32, 42, 26), 733, (42, 40, 18)),
-            "feature_mild": (even(BA=12, MW=2.6), (24, 42, 34), 811, (32, 40, 28)),
-            "feature_rich": (hot(7.2), (8, 20, 72), 822, (8, 20, 72)),
+            "madness_low": (even(MW=0.30), (76, 20, 4), 711, (82, 16, 2)),
+            "madness_mid": (even(BA=10, MW=1.05), (48, 38, 14), 722, (58, 32, 10)),
+            "madness_high": (hot(1.5), (34, 42, 24), 733, (44, 38, 18)),
+            "feature_mild": (even(BA=12, MW=2.2), (28, 42, 30), 811, (36, 40, 24)),
+            "feature_rich": (hot(5.6), (12, 28, 60), 822, (14, 30, 56)),
             "peak_a": (even(MW=1.0), (40, 40, 20), 911, (50, 36, 14)),
             "peak_b": (hot(2.0), (20, 40, 40), 922, (30, 40, 30)),
         }
         self.reel_set_weights = {
-            "base": {"base_quiet": 42, "base_normal": 12, "base_hot": 41, "base_teaser": 5},
-            "see": {"see_slow": 50, "see_steady": 38, "see_burst": 12},
-            "hear": {"hear_slow": 62, "hear_steady": 30, "hear_burst": 8},
-            "madness": {"madness_low": 92, "madness_mid": 7, "madness_high": 1},
-            "feature": {"feature_mild": 26, "feature_rich": 74},
+            "base": {"base_quiet": 52, "base_normal": 16, "base_hot": 26, "base_teaser": 6},
+            "see": {"see_slow": 56, "see_steady": 34, "see_burst": 10},
+            "hear": {"hear_slow": 68, "hear_steady": 26, "hear_burst": 6},
+            "madness": {"madness_low": 88, "madness_mid": 10, "madness_high": 2},
+            "feature": {"feature_mild": 30, "feature_rich": 70},
             "peak": {"peak_a": 55, "peak_b": 45},
             "gamble_dead": {"base_quiet": 1},
         }
@@ -603,7 +607,7 @@ class GameConfig(Config):
                 self._distribution("freegame", bonus_ante, **freegame_ante),
                 self._distribution("cap", ANTE_CAP_QUOTA, force_wincap=True),
             ]),
-            BetMode("feature_spin", 50.0, self.rtp, self.wincap, False, True, False, [
+            BetMode("feature_spin", FEATURE_BUY_COST, self.rtp, self.wincap, False, True, False, [
                 self._distribution("dead_juicy", FEATURE_DEAD_QUOTA),
                 self._distribution("nibble", FEATURE_NIBBLE_QUOTA),
                 self._distribution("run", FEATURE_RUN_QUOTA),
@@ -621,7 +625,7 @@ class GameConfig(Config):
                 self._distribution("bonus_see", 1.0 - SEE_CAP_QUOTA, bonus_variant="see"),
                 self._distribution("cap", SEE_CAP_QUOTA, force_wincap=True, bonus_variant="see"),
             ]),
-            BetMode("bonus_hear", 200.0, self.rtp, self.wincap, False, True, True, [
+            BetMode("bonus_hear", HEAR_BUY_COST, self.rtp, self.wincap, False, True, True, [
                 self._distribution("bonus_hear", 1.0 - HEAR_CAP_QUOTA, bonus_variant="hear"),
                 self._distribution("cap", HEAR_CAP_QUOTA, force_wincap=True, bonus_variant="hear"),
             ]),

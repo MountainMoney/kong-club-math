@@ -21,11 +21,11 @@ PUBLISH = GAME_DIR / "library" / "publish_files"
 MODES = [
     ("base", 1.0),
     ("base_ante", 1.4),
-    ("feature_spin", 50.0),
-    ("peak_spin", 1000.0),
-    ("bonus_see", 100.0),
-    ("bonus_hear", 200.0),
-    ("bonus_gamble", 262.0),
+    ("feature_spin", 65.0),
+    ("peak_spin", 1400.0),
+    ("bonus_see", 115.0),
+    ("bonus_hear", 250.0),
+    ("bonus_gamble", 380.0),
 ]
 
 
