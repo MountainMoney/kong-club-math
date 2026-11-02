@@ -128,7 +128,7 @@ class GameConfig(Config):
             "bonus_see": 5,
             "bonus_hear": 5,
             "bonus_madness": 5,
-            "bonus_gamble": 5,
+            "bonus_pick": 5,
         }
         # One coin game per spin. The old Hear cap of 3 is not used.
         self.max_board_activations_hear = 1
@@ -163,7 +163,7 @@ class GameConfig(Config):
             "bonus_see": {"multiplier": 3, "collector": 0, "tier_shift": 0},
             "bonus_hear": {"multiplier": 3, "collector": 0, "tier_shift": 0},
             "bonus_madness": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_gamble": {"multiplier": 3, "collector": 0, "tier_shift": 0},
+            "bonus_pick": {"multiplier": 3, "collector": 0, "tier_shift": 0},
         }
         # Exact Le Bandit cluster pays in base AND bonus (do not dilute the table).
         # RTP levers: shorter strip runs (fewer tumbles), trigger rarity — not pay scales.
@@ -179,7 +179,7 @@ class GameConfig(Config):
             "bonus_see": 1.0,
             "bonus_hear": 1.0,
             "bonus_madness": 1.0,
-            "bonus_gamble": 1.0,
+            "bonus_pick": 1.0,
         }
         # Every lit tile pays a virtual coin. None = no sample cap.
         self.max_activation_coins_by_mode = {
@@ -190,7 +190,7 @@ class GameConfig(Config):
             "bonus_see": None,
             "bonus_hear": None,
             "bonus_madness": None,
-            "bonus_gamble": None,
+            "bonus_pick": None,
         }
         # Dead once Hear is uncapped.
         self.hear_coin_cap_boost_chance = 0.0
@@ -565,7 +565,7 @@ class GameConfig(Config):
             "madness",
         ):
             return "INITIAL_BONUS"
-        if betmode == "bonus_gamble":
+        if betmode == "bonus_pick":
             if gametype == self.freegame_type or bonus_variant in ("see", "hear", "madness"):
                 return "INITIAL_BONUS"
             return "INITIAL_BASE"
@@ -629,7 +629,7 @@ class GameConfig(Config):
                 self._distribution("bonus_hear", 1.0 - HEAR_CAP_QUOTA, bonus_variant="hear"),
                 self._distribution("cap", HEAR_CAP_QUOTA, force_wincap=True, bonus_variant="hear"),
             ]),
-            BetMode("bonus_gamble", self.gamble_buy_cost, self.rtp, self.wincap, False, True, False, [
+            BetMode("bonus_pick", self.gamble_buy_cost, self.rtp, self.wincap, False, True, False, [
                 self._distribution("gamble_dead", GAMBLE_DEAD_QUOTA - GAMBLE_CAP_QUOTA),
                 self._distribution(
                     "gamble_hear",
