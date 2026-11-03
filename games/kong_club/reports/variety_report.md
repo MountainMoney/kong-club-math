@@ -34,8 +34,8 @@
 <!-- bonus_hear reels hear_steady:40%,hear_slow:39%,hear_burst:20% -->
 <!-- bonus_hear clovers 2:39.4%, 3:29.2%, 4:17.2%, 5:10.7%, 10:2.9%, 20:0.6% -->
 <!-- bonus_hear scatters==2 0.00% big10x books 0 -->
-| bonus_pick | 3 | 116250 | 0.0% | 0.0% | 66603 | 0 | 47.0% / 6.41% | 4.6% | 26%/17%/6%/0% |  | ok |
+| bonus_mystery | 3 | 116250 | 0.0% | 0.0% | 66603 | 0 | 47.0% / 6.41% | 4.6% | 26%/17%/6%/0% |  | ok |
 
-<!-- bonus_pick reels base_quiet:75%,base_hot:18%,base_normal:6% -->
-<!-- bonus_pick clovers 2:36.5%, 3:28.8%, 4:17.8%, 5:11.5%, 10:4.2%, 20:1.3% -->
-<!-- bonus_pick scatters==2 49.98% big10x books 0 -->
+<!-- bonus_mystery reels base_quiet:75%,base_hot:18%,base_normal:6% -->
+<!-- bonus_mystery clovers 2:36.5%, 3:28.8%, 4:17.8%, 5:11.5%, 10:4.2%, 20:1.3% -->
+<!-- bonus_mystery scatters==2 49.98% big10x books 0 -->

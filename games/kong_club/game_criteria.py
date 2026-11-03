@@ -5,7 +5,8 @@ Brief role → repo name (do not rename modes):
   feature → feature_spin (cost 50)
   summit → peak_spin (cost 1000)
   bonus_3 / bonus_4 / bonus_5 → bonus_see / bonus_hear / bonus_madness
-  gamble_scat / gamble_4 / gamble_5 → bonus_pick / gamble_hear / gamble_madness
+  Mystery Bonus dead / hear / madness → bonus_mystery / bonus_mystery_hear / bonus_mystery_madness
+  Planned, not built: Risky Mystery Bonus (bonus_risky_mystery).
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ ANTE_CAP_QUOTA = 1 / 700_000
 FEATURE_CAP_QUOTA = 1 / 80_000
 SEE_CAP_QUOTA = 1 / 40_000
 HEAR_CAP_QUOTA = 1 / 20_000
-GAMBLE_CAP_QUOTA = 1 / 4_500
+BONUS_MYSTERY_CAP_QUOTA = 1 / 4_500
 FEATURE_NIBBLE_QUOTA = 1.0 - FEATURE_DEAD_QUOTA - FEATURE_RUN_QUOTA - FEATURE_CAP_QUOTA
 # Brief 10–80 / 80–500 assumes a single toy, not 30 gold virtual coins.
 # PEAK lights every cell gold; a connect pays ~30× gold faces (min ~750).

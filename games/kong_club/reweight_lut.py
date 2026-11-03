@@ -17,7 +17,7 @@ MODE_COSTS = {
     "peak_spin": 1400.0,
     "bonus_see": 115.0,
     "bonus_hear": 250.0,
-    "bonus_pick": 380.0,
+    "bonus_mystery": 380.0,
 }
 
 TARGET_RTP = 0.965
@@ -35,25 +35,27 @@ MODE_MAX_P = {
     "peak_spin": 1 / 4_000,
     "bonus_see": 1 / 40_000,
     "bonus_hear": 1 / 20_000,
-    "bonus_pick": 1 / 4_500,
+    "bonus_mystery": 1 / 4_500,
 }
 MODE_ZERO_BAND = {
-    "base": (0.45, 0.60),
-    "base_ante": (0.45, 0.60),
+    # Natural base hit rate is about 20%, so the miss rate stays near 80%.
+    "base": (0.76, 0.84),
+    "base_ante": (0.76, 0.84),
     "feature_spin": (0.50, 0.62),
     "peak_spin": (0.55, 0.75),
     "bonus_see": (0.0, 0.04),
     "bonus_hear": (0.0, 0.04),
-    "bonus_pick": (0.47, 0.53),
+    "bonus_mystery": (0.47, 0.53),
 }
 MODE_PROFIT_MIN = {
-    "base": 0.15,
-    "base_ante": 0.12,
+    # A 20% hit rate cannot also force 15% of spins above the stake.
+    "base": 0.06,
+    "base_ante": 0.05,
     "feature_spin": 0.20,
     "peak_spin": 0.20,
     "bonus_see": 0.30,
     "bonus_hear": 0.30,
-    "bonus_pick": 0.15,
+    "bonus_mystery": 0.15,
 }
 MID_PAYOUT_LO = 1_500
 MID_PAYOUT_HI = 4_500
@@ -185,7 +187,7 @@ def assign_weights(
     uniform_rtp = (sum(payouts) / len(payouts) / 100.0 / cost) if payouts else 0.0
     zero_count = sum(1 for payout in payouts if payout <= 0)
     # Already near the target: only move weight between misses and hits.
-    # Crushing the tail here would delete the 50/40/10 gamble mix.
+    # Crushing the tail here would delete the 50/40/10 Mystery Bonus mix.
     if zero_count and abs(uniform_rtp - target_rtp) / target_rtp <= 0.05:
         hit_idx = [i for i, payout in enumerate(payouts) if payout > 0]
         zero_idx = [i for i, payout in enumerate(payouts) if payout <= 0]

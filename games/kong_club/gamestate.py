@@ -28,8 +28,8 @@ class GameState(GameStateOverride):
                 self.run_bonus_buy("see")
             elif self.betmode == "bonus_hear":
                 self.run_bonus_buy("hear")
-            elif self.betmode == "bonus_pick":
-                self.run_gamble_spin()
+            elif self.betmode == "bonus_mystery":
+                self.run_bonus_mystery_spin()
             else:
                 self.run_base_spin()
             self.check_repeat()
@@ -38,11 +38,15 @@ class GameState(GameStateOverride):
     def run_base_spin(self):
         self.board_activation_fired_this_spin = False
         self.gametype = self.config.basegame_type
-        self.use_reel_family("base")
-        if self.reel_set_name == "base_teaser" and (
-            self.should_force_initial_scatters() or self.outcome_bucket() == "cap"
-        ):
-            self.use_reel_family("gamble_dead")
+        if self.betmode in ("base", "base_ante"):
+            # Real stops. Mystery still enters this spin on the planted family.
+            self.use_reel_family("base_play")
+        else:
+            self.use_reel_family("base")
+            if self.reel_set_name == "base_teaser" and (
+                self.should_force_initial_scatters() or self.outcome_bucket() == "cap"
+            ):
+                self.use_reel_family("bonus_mystery_dead")
         if self.outcome_bucket() == "cap":
             self.seed_peak_gold_tiles()
         self.draw_prepared_board()
@@ -59,12 +63,12 @@ class GameState(GameStateOverride):
         if bonus_hit:
             self.triggered_freegame = True
             self.bonus_variant = self.resolve_bonus_variant_from_scatters(scatter_count)
-            if self.betmode != "bonus_pick":
+            if self.betmode != "bonus_mystery":
                 self.criteria = "freegame"
             # Mode before setWin so FE starts See/Hear/Madness on the landed ST board.
             mode_name = (
                 f"start_bonus_{self.bonus_variant}"
-                if self.betmode == "bonus_pick"
+                if self.betmode == "bonus_mystery"
                 else f"organic_bonus_{self.bonus_variant}"
             )
             mode_state_event(self, mode_name)
@@ -76,7 +80,7 @@ class GameState(GameStateOverride):
         self.win_manager.update_gametype_wins(self.gametype)
 
         if bonus_hit:
-            if self.betmode != "bonus_pick":
+            if self.betmode != "bonus_mystery":
                 fs_trigger_event(self, basegame_trigger=True, freegame_trigger=False)
             self.run_freespin()
 
@@ -125,25 +129,25 @@ class GameState(GameStateOverride):
         self.win_manager.update_gametype_wins(self.gametype)
         self.evaluate_finalwin()
 
-    def run_gamble_spin(self):
+    def run_bonus_mystery_spin(self):
         if self.outcome_bucket() == "cap":
             self.run_base_spin()
             return
         if self.should_force_initial_scatters():
             self.run_base_spin()
             return
-        self.run_gamble_dead_spin()
+        self.run_bonus_mystery_dead_spin()
 
-    def run_gamble_dead_spin(self):
+    def run_bonus_mystery_dead_spin(self):
         """Hard miss: board drops, no clusters, no ST, no bar, no coins."""
         self.board_activation_fired_this_spin = False
         self.tumbles_this_spin = 0
         self.gametype = self.config.basegame_type
-        self.use_reel_family("gamble_dead")
-        self.draw_gamble_dead_board()
+        self.use_reel_family("bonus_mystery_dead")
+        self.draw_bonus_mystery_dead_board()
         self.win_data = {"totalWin": 0.0, "wins": []}
         self.set_end_tumble_event()
-        self.log_spin_end("gamble_dead")
+        self.log_spin_end("bonus_mystery_dead")
         self.win_manager.update_gametype_wins(self.gametype)
         self.evaluate_finalwin()
 

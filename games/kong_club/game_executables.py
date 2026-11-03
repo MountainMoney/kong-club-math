@@ -140,7 +140,7 @@ class GameExecutables(GameCalculations):
                 count = 4
             else:
                 count = int(get_random_outcome(triggers))
-        floor = 4 if getattr(self, "betmode", None) == "bonus_pick" else 3
+        floor = 4 if getattr(self, "betmode", None) == "bonus_mystery" else 3
         return min(max(count, floor), self.config.num_reels)
 
     def _fill_initial_board(self):
@@ -176,7 +176,7 @@ class GameExecutables(GameCalculations):
         if self.should_force_initial_scatters():
             self.force_initial_scatters(self.resolve_forced_scatter_count())
             self.apply_scatter_anticipation()
-        self.apply_gamble_two_bait()
+        self.apply_bonus_mystery_two_bait()
 
         # Phase A: sticky HEAR disabled — never apply / refresh / level stickies.
         self.sticky_wild_positions = []
@@ -214,7 +214,21 @@ class GameExecutables(GameCalculations):
         return f"{variant}_slow" if random.random() < 0.88 else f"{variant}_steady"
 
     def draw_prepared_board(self):
-        """Initial fill: choose a random start per column and read 5 symbols downward."""
+        """Initial fill.
+
+        Base and ante read a random stop on base_natural. The refill strip is
+        left alone, so new symbols are random draws from that strip rather than
+        a planted column. Long same-symbol runs are capped in the strip builder,
+        which is what stops a natural stop collapsing into one size-5 column.
+
+        Mystery still plants: it shares this method, but not the base bet mode.
+        Bonus, feature, and peak callers do not use the planted reel names, so
+        they keep the random-stop path at the bottom.
+        """
+        if getattr(self, "betmode", "") in ("base", "base_ante"):
+            self._fill_initial_board()
+            self._finalize_initial_board()
+            return
         if getattr(self, "reel_set_name", "") == "base_teaser":
             self._plant_dead_teaser()
             self._finalize_initial_board()
@@ -508,8 +522,8 @@ class GameExecutables(GameCalculations):
             )
             self.board[reel][row] = self.create_symbol(alt)
 
-    def draw_gamble_dead_board(self):
-        """Gamble miss: no 5-connect. Always 2 ST on reels 0–1 as tease bait."""
+    def draw_bonus_mystery_dead_board(self):
+        """Mystery Bonus miss: no 5-connect. Always 2 ST on reels 0–1 as tease bait."""
         filled = False
         for _ in range(80):
             self._fill_initial_board()
@@ -522,12 +536,12 @@ class GameExecutables(GameCalculations):
                 if not GameCluster.find_winning_clusters(self.board, self.config):
                     break
                 self._break_winning_clusters()
-        self.apply_gamble_two_bait()
+        self.apply_bonus_mystery_two_bait()
         self._finalize_initial_board()
 
-    def apply_gamble_two_bait(self):
-        """Every gamble trigger land: ST on reels 0 and 1, then tease. No rate."""
-        if getattr(self, "betmode", None) != "bonus_pick":
+    def apply_bonus_mystery_two_bait(self):
+        """Every Mystery Bonus trigger land: ST on reels 0 and 1, then tease. No rate."""
+        if getattr(self, "betmode", None) != "bonus_mystery":
             return
         if getattr(self, "gametype", None) == self.config.freegame_type:
             return
@@ -720,14 +734,21 @@ class GameExecutables(GameCalculations):
         amount = self.win_data["totalWin"]
         if amount <= 0:
             return
-        # Sticky FS boards light most cells — downscale cluster pays in bonus only.
+        # Cluster scales are 1.0, so base, ante, free spins, and bonus pay the table.
+        # Coin faces are not scaled.
+        pay_scale = 1.0
         if self.is_bonus_mode():
-            bonus_scale = float(getattr(self.config, "bonus_cluster_pay_scale", 1.0))
-            if bonus_scale != 1.0:
-                amount = round(amount * bonus_scale, 6)
-                for win in self.win_data["wins"]:
-                    win["win"] = round(float(win["win"]) * bonus_scale, 6)
-                self.win_data["totalWin"] = amount
+            pay_scale = float(getattr(self.config, "bonus_cluster_pay_scale", 1.0))
+        elif getattr(self, "betmode", "") in ("base", "base_ante"):
+            pay_scale = float(getattr(self.config, "base_cluster_pay_scale", 1.0))
+        if pay_scale != 1.0:
+            amount = round(amount * pay_scale, 6)
+            for win in self.win_data["wins"]:
+                win["win"] = round(float(win["win"]) * pay_scale, 6)
+                meta = win.get("meta")
+                if isinstance(meta, dict) and "winWithoutMult" in meta:
+                    meta["winWithoutMult"] = round(float(meta["winWithoutMult"]) * pay_scale, 6)
+            self.win_data["totalWin"] = amount
         remaining = max(0.0, self.config.wincap - self.win_manager.running_bet_win)
         paid = min(amount, remaining)
         if paid < amount:

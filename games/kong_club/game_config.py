@@ -18,7 +18,7 @@ from game_criteria import (
     BASE_CAP_QUOTA,
     FEATURE_CAP_QUOTA,
     FEATURE_DEAD_QUOTA,
-    GAMBLE_CAP_QUOTA,
+    BONUS_MYSTERY_CAP_QUOTA,
     HEAR_CAP_QUOTA,
     SEE_CAP_QUOTA,
     FEATURE_NIBBLE_QUOTA,
@@ -36,7 +36,7 @@ STAKE_SLUG = "kong-club"
 
 # Organic bonus entry — same pattern as Football Fiesta:
 # quota picks "freegame" criteria → force N scatters from weighted table → no organic land on base strips.
-# See / Hear / Madness given a bonus. Madness stays rare so a 3,000× floor
+# See / Hear / Madness given a bonus. Madness stays rare so a 2,000× floor
 # does not blow base or ante RTP. Ante uses the same mix; only the rate doubles.
 SCATTER_TRIGGERS = {3: 989, 4: 10, 5: 1}
 SCATTER_TRIGGERS_ANTE = {3: 989, 4: 10, 5: 1}
@@ -45,18 +45,20 @@ SCATTER_TRIGGERS_ANTE = {3: 989, 4: 10, 5: 1}
 BASE_FREEGAME_QUOTA = 1 / 260
 ANTE_FREEGAME_QUOTA = 1 / 130
 
-# Gamble — 50% dead / 45% Hear / 5% Madness.
+# Mystery Bonus. Display name "Mystery Bonus". Internal key stays bonus_mystery.
+# 50% dead / 45% Hear No Evil / 5% Monkey Madness.
 # Cost = (0.45·E[Hear] + 0.05·E[Madness] + 25000/4500) / 0.965.
 # Raised with the restored coin faces and tile multipliers. Still under the old 1,567×.
-GAMBLE_BUY_COST = 380.0
+# Planned, not built: Risky Mystery Bonus (internal key bonus_risky_mystery).
+BONUS_MYSTERY_COST = 380.0
 SEE_BUY_COST = 115.0
 HEAR_BUY_COST = 250.0
 FEATURE_BUY_COST = 65.0
-GAMBLE_DEAD_QUOTA = 0.50
-GAMBLE_HEAR_QUOTA = 0.45
-GAMBLE_MADNESS_QUOTA = 0.05
+BONUS_MYSTERY_DEAD_QUOTA = 0.50
+BONUS_MYSTERY_HEAR_QUOTA = 0.45
+BONUS_MYSTERY_MADNESS_QUOTA = 0.05
 # Dead spins: always plant 2 ST on reels 0–1 and tease the rest (no bonus).
-GAMBLE_DEAD_BAIT_RATE = 1.0
+BONUS_MYSTERY_DEAD_BAIT_RATE = 1.0
 
 
 class GameConfig(Config):
@@ -103,23 +105,26 @@ class GameConfig(Config):
         self.tile_level_multipliers = self.multiplier_table
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}
-        # Frontend hard faces. Books may only reveal these values.
-        # Weights lean low so a gold board does not print the 250 / 500 faces.
+        # Faces are multiples of bet. Every mode pays these directly.
+        # TEST weights, not a final publish. Mass sits on the small face of
+        # each metal. 250/500/1000 and the top clovers still exist. 1000 stays
+        # the rarest gold face.
         self.coin_values = {
-            "CB": [1, 2, 3, 4],
-            "CS": [5, 7, 10, 15, 20],
-            "CG": [25, 50, 100, 250, 500],
+            "CB": [0.2, 0.5, 1, 2, 3, 4],
+            "CS": [5, 10, 15, 20],
+            "CG": [25, 50, 100, 250, 500, 1000],
         }
         self.coin_value_weights = {
-            "CB": [70, 20, 7, 3],
-            "CS": [60, 24, 10, 4, 2],
-            "CG": [82, 12, 4, 1, 1],
+            "CB": [72, 18, 6, 2, 1, 1],
+            "CS": [84, 10, 4, 2],
+            "CG": [1600, 80, 20, 4, 2, 1],
         }
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
         self.activation_coin_value_pools = self._build_activation_coin_pools()
         self.activation_coin_value_weights = self._build_activation_coin_weights()
 
-        # See / Hear / Madness fill in 5 cluster connections (Cole 2026-09-02).
+        # Every mode that uses the bar of 5 fills on 5 cluster connections.
+        # Peak still fills on 1. The coin game flips every lit cell.
         self.progress_thresholds = {
             "base": 5,
             "base_ante": 5,
@@ -128,14 +133,14 @@ class GameConfig(Config):
             "bonus_see": 5,
             "bonus_hear": 5,
             "bonus_madness": 5,
-            "bonus_pick": 5,
+            "bonus_mystery": 5,
         }
         # One coin game per spin. The old Hear cap of 3 is not used.
         self.max_board_activations_hear = 1
         self.coin_game_max_reruns = 10
-        # MULTI faces — LOCKED Cole 2026-07-18 (COIN_POWERS_LOCKED.md).
+        # MULTI faces — values unchanged. TEST weights: mostly ×2/×3, ×10/×20 still live.
         self.coin_game_multi_values = [2, 3, 4, 5, 10, 20]
-        self.coin_game_multi_weights = [35, 28, 18, 12, 5, 2]
+        self.coin_game_multi_weights = [180, 90, 36, 12, 2, 1]
         # Baseline vs power weights when rolling each lit cell's prize kind.
         self.coin_game_coin_weight = 100
         # Per-tile-tier powers (same table in every priced mode). Coin 100 vs:
@@ -163,13 +168,15 @@ class GameConfig(Config):
             "bonus_see": {"multiplier": 3, "collector": 0, "tier_shift": 0},
             "bonus_hear": {"multiplier": 3, "collector": 0, "tier_shift": 0},
             "bonus_madness": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_pick": {"multiplier": 3, "collector": 0, "tier_shift": 0},
+            "bonus_mystery": {"multiplier": 3, "collector": 0, "tier_shift": 0},
         }
-        # Exact Le Bandit cluster pays in base AND bonus (do not dilute the table).
-        # RTP levers: shorter strip runs (fewer tumbles), trigger rarity — not pay scales.
+        # Cluster scales stay 1.0. The paytable values themselves are the TEST cut.
         self.bonus_cluster_pay_scale = 1.0
-        # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table — DO NOT dilute.
         self.paytable_scale = 1.0
+        # Base and ante pay the same cluster table. Coin faces are the labeled
+        # values in every mode. There is no extra coin-face scale.
+        self.base_cluster_pay_scale = 1.0
+        self.base_coin_game_scale = 1.0
         # Always pay face as labeled (1.0). Do not soft-scale coin values.
         self.coin_tile_scale_by_mode = {
             "base": 1.0,
@@ -179,26 +186,15 @@ class GameConfig(Config):
             "bonus_see": 1.0,
             "bonus_hear": 1.0,
             "bonus_madness": 1.0,
-            "bonus_pick": 1.0,
-        }
-        # Every lit tile pays a virtual coin. None = no sample cap.
-        self.max_activation_coins_by_mode = {
-            "base": None,
-            "base_ante": None,
-            "feature_spin": None,
-            "peak_spin": None,
-            "bonus_see": None,
-            "bonus_hear": None,
-            "bonus_madness": None,
-            "bonus_pick": None,
+            "bonus_mystery": 1.0,
         }
         # Dead once Hear is uncapped.
         self.hear_coin_cap_boost_chance = 0.0
         # PEAK: light every cell gold (level 3) before the drop. Progress still starts at 0.
         self.peak_spin_seed_gold = True
         self.peak_spin_cost = 1400.0
-        self.gamble_buy_cost = GAMBLE_BUY_COST
-        self.gamble_dead_bait_rate = GAMBLE_DEAD_BAIT_RATE
+        self.bonus_mystery_cost = BONUS_MYSTERY_COST
+        self.bonus_mystery_dead_bait_rate = BONUS_MYSTERY_DEAD_BAIT_RATE
         self.see_buy_cost = SEE_BUY_COST
         self.bonus_spins = 10
         self.scatter_pays = {}
@@ -358,9 +354,9 @@ class GameConfig(Config):
             return "CS"
         return "CG"
 
-    def _build_activation_coin_pools(self) -> dict[int, list[int]]:
-        """Map tile levels to integer coin face pools."""
-        pools: dict[int, list[int]] = {}
+    def _build_activation_coin_pools(self) -> dict[int, list[float]]:
+        """Map tile levels to coin face pools."""
+        pools: dict[int, list[float]] = {}
         for level in range(1, self.max_tile_level + 1):
             symbol = self._coin_symbol_for_tile_level(level)
             pools[level] = list(self.coin_values[symbol])
@@ -375,8 +371,13 @@ class GameConfig(Config):
         return weights
 
     def _build_paytable(self) -> dict[tuple[int, str], float]:
-        """Full Jul 2 Le Bandit paytable — 7 size bands."""
-        payouts = {
+        """TEST paytable, not a final publish. Scales stay 1.0.
+
+        Flat 0.67× the Jul 2 table, every band. Bands are 5, 6, 7, 8,
+        9–10, 11–12, 13+.
+        """
+        flat = 0.67
+        jul2 = {
             "T": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
             "J": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
             "Q": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
@@ -387,6 +388,10 @@ class GameConfig(Config):
             "OR": [0.50, 0.70, 1.00, 1.50, 5.00, 15.00, 50.00],
             "GR": [0.50, 0.70, 1.00, 1.50, 5.00, 15.00, 50.00],
             "BA": [1.00, 1.50, 2.00, 3.00, 10.00, 30.00, 100.00],
+        }
+        payouts = {
+            symbol: [round(value * flat, 6) for value in values]
+            for symbol, values in jul2.items()
         }
         band_to_index = {5: 0, 6: 1, 7: 2, 8: 3, 9: 4, 11: 5, 13: 6}
         scale = float(getattr(self, "paytable_scale", 1.0))
@@ -415,6 +420,92 @@ class GameConfig(Config):
         if size <= 12:
             return 11
         return 13
+
+    def build_capped_reel_strips(
+        self,
+        weights: dict[str, float],
+        seed: int,
+        strip_len: int = 96,
+        run_lengths: tuple[int, ...] = (1, 2),
+        run_weights: tuple[int, ...] = (64, 36),
+        max_run: int = 2,
+    ) -> list[list[str]]:
+        """Run-based strips whose longest same-symbol stack is `max_run`.
+
+        Consecutive runs never repeat a symbol, and the wrap from the bottom
+        of the strip back to the top counts toward the same cap. A 5-row
+        window therefore cannot be a straight column of one symbol. Clusters
+        have to form as irregular blobs across reels.
+        """
+        symbols = list(weights)
+        strips: list[list[str]] = []
+        for reel in range(self.num_reels):
+            rng = random.Random(seed + reel * 997)
+            strip: list[str] = []
+            prev = None
+            while len(strip) < strip_len:
+                choices = [symbol for symbol in symbols if symbol != prev] or symbols
+                choice_w = [weights[symbol] for symbol in choices]
+                symbol = rng.choices(choices, weights=choice_w, k=1)[0]
+                run_len = rng.choices(list(run_lengths), weights=list(run_weights), k=1)[0]
+                run_len = min(int(run_len), max_run, strip_len - len(strip))
+                strip.extend([symbol] * run_len)
+                prev = symbol
+            self._cap_symbol_runs(strip, max_run, symbols)
+            if self._longest_run(strip) > max_run:
+                raise RuntimeError(f"reel {reel} run exceeded {max_run}")
+            strips.append(strip)
+        return strips
+
+    @staticmethod
+    def _cap_symbol_runs(strip: list[str], max_run: int, symbols: list[str]) -> None:
+        """Split any linear or wrap-around run that is longer than max_run."""
+        n = len(strip)
+        index = 0
+        while index < n:
+            end = index
+            while end < n and strip[end] == strip[index]:
+                end += 1
+            if end - index > max_run:
+                alts = [symbol for symbol in symbols if symbol != strip[index]]
+                for cursor in range(index + max_run, end):
+                    strip[cursor] = alts[(cursor - index) % len(alts)]
+            index = max(end, index + 1)
+        if strip[0] != strip[-1]:
+            return
+        left = 0
+        while left < n and strip[left] == strip[0]:
+            left += 1
+        right = 0
+        while right < n and strip[-1 - right] == strip[0]:
+            right += 1
+        if left + right <= max_run:
+            return
+        # One different face at the seam splits the wrap. It must not extend
+        # the run that now sits beside it.
+        blocked = {strip[0], strip[1], strip[-2]}
+        alt = next(symbol for symbol in symbols if symbol not in blocked)
+        strip[-1] = alt
+
+    @staticmethod
+    def _longest_run(strip: list[str]) -> int:
+        longest = 1
+        run = 1
+        for index in range(1, len(strip)):
+            if strip[index] == strip[index - 1]:
+                run += 1
+                longest = max(longest, run)
+            else:
+                run = 1
+        if strip[0] == strip[-1]:
+            left = 0
+            while left < len(strip) and strip[left] == strip[0]:
+                left += 1
+            right = 0
+            while right < len(strip) and strip[-1 - right] == strip[0]:
+                right += 1
+            longest = max(longest, left + right)
+        return longest
 
     def build_reel_strips(
         self,
@@ -517,7 +608,7 @@ class GameConfig(Config):
             "madness": {"madness_low": 88, "madness_mid": 10, "madness_high": 2},
             "feature": {"feature_mild": 30, "feature_rich": 70},
             "peak": {"peak_a": 55, "peak_b": 45},
-            "gamble_dead": {"base_quiet": 1},
+            "bonus_mystery_dead": {"base_quiet": 1},
         }
         self.reel_set_weights_flat = set(specs)
         for name, (weights, runs, seed, refill_runs) in specs.items():
@@ -538,6 +629,56 @@ class GameConfig(Config):
                 for symbol in chain_symbols:
                     strip.extend([symbol] * 2)
             self.reels["base_hot_REFILL"][reel_index] = strip[:50]
+        self._build_base_natural_reels()
+
+    def _build_base_natural_reels(self) -> None:
+        """Base and ante draw these stops. Mystery keeps the planted sets above.
+
+        Opening runs are only 1–2 symbols, so a 5-high window cannot be one
+        face. Refill run weights stay 36/42/22, capped at 3. The base bar
+        fills on 5 clusters. A random stop wins about one spin in five.
+        """
+        initial = {
+            "T": 11.2,
+            "J": 11.2,
+            "Q": 10.6,
+            "K": 8.5,
+            "A": 7.5,
+            "LE": 5.2,
+            "CO": 4.4,
+            "OR": 2.4,
+            "GR": 1.9,
+            "BA": 1.3,
+            "MW": 0.7,
+        }
+        refill = {
+            "T": 18.0,
+            "J": 17.0,
+            "Q": 15.0,
+            "K": 12.0,
+            "A": 11.0,
+            "LE": 6.0,
+            "CO": 5.0,
+            "OR": 3.0,
+            "GR": 2.0,
+            "BA": 1.2,
+        }
+        self.reels["base_natural"] = self.build_capped_reel_strips(
+            initial,
+            seed=2401,
+            run_lengths=(1, 2),
+            run_weights=(64, 36),
+            max_run=2,
+        )
+        self.reels["base_natural_REFILL"] = self.build_capped_reel_strips(
+            refill,
+            seed=2417,
+            run_lengths=(1, 2, 3),
+            run_weights=(36, 42, 22),
+            max_run=3,
+        )
+        self.reel_set_weights["base_play"] = {"base_natural": 1}
+        self.reel_set_weights_flat.add("base_natural")
 
     def pick_reel_set(self, family: str) -> str:
         weights = self.reel_set_weights[family]
@@ -565,7 +706,7 @@ class GameConfig(Config):
             "madness",
         ):
             return "INITIAL_BONUS"
-        if betmode == "bonus_pick":
+        if betmode == "bonus_mystery":
             if gametype == self.freegame_type or bonus_variant in ("see", "hear", "madness"):
                 return "INITIAL_BONUS"
             return "INITIAL_BASE"
@@ -629,20 +770,20 @@ class GameConfig(Config):
                 self._distribution("bonus_hear", 1.0 - HEAR_CAP_QUOTA, bonus_variant="hear"),
                 self._distribution("cap", HEAR_CAP_QUOTA, force_wincap=True, bonus_variant="hear"),
             ]),
-            BetMode("bonus_pick", self.gamble_buy_cost, self.rtp, self.wincap, False, True, False, [
-                self._distribution("gamble_dead", GAMBLE_DEAD_QUOTA - GAMBLE_CAP_QUOTA),
+            BetMode("bonus_mystery", self.bonus_mystery_cost, self.rtp, self.wincap, False, True, False, [
+                self._distribution("bonus_mystery_dead", BONUS_MYSTERY_DEAD_QUOTA - BONUS_MYSTERY_CAP_QUOTA),
                 self._distribution(
-                    "gamble_hear",
-                    GAMBLE_HEAR_QUOTA,
+                    "bonus_mystery_hear",
+                    BONUS_MYSTERY_HEAR_QUOTA,
                     force_freegame=True,
                     scatter_triggers={4: 1},
                 ),
                 self._distribution(
-                    "gamble_madness",
-                    GAMBLE_MADNESS_QUOTA,
+                    "bonus_mystery_madness",
+                    BONUS_MYSTERY_MADNESS_QUOTA,
                     force_freegame=True,
                     scatter_triggers={5: 1},
                 ),
-                self._distribution("cap", GAMBLE_CAP_QUOTA, force_wincap=True),
+                self._distribution("cap", BONUS_MYSTERY_CAP_QUOTA, force_wincap=True),
             ]),
         ]

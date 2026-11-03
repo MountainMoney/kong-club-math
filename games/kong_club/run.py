@@ -46,7 +46,7 @@ if __name__ == "__main__":
         "peak_spin": int(sims_per_mode),
         "bonus_see": int(sims_per_mode),
         "bonus_hear": int(sims_per_mode),
-        "bonus_pick": int(sims_per_mode),
+        "bonus_mystery": int(sims_per_mode),
     }
     modes_filter = os.environ.get("MM_MODES", "").strip()
     if modes_filter:
@@ -76,5 +76,10 @@ if __name__ == "__main__":
         )
         sync_publish_luts(gamestate, [m for m in num_sim_args if num_sim_args[m] > 0])
 
-    generate_configs(gamestate)
+    # A partial MM_MODES run has no books for the modes it skipped. Writing
+    # configs would hash those missing files. Regenerate configs after a full run.
+    if modes_filter:
+        print("Skipping generate_configs because MM_MODES is a subset.")
+    else:
+        generate_configs(gamestate)
 

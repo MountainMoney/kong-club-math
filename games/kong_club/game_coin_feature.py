@@ -68,16 +68,22 @@ def _coin_metal_for_face(face: int, current_level: int = 1) -> tuple[str, int]:
     return _virtual_coin_symbol(level), level
 
 
+def base_coin_game_scale(gamestate: "GameExecutables") -> float:
+    """Labeled coin faces. Base and ante are not shrunk."""
+    del gamestate
+    return 1.0
+
+
 def _pick_weighted_coin_value(
     gamestate: "GameExecutables", tile_level: int, rng: random.Random
-) -> int:
+) -> float:
     pools = getattr(gamestate.config, "activation_coin_value_pools", {}) or {}
     weights_by_level = getattr(gamestate.config, "activation_coin_value_weights", {}) or {}
     pool = pools.get(tile_level) or pools.get(1) or [1]
     weights = weights_by_level.get(tile_level)
     if not weights or len(weights) != len(pool):
         weights = [1] * len(pool)
-    return int(rng.choices(pool, weights=weights, k=1)[0])
+    return float(rng.choices(pool, weights=weights, k=1)[0])
 
 
 def _pick_multi_value(gamestate: "GameExecutables", rng: random.Random) -> int:
@@ -648,18 +654,6 @@ def _mode_coin_scale(gamestate: "GameExecutables") -> float:
     return float(scales.get(mode, 1.0))
 
 
-def _mode_coin_cap(gamestate: "GameExecutables") -> int | None:
-    """Max lit tiles that pay coins this activation (None = all lit)."""
-    caps = getattr(gamestate.config, "max_activation_coins_by_mode", {}) or {}
-    freegame = getattr(gamestate.config, "freegame_type", "freegame")
-    if getattr(gamestate, "gametype", None) == freegame:
-        variant = getattr(gamestate, "bonus_variant", None)
-        if variant in ("hear", "madness"):
-            return caps.get(f"bonus_{variant}")
-    mode = getattr(gamestate, "betmode", "base")
-    return caps.get(mode)
-
-
 def _physical_coins_land(gamestate: "GameExecutables") -> bool:
     """Feature Spin and free spins land CB/CS/CG. Base and TRIFECTA stay virtual."""
     if getattr(gamestate, "betmode", None) == "feature_spin":
@@ -732,7 +726,8 @@ def _flip_cell(gamestate, level: int, rng: random.Random, *, rerun: bool = False
         return {"kind": "clover", "value": float(_pick_multi_value(gamestate, rng)), "used": False}
     if kind == "pot":
         return {"kind": "pot", "value": 0.0, "valued": False, "spent": False}
-    return {"kind": "coin", "value": float(_pick_weighted_coin_value(gamestate, level, rng))}
+    face = float(_pick_weighted_coin_value(gamestate, level, rng))
+    return {"kind": "coin", "value": face * base_coin_game_scale(gamestate)}
 
 
 def _lit_positions(gamestate) -> list[tuple[int, int]]:

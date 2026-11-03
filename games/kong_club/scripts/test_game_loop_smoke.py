@@ -176,17 +176,17 @@ def smoke_bonus_modes() -> None:
             assert_no_leftover_clusters(gs, book, label)
 
 
-def smoke_bonus_pick() -> None:
+def smoke_bonus_mystery() -> None:
     saw_dead = False
     saw_hear = False
     for criteria, seeds in (
-        ("gamble_dead", range(1, 8)),
-        ("gamble_hear", range(1, 6)),
+        ("bonus_mystery_dead", range(1, 8)),
+        ("bonus_mystery_hear", range(1, 6)),
     ):
         for seed in seeds:
-            gs, book = run_book("bonus_pick", criteria, seed)
+            gs, book = run_book("bonus_mystery", criteria, seed)
             types = _types(book)
-            label = f"bonus_pick {criteria} seed={seed}"
+            label = f"bonus_mystery {criteria} seed={seed}"
             assert "setTotalWin" in types, f"{label}: missing setTotalWin"
             assert_no_leftover_clusters(gs, book, label)
             if "freeSpinTrigger" in types or any(
@@ -197,8 +197,8 @@ def smoke_bonus_pick() -> None:
                 saw_hear = True
             else:
                 saw_dead = True
-    assert saw_dead, "bonus_pick: need a dead book"
-    assert saw_hear, "bonus_pick: need a Hear trigger book"
+    assert saw_dead, "bonus_mystery: need a dead book"
+    assert saw_hear, "bonus_mystery: need a Hear trigger book"
 
 
 def main() -> None:
@@ -206,7 +206,7 @@ def main() -> None:
     smoke_base_modes()
     smoke_peak_spin()
     smoke_bonus_modes()
-    smoke_bonus_pick()
+    smoke_bonus_mystery()
     print("test_game_loop_smoke: all passed")
 
 

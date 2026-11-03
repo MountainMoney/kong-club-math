@@ -27,8 +27,8 @@ PUBLISH = GAME_DIR / "library" / "publish_files"
 LOOKUP = GAME_DIR / "library" / "lookup_tables"
 MAX_PAY = 2_500_000
 
-# Gamble price is the 50/45/5 formula, raised with the restored faces and tile multipliers.
-GAMBLE_COST = 380.0
+# Mystery Bonus price is the 50/45/5 formula, raised with the restored faces and tile multipliers.
+BONUS_MYSTERY_COST = 380.0
 
 
 def _iter_books(path: Path):
@@ -52,9 +52,29 @@ def _iter_books(path: Path):
                     yield json.loads(line)
 
 
-def load_criteria(mode: str) -> dict[int, str]:
+def load_book_meta(mode: str) -> tuple[dict[int, str], set[int]]:
+    """Criteria per book, plus base-game spins whose progress bar fired the coin game.
+
+    Free-spin books can also activate. Those stay in the freegame bands.
+    """
     path = PUBLISH / f"books_{mode}.jsonl.zst"
-    return {int(book["id"]): str(book.get("criteria") or "") for book in _iter_books(path)}
+    criteria: dict[int, str] = {}
+    coins: set[int] = set()
+    for book in _iter_books(path):
+        sim_id = int(book["id"])
+        crit = str(book.get("criteria") or "")
+        criteria[sim_id] = crit
+        if crit == "freegame":
+            continue
+        events = book.get("events") or []
+        if any(event.get("type") == "boardActivation" for event in events):
+            coins.add(sim_id)
+    return criteria, coins
+
+
+def load_criteria(mode: str) -> dict[int, str]:
+    criteria, _coins = load_book_meta(mode)
+    return criteria
 
 
 def _band(xbet: float, edges: list[tuple[str, float, float]]) -> str:
@@ -64,7 +84,7 @@ def _band(xbet: float, edges: list[tuple[str, float, float]]) -> str:
     return "tail"
 
 
-def classify(mode: str, payout: int, criteria: str) -> str:
+def classify(mode: str, payout: int, criteria: str, coin: bool = False) -> str:
     if payout >= MAX_PAY:
         return "cap"
     xbet = payout / 100.0
@@ -75,6 +95,10 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             if 50 < xbet <= 280:
                 return "fg_high"
             return "fg_out"
+        # The bar-of-5 coin game is its own band so a long cascade that never
+        # fills the bar is not tied to the coin-game weight.
+        if coin:
+            return "coin"
         if xbet <= 0:
             return "zero"
         if xbet <= 1:
@@ -83,7 +107,9 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             return "profit"
         if xbet <= 12:
             return "kicker"
-        return "spike"
+        if xbet <= 60:
+            return "spike"
+        return "tail"
     if mode == "base_ante":
         if criteria == "freegame":
             if 6 <= xbet <= 50:
@@ -91,6 +117,8 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             if 50 < xbet <= 280:
                 return "fg_high"
             return "fg_out"
+        if coin:
+            return "coin"
         if xbet <= 0:
             return "zero"
         if xbet <= 1.4:
@@ -99,11 +127,13 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             return "profit"
         if xbet <= 16:
             return "kicker"
-        return "spike"
-    if mode == "bonus_pick":
-        if criteria == "gamble_dead":
+        if xbet <= 80:
+            return "spike"
+        return "tail"
+    if mode == "bonus_mystery":
+        if criteria == "bonus_mystery_dead":
             return "dead"
-        if criteria == "gamble_hear":
+        if criteria == "bonus_mystery_hear":
             if xbet <= 0:
                 return "hear_zero"
             if xbet <= 100:
@@ -115,7 +145,7 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             if xbet <= 900:
                 return "hear_profit"
             return "hear_tail"
-        if criteria == "gamble_madness":
+        if criteria == "bonus_mystery_madness":
             if 2200 <= xbet <= 9000:
                 return "mad_body"
             return "mad_out"
@@ -165,37 +195,64 @@ def classify(mode: str, payout: int, criteria: str) -> str:
     raise KeyError(mode)
 
 
+def _natural_play_probs(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float], str, str]:
+    """Pin the hit rate, the coin game, and the bonus quota. Leave cascades alone.
+
+    Zero stays at 80% (about a 20% hit rate). The coin band is 1/100 spins.
+    Freegame books outside 6–280× stay at weight 0, and that quota is split
+    across the kept freegame bands the way it was before this rebalance.
+    Everything else — short wins and long tumbles that never fill the bar —
+    keeps its natural share of whatever probability is left. Profit ↔ small
+    is only the last nudge to 96.50%.
+    """
+    max_p = MODE_MAX_P[mode]
+    quota = (1 / 260) if mode == "base" else (1 / 130)
+    if mode == "base":
+        fg_low, fg_high = 0.0023, quota - 0.0023
+    else:
+        # Ante's bonus quota is twice base and the cost is 1.4×. Keeping the
+        # old 6–50× heavy split left the mode short, so the solver had to
+        # promote a lot of small wins into profit and that shuffled tumble
+        # lengths. A slightly richer 50–280× share lets the cascade bands
+        # stay on their natural weights.
+        fg_low, fg_high = 0.003853, quota - 0.003853
+    probs = {name: 0.0 for name in bands}
+    if bands.get("cap"):
+        probs["cap"] = max_p
+    if bands.get("zero"):
+        probs["zero"] = 0.80
+    if bands.get("coin"):
+        probs["coin"] = 0.01
+    if bands.get("fg_low"):
+        probs["fg_low"] = fg_low
+    if bands.get("fg_high"):
+        probs["fg_high"] = fg_high
+    play = [name for name in ("small", "profit", "kicker", "spike", "tail") if bands.get(name)]
+    natural = {name: len(idxs) for name, idxs in bands.items()}
+    play_count = sum(natural[name] for name in play) or 1
+    remain = 1.0 - sum(probs.values())
+    if remain < 0:
+        # Pins overlap an empty play section. Shrink zero first.
+        probs["zero"] = max(0.0, probs.get("zero", 0.0) + remain)
+        remain = 0.0
+    for name in play:
+        probs[name] = remain * natural[name] / play_count
+    gap = 1.0 - sum(probs.values())
+    sink = "small" if bands.get("small") else (play[0] if play else "zero")
+    probs[sink] = probs.get(sink, 0.0) + gap
+    donor = "profit" if bands.get("profit") and probs.get("profit", 0.0) > 0 else (play[-1] if play else "zero")
+    recv = "small" if bands.get("small") else donor
+    return probs, donor, recv
+
+
 def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float], str, str]:
     """Return starting probabilities plus the donor and receiver used to hit RTP."""
     max_p = MODE_MAX_P[mode]
     probs = {name: 0.0 for name in bands}
     if bands.get("cap"):
         probs["cap"] = max_p
-    if mode == "base":
-        probs.update(
-            {
-                "zero": 0.55,
-                "small": 0.284,
-                "profit": 0.152,
-                "kicker": 0.006,
-                "fg_low": 0.0023,
-                "fg_high": 1 / 260 - 0.0023,
-            }
-        )
-        # Profit, not the thin kicker band, is what can still move base RTP down to 96.50%.
-        donor, recv = "profit", "small"
-    elif mode == "base_ante":
-        probs.update(
-            {
-                "zero": 0.50,
-                "small": 0.270,
-                "profit": 0.210,
-                "kicker": 0.010,
-                "fg_low": 0.0046,
-                "fg_high": 1 / 130 - 0.0046,
-            }
-        )
-        donor, recv = "profit", "small"
+    if mode in ("base", "base_ante"):
+        return _natural_play_probs(mode, bands)
     elif mode == "feature_spin":
         probs.update({"zero": 0.56, "small": 0.18, "profit": 0.18, "upper": 0.08})
         donor, recv = "small", "upper"
@@ -208,7 +265,7 @@ def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float]
     elif mode == "bonus_hear":
         probs.update({"zero": 0.01, "low": 0.22, "med": 0.36, "bridge": 0.23, "profit": 0.16, "tail": 0.02 - max_p})
         donor, recv = "profit", "bridge"
-    elif mode == "bonus_pick":
+    elif mode == "bonus_mystery":
         hear_p = 0.45
         mad_p = 0.05
         dead_p = 0.50 - max_p
@@ -326,11 +383,17 @@ def _solve(rows, bands, probs, donor, recv, cost):
     return best_rows, best_probs
 
 
-def fit_rows(mode: str, rows: list[tuple[int, int, int]], criteria: dict[int, str]):
-    cost = GAMBLE_COST if mode == "bonus_pick" else MODE_COSTS[mode]
+def fit_rows(
+    mode: str,
+    rows: list[tuple[int, int, int]],
+    criteria: dict[int, str],
+    coin_ids: set[int] | None = None,
+):
+    cost = BONUS_MYSTERY_COST if mode == "bonus_mystery" else MODE_COSTS[mode]
+    coins = coin_ids or set()
     bands: dict[str, list[int]] = {}
     for index, (sim_id, _, payout) in enumerate(rows):
-        name = classify(mode, payout, criteria.get(sim_id, ""))
+        name = classify(mode, payout, criteria.get(sim_id, ""), sim_id in coins)
         bands.setdefault(name, []).append(index)
     probs, donor, recv = _probs_for(mode, bands)
     _drop_empty(bands, probs, recv)
@@ -396,11 +459,15 @@ def mode_stats(weighted, cost: float) -> dict:
     }
 
 
-def fit_mode(mode: str, criteria: dict[int, str] | None = None):
+def fit_mode(mode: str, criteria: dict[int, str] | None = None, coin_ids: set[int] | None = None):
     rows = read_lut(LOOKUP / f"lookUpTable_{mode}.csv")
-    if criteria is None:
-        criteria = load_criteria(mode)
-    weighted, bands, probs, cost = fit_rows(mode, rows, criteria)
+    if criteria is None or coin_ids is None:
+        loaded_criteria, loaded_coins = load_book_meta(mode)
+        if criteria is None:
+            criteria = loaded_criteria
+        if coin_ids is None:
+            coin_ids = loaded_coins
+    weighted, bands, probs, cost = fit_rows(mode, rows, criteria, coin_ids)
     counts = {name: len(idxs) for name, idxs in sorted(bands.items())}
     return weighted, mode_stats(weighted, cost), counts, probs, cost
 
