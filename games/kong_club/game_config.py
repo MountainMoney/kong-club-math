@@ -416,6 +416,92 @@ class GameConfig(Config):
             return 11
         return 13
 
+    def build_capped_reel_strips(
+        self,
+        weights: dict[str, float],
+        seed: int,
+        strip_len: int = 96,
+        run_lengths: tuple[int, ...] = (1, 2),
+        run_weights: tuple[int, ...] = (64, 36),
+        max_run: int = 2,
+    ) -> list[list[str]]:
+        """Run-based strips whose longest same-symbol stack is `max_run`.
+
+        Consecutive runs never repeat a symbol, and the wrap from the bottom
+        of the strip back to the top counts toward the same cap. A 5-row
+        window therefore cannot be a straight column of one symbol. Clusters
+        have to form as irregular blobs across reels.
+        """
+        symbols = list(weights)
+        strips: list[list[str]] = []
+        for reel in range(self.num_reels):
+            rng = random.Random(seed + reel * 997)
+            strip: list[str] = []
+            prev = None
+            while len(strip) < strip_len:
+                choices = [symbol for symbol in symbols if symbol != prev] or symbols
+                choice_w = [weights[symbol] for symbol in choices]
+                symbol = rng.choices(choices, weights=choice_w, k=1)[0]
+                run_len = rng.choices(list(run_lengths), weights=list(run_weights), k=1)[0]
+                run_len = min(int(run_len), max_run, strip_len - len(strip))
+                strip.extend([symbol] * run_len)
+                prev = symbol
+            self._cap_symbol_runs(strip, max_run, symbols)
+            if self._longest_run(strip) > max_run:
+                raise RuntimeError(f"reel {reel} run exceeded {max_run}")
+            strips.append(strip)
+        return strips
+
+    @staticmethod
+    def _cap_symbol_runs(strip: list[str], max_run: int, symbols: list[str]) -> None:
+        """Split any linear or wrap-around run that is longer than max_run."""
+        n = len(strip)
+        index = 0
+        while index < n:
+            end = index
+            while end < n and strip[end] == strip[index]:
+                end += 1
+            if end - index > max_run:
+                alts = [symbol for symbol in symbols if symbol != strip[index]]
+                for cursor in range(index + max_run, end):
+                    strip[cursor] = alts[(cursor - index) % len(alts)]
+            index = max(end, index + 1)
+        if strip[0] != strip[-1]:
+            return
+        left = 0
+        while left < n and strip[left] == strip[0]:
+            left += 1
+        right = 0
+        while right < n and strip[-1 - right] == strip[0]:
+            right += 1
+        if left + right <= max_run:
+            return
+        # One different face at the seam splits the wrap. It must not extend
+        # the run that now sits beside it.
+        blocked = {strip[0], strip[1], strip[-2]}
+        alt = next(symbol for symbol in symbols if symbol not in blocked)
+        strip[-1] = alt
+
+    @staticmethod
+    def _longest_run(strip: list[str]) -> int:
+        longest = 1
+        run = 1
+        for index in range(1, len(strip)):
+            if strip[index] == strip[index - 1]:
+                run += 1
+                longest = max(longest, run)
+            else:
+                run = 1
+        if strip[0] == strip[-1]:
+            left = 0
+            while left < len(strip) and strip[left] == strip[0]:
+                left += 1
+            right = 0
+            while right < len(strip) and strip[-1 - right] == strip[0]:
+                right += 1
+            longest = max(longest, left + right)
+        return longest
+
     def build_reel_strips(
         self,
         weights: dict[str, float],
@@ -538,6 +624,57 @@ class GameConfig(Config):
                 for symbol in chain_symbols:
                     strip.extend([symbol] * 2)
             self.reels["base_hot_REFILL"][reel_index] = strip[:50]
+        self._build_base_natural_reels()
+
+    def _build_base_natural_reels(self) -> None:
+        """Base and ante draw these stops. Mystery keeps the planted sets above.
+
+        Opening runs are only 1–2 symbols, so a 5-high window cannot be one
+        face. Refills are a little stickier (runs of 1–3, lows heavier) so a
+        win can tumble again without dropping a whole column of one symbol.
+        Weights are set so a random stop wins about one spin in five.
+        """
+        initial = {
+            "T": 11.2,
+            "J": 11.2,
+            "Q": 10.6,
+            "K": 8.5,
+            "A": 7.5,
+            "LE": 5.2,
+            "CO": 4.4,
+            "OR": 2.4,
+            "GR": 1.9,
+            "BA": 1.3,
+            "MW": 0.7,
+        }
+        refill = {
+            "T": 34.0,
+            "J": 31.0,
+            "Q": 27.0,
+            "K": 19.0,
+            "A": 17.0,
+            "LE": 3.2,
+            "CO": 2.7,
+            "OR": 0.9,
+            "GR": 0.7,
+            "BA": 0.5,
+        }
+        self.reels["base_natural"] = self.build_capped_reel_strips(
+            initial,
+            seed=2401,
+            run_lengths=(1, 2),
+            run_weights=(64, 36),
+            max_run=2,
+        )
+        self.reels["base_natural_REFILL"] = self.build_capped_reel_strips(
+            refill,
+            seed=2417,
+            run_lengths=(1, 2, 3),
+            run_weights=(8, 46, 46),
+            max_run=3,
+        )
+        self.reel_set_weights["base_play"] = {"base_natural": 1}
+        self.reel_set_weights_flat.add("base_natural")
 
     def pick_reel_set(self, family: str) -> str:
         weights = self.reel_set_weights[family]

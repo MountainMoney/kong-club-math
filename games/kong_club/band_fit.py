@@ -83,7 +83,11 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             return "profit"
         if xbet <= 12:
             return "kicker"
-        return "spike"
+        # Split the old open spike. 12–60× is a long cascade. Above that is
+        # almost always the coin game, whose mean is too wide to share one weight.
+        if xbet <= 60:
+            return "spike"
+        return "tail"
     if mode == "base_ante":
         if criteria == "freegame":
             if 6 <= xbet <= 50:
@@ -99,7 +103,9 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             return "profit"
         if xbet <= 16:
             return "kicker"
-        return "spike"
+        if xbet <= 80:
+            return "spike"
+        return "tail"
     if mode == "bonus_mystery":
         if criteria == "gamble_dead":
             return "dead"
@@ -172,27 +178,36 @@ def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float]
     if bands.get("cap"):
         probs["cap"] = max_p
     if mode == "base":
+        # Misses stay near 80% so the published hit rate is about 20%.
+        # Profit ↔ small is the RTP lever. Kicker / spike / tail are pinned
+        # low enough that a coin-game tail cannot hold the mode above 96.50%.
         probs.update(
             {
-                "zero": 0.55,
-                "small": 0.284,
-                "profit": 0.152,
-                "kicker": 0.006,
+                "zero": 0.80,
+                "small": 0.100,
+                "profit": 0.078033,
+                "kicker": 0.012,
+                "spike": 0.006,
+                "tail": 0.00012,
                 "fg_low": 0.0023,
                 "fg_high": 1 / 260 - 0.0023,
             }
         )
-        # Profit, not the thin kicker band, is what can still move base RTP down to 96.50%.
         donor, recv = "profit", "small"
     elif mode == "base_ante":
         probs.update(
             {
-                "zero": 0.50,
-                "small": 0.270,
-                "profit": 0.210,
-                "kicker": 0.010,
-                "fg_low": 0.0046,
-                "fg_high": 1 / 130 - 0.0046,
+                "zero": 0.80,
+                "small": 0.090,
+                "profit": 0.0801,
+                "kicker": 0.014,
+                "spike": 0.008,
+                "tail": 0.00020,
+                # More of the ante quota sits in the 6–50× band. The 50–280×
+                # slice is fat enough that the old split held ante above 96.50%
+                # even after every profit book had been moved into small.
+                "fg_low": 0.004935,
+                "fg_high": 1 / 130 - 0.004935,
             }
         )
         donor, recv = "profit", "small"

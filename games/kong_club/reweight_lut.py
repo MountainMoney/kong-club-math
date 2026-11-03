@@ -38,8 +38,9 @@ MODE_MAX_P = {
     "bonus_mystery": 1 / 4_500,
 }
 MODE_ZERO_BAND = {
-    "base": (0.45, 0.60),
-    "base_ante": (0.45, 0.60),
+    # Natural base hit rate is about 20%, so the miss rate stays near 80%.
+    "base": (0.76, 0.84),
+    "base_ante": (0.76, 0.84),
     "feature_spin": (0.50, 0.62),
     "peak_spin": (0.55, 0.75),
     "bonus_see": (0.0, 0.04),
@@ -47,8 +48,9 @@ MODE_ZERO_BAND = {
     "bonus_mystery": (0.47, 0.53),
 }
 MODE_PROFIT_MIN = {
-    "base": 0.15,
-    "base_ante": 0.12,
+    # A 20% hit rate cannot also force 15% of spins above the stake.
+    "base": 0.06,
+    "base_ante": 0.05,
     "feature_spin": 0.20,
     "peak_spin": 0.20,
     "bonus_see": 0.30,

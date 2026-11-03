@@ -76,5 +76,10 @@ if __name__ == "__main__":
         )
         sync_publish_luts(gamestate, [m for m in num_sim_args if num_sim_args[m] > 0])
 
-    generate_configs(gamestate)
+    # A partial MM_MODES run has no books for the modes it skipped. Writing
+    # configs would hash those missing files. Regenerate configs after a full run.
+    if modes_filter:
+        print("Skipping generate_configs because MM_MODES is a subset.")
+    else:
+        generate_configs(gamestate)
 

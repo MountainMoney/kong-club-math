@@ -38,11 +38,15 @@ class GameState(GameStateOverride):
     def run_base_spin(self):
         self.board_activation_fired_this_spin = False
         self.gametype = self.config.basegame_type
-        self.use_reel_family("base")
-        if self.reel_set_name == "base_teaser" and (
-            self.should_force_initial_scatters() or self.outcome_bucket() == "cap"
-        ):
-            self.use_reel_family("gamble_dead")
+        if self.betmode in ("base", "base_ante"):
+            # Real stops. Mystery still enters this spin on the planted family.
+            self.use_reel_family("base_play")
+        else:
+            self.use_reel_family("base")
+            if self.reel_set_name == "base_teaser" and (
+                self.should_force_initial_scatters() or self.outcome_bucket() == "cap"
+            ):
+                self.use_reel_family("gamble_dead")
         if self.outcome_bucket() == "cap":
             self.seed_peak_gold_tiles()
         self.draw_prepared_board()

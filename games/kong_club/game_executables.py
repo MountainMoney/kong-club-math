@@ -214,7 +214,21 @@ class GameExecutables(GameCalculations):
         return f"{variant}_slow" if random.random() < 0.88 else f"{variant}_steady"
 
     def draw_prepared_board(self):
-        """Initial fill: choose a random start per column and read 5 symbols downward."""
+        """Initial fill.
+
+        Base and ante read a random stop on base_natural. The refill strip is
+        left alone, so new symbols are random draws from that strip rather than
+        a planted column. Long same-symbol runs are capped in the strip builder,
+        which is what stops a natural stop collapsing into one size-5 column.
+
+        Mystery still plants: it shares this method, but not the base bet mode.
+        Bonus, feature, and peak callers do not use the planted reel names, so
+        they keep the random-stop path at the bottom.
+        """
+        if getattr(self, "betmode", "") in ("base", "base_ante"):
+            self._fill_initial_board()
+            self._finalize_initial_board()
+            return
         if getattr(self, "reel_set_name", "") == "base_teaser":
             self._plant_dead_teaser()
             self._finalize_initial_board()
