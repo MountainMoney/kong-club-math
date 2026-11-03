@@ -72,7 +72,7 @@
     "cap_probability": 2.488e-07
   },
   {
-    "mode": "bonus_pick",
+    "mode": "bonus_mystery",
     "cost": 1567.0,
     "sims": 250000,
     "rtp": 0.9600999993944288,

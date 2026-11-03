@@ -100,7 +100,7 @@ def classify(mode: str, payout: int, criteria: str) -> str:
         if xbet <= 16:
             return "kicker"
         return "spike"
-    if mode == "bonus_pick":
+    if mode == "bonus_mystery":
         if criteria == "gamble_dead":
             return "dead"
         if criteria == "gamble_hear":
@@ -208,7 +208,7 @@ def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float]
     elif mode == "bonus_hear":
         probs.update({"zero": 0.01, "low": 0.22, "med": 0.36, "bridge": 0.23, "profit": 0.16, "tail": 0.02 - max_p})
         donor, recv = "profit", "bridge"
-    elif mode == "bonus_pick":
+    elif mode == "bonus_mystery":
         hear_p = 0.45
         mad_p = 0.05
         dead_p = 0.50 - max_p
@@ -327,7 +327,7 @@ def _solve(rows, bands, probs, donor, recv, cost):
 
 
 def fit_rows(mode: str, rows: list[tuple[int, int, int]], criteria: dict[int, str]):
-    cost = GAMBLE_COST if mode == "bonus_pick" else MODE_COSTS[mode]
+    cost = GAMBLE_COST if mode == "bonus_mystery" else MODE_COSTS[mode]
     bands: dict[str, list[int]] = {}
     for index, (sim_id, _, payout) in enumerate(rows):
         name = classify(mode, payout, criteria.get(sim_id, ""))

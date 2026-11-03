@@ -127,8 +127,8 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert config.bonus_variant_map[3] == "see"
     assert config.bonus_variant_map[4] == "hear"
     assert config.bonus_variant_map[5] == "madness"
-    assert "bonus_pick" in {mode.get_name() for mode in config.bet_modes}
-    gamble = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_pick")
+    assert "bonus_mystery" in {mode.get_name() for mode in config.bet_modes}
+    gamble = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_mystery")
     quotas = {dist.get_criteria(): dist.get_quota() for dist in gamble.get_distributions()}
     assert abs(quotas["gamble_dead"] - 0.50) < 1e-9
     assert abs(quotas["gamble_hear"] - 0.40) < 1e-9
@@ -1439,7 +1439,7 @@ def test_three_scatters_trigger_see_bonus():
 def test_gamble_forced_scatters_never_see():
     """Gamble hear/madness force 4/5 ST only — never 3 / See."""
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.criteria = "gamble_hear"
     assert gs.resolve_forced_scatter_count() == 4
     assert gs.resolve_bonus_variant_from_scatters(gs.resolve_forced_scatter_count()) == "hear"
@@ -1461,7 +1461,7 @@ def test_five_scatters_resolve_to_madness():
 
 def test_gamble_dead_has_no_cluster_or_bonus():
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.criteria = "gamble_dead"
     gs.reset_book()
     sink = io.StringIO()
@@ -1488,7 +1488,7 @@ def test_gamble_always_baits_two_on_trigger_land():
     cases = (("gamble_dead", 7), ("gamble_hear", 11), ("gamble_madness", 13))
     for criteria, seed in cases:
         gs = state()
-        gs.betmode = "bonus_pick"
+        gs.betmode = "bonus_mystery"
         gs.criteria = criteria
         gs.reset_book()
         sink = io.StringIO()
@@ -1509,7 +1509,7 @@ def test_gamble_always_baits_two_on_trigger_land():
 def test_gamble_dead_baits_two_every_seed():
     for seed in range(1, 21):
         gs = state()
-        gs.betmode = "bonus_pick"
+        gs.betmode = "bonus_mystery"
         gs.criteria = "gamble_dead"
         gs.reset_book()
         sink = io.StringIO()
@@ -1523,7 +1523,7 @@ def test_gamble_dead_baits_two_every_seed():
 def test_tease_through_last_reel_when_fewer_than_five_st():
     """Hear / late 3-ST: tease after the 2nd tablet through reel 5."""
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.gametype = gs.config.basegame_type
     rows = [["A"] * 6 for _ in range(5)]
     rows[0][3] = "ST"
@@ -1536,7 +1536,7 @@ def test_tease_through_last_reel_when_fewer_than_five_st():
 
 def test_hear_four_st_teases_through_last_reel():
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.gametype = gs.config.basegame_type
     rows = [["A"] * 6 for _ in range(5)]
     rows[0][0] = "ST"
@@ -1552,7 +1552,7 @@ def test_hear_four_st_teases_through_last_reel():
 def test_fifth_st_on_reel_four_slams_last_reel():
     """5th tablet on reel 4 → tease through that reel, reel 5 slams."""
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.gametype = gs.config.basegame_type
     rows = [["A"] * 6 for _ in range(5)]
     for reel in range(5):
@@ -1566,7 +1566,7 @@ def test_fifth_st_on_reel_four_slams_last_reel():
 
 def test_gamble_dead_bait_two_st_tease():
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.criteria = "gamble_dead"
     gs.reset_book()
     sink = io.StringIO()
@@ -1588,7 +1588,7 @@ def test_gamble_dead_bait_two_st_tease():
 
 def test_gamble_hear_emits_freespins():
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.criteria = "gamble_hear"
     gs.reset_book()
     sink = io.StringIO()
@@ -1620,7 +1620,7 @@ def test_gamble_hear_emits_freespins():
 
 def test_gamble_madness_emits_freespins():
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.criteria = "gamble_madness"
     gs.reset_book()
     sink = io.StringIO()

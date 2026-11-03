@@ -68,7 +68,7 @@ Payout units: book/LUT payouts are hundredths of stake, so 9600 means 96.00x.
 - P95 / P99: 450.60x / 1554.10x
 - CVaR95 / CVaR99: 1002.35x / 1554.10x
 
-### bonus_pick
+### bonus_mystery
 - Spins: 25
 - Mean payout / EV: 241.8720x
 - Hit rate: 100.00%

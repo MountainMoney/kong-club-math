@@ -140,7 +140,7 @@ class GameExecutables(GameCalculations):
                 count = 4
             else:
                 count = int(get_random_outcome(triggers))
-        floor = 4 if getattr(self, "betmode", None) == "bonus_pick" else 3
+        floor = 4 if getattr(self, "betmode", None) == "bonus_mystery" else 3
         return min(max(count, floor), self.config.num_reels)
 
     def _fill_initial_board(self):
@@ -527,7 +527,7 @@ class GameExecutables(GameCalculations):
 
     def apply_gamble_two_bait(self):
         """Every gamble trigger land: ST on reels 0 and 1, then tease. No rate."""
-        if getattr(self, "betmode", None) != "bonus_pick":
+        if getattr(self, "betmode", None) != "bonus_mystery":
             return
         if getattr(self, "gametype", None) == self.config.freegame_type:
             return

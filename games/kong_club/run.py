@@ -46,7 +46,7 @@ if __name__ == "__main__":
         "peak_spin": int(sims_per_mode),
         "bonus_see": int(sims_per_mode),
         "bonus_hear": int(sims_per_mode),
-        "bonus_pick": int(sims_per_mode),
+        "bonus_mystery": int(sims_per_mode),
     }
     modes_filter = os.environ.get("MM_MODES", "").strip()
     if modes_filter:
