@@ -53,7 +53,7 @@ def main() -> None:
         "peak_spin",
         "bonus_see",
         "bonus_hear",
-        "bonus_pick",
+        "bonus_mystery",
     ]
     for mode in modes:
         export_mode(mode, FORCES / f"force_record_{mode}.json")

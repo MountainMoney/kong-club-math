@@ -17,7 +17,7 @@ MODE_COSTS = {
     "peak_spin": 1400.0,
     "bonus_see": 115.0,
     "bonus_hear": 250.0,
-    "bonus_pick": 380.0,
+    "bonus_mystery": 380.0,
 }
 
 TARGET_RTP = 0.965
@@ -35,7 +35,7 @@ MODE_MAX_P = {
     "peak_spin": 1 / 4_000,
     "bonus_see": 1 / 40_000,
     "bonus_hear": 1 / 20_000,
-    "bonus_pick": 1 / 4_500,
+    "bonus_mystery": 1 / 4_500,
 }
 MODE_ZERO_BAND = {
     "base": (0.45, 0.60),
@@ -44,7 +44,7 @@ MODE_ZERO_BAND = {
     "peak_spin": (0.55, 0.75),
     "bonus_see": (0.0, 0.04),
     "bonus_hear": (0.0, 0.04),
-    "bonus_pick": (0.47, 0.53),
+    "bonus_mystery": (0.47, 0.53),
 }
 MODE_PROFIT_MIN = {
     "base": 0.15,
@@ -53,7 +53,7 @@ MODE_PROFIT_MIN = {
     "peak_spin": 0.20,
     "bonus_see": 0.30,
     "bonus_hear": 0.30,
-    "bonus_pick": 0.15,
+    "bonus_mystery": 0.15,
 }
 MID_PAYOUT_LO = 1_500
 MID_PAYOUT_HI = 4_500
