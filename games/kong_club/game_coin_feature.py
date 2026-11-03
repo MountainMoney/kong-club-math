@@ -68,32 +68,15 @@ def _coin_metal_for_face(face: int, current_level: int = 1) -> tuple[str, int]:
     return _virtual_coin_symbol(level), level
 
 
-def _base_ante_basegame(gamestate: "GameExecutables") -> bool:
-    """True only for the base spin of base and ante. Free spins pay the shared table."""
-    if getattr(gamestate, "betmode", None) not in ("base", "base_ante"):
-        return False
-    freegame = getattr(gamestate.config, "freegame_type", "freegame")
-    return getattr(gamestate, "gametype", None) != freegame
-
-
 def base_coin_game_scale(gamestate: "GameExecutables") -> float:
-    """0.20× locked faces on base / ante base spins. Everyone else pays the label."""
-    if not _base_ante_basegame(gamestate):
-        return 1.0
-    return float(getattr(gamestate.config, "base_coin_game_scale", 0.20) or 0.20)
+    """Labeled coin faces. Base and ante are not shrunk."""
+    del gamestate
+    return 1.0
 
 
 def _pick_weighted_coin_value(
     gamestate: "GameExecutables", tile_level: int, rng: random.Random
 ) -> float:
-    if _base_ante_basegame(gamestate):
-        values = getattr(gamestate.config, "base_locked_coin_values", None) or {}
-        weights_all = getattr(gamestate.config, "base_locked_coin_weights", None) or {}
-        symbol = "CB" if int(tile_level) <= 1 else "CS" if int(tile_level) == 2 else "CG"
-        pool = values.get(symbol)
-        weights = weights_all.get(symbol)
-        if pool and weights and len(weights) == len(pool):
-            return float(rng.choices(pool, weights=weights, k=1)[0])
     pools = getattr(gamestate.config, "activation_coin_value_pools", {}) or {}
     weights_by_level = getattr(gamestate.config, "activation_coin_value_weights", {}) or {}
     pool = pools.get(tile_level) or pools.get(1) or [1]

@@ -67,12 +67,13 @@ def test_base_and_ante_draw_random_stops():
 
 
 def test_base_pay_scales_leave_bonus_table_alone():
-    """Base clusters stay at 0.25×. Base and ante coin faces are the locked 0.20× set."""
+    """Base clusters stay at 0.25×. Every mode pays the labeled coin faces."""
     config = GameConfig()
     assert config.paytable_scale == 1.0
     assert config.bonus_cluster_pay_scale == 1.0
     assert config.base_cluster_pay_scale == 0.25
-    assert config.base_coin_game_scale == 0.20
+    assert config.base_coin_game_scale == 1.0
+    assert not hasattr(config, "base_locked_coin_values")
     assert config.multiplier_table == [2, 5, 10]
     assert config.coin_values == {
         "CB": [0.2, 0.5, 1, 2, 3, 4],
@@ -82,27 +83,19 @@ def test_base_pay_scales_leave_bonus_table_alone():
     assert config.coin_value_weights["CB"] == [58, 22, 10, 6, 3, 1]
     assert config.coin_value_weights["CS"] == [70, 18, 8, 4]
     assert config.coin_value_weights["CG"] == [410, 60, 20, 6, 3, 1]
-    assert config.base_locked_coin_weights == {
-        "CB": [70, 20, 7, 3],
-        "CS": [60, 24, 10, 4, 2],
-        "CG": [82, 12, 4, 1, 1],
-    }
-    scale = config.base_coin_game_scale
-    assert [round(v * scale, 10) for v in config.base_locked_coin_values["CB"]] == [0.2, 0.4, 0.6, 0.8]
-    assert [round(v * scale, 10) for v in config.base_locked_coin_values["CS"]] == [1, 1.4, 2, 3, 4]
-    assert [round(v * scale, 10) for v in config.base_locked_coin_values["CG"]] == [5, 10, 20, 50, 100]
+    assert config.coin_value_weights["CG"][-1] < min(config.coin_value_weights["CG"][:-1])
     assert config.paytable[(5, "BA")] == 1.0
     assert config.wincap == 25000.0
 
     base = GameState(config)
     base.betmode = "base"
     base.gametype = config.basegame_type
-    assert base_coin_game_scale(base) == 0.20
+    assert base_coin_game_scale(base) == 1.0
 
     ante = GameState(config)
     ante.betmode = "base_ante"
     ante.gametype = config.basegame_type
-    assert base_coin_game_scale(ante) == 0.20
+    assert base_coin_game_scale(ante) == 1.0
 
     free = GameState(config)
     free.betmode = "base"
