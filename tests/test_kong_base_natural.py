@@ -89,7 +89,9 @@ def test_base_pay_scales_leave_bonus_table_alone():
     assert config.coin_game_power_by_tile_level[1] == {"multiplier": 3, "collector": 0, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level[2] == {"multiplier": 6, "collector": 2, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level[3] == {"multiplier": 8, "collector": 3, "tier_shift": 0}
-    assert config.paytable[(5, "BA")] == 1.0
+    assert config.paytable[(5, "T")] == 0.025
+    assert config.paytable[(5, "BA")] == 0.25
+    assert config.paytable[(13, "BA")] == 25.0
     assert config.wincap == 25000.0
 
     base = GameState(config)
