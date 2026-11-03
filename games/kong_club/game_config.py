@@ -167,16 +167,13 @@ class GameConfig(Config):
             "bonus_madness": {"multiplier": 3, "collector": 0, "tier_shift": 0},
             "bonus_mystery": {"multiplier": 3, "collector": 0, "tier_shift": 0},
         }
-        # Exact Le Bandit cluster pays. Bonus modes read this table at scale 1.0.
-        # Base and ante apply base_cluster_pay_scale on top, so regular clusters
-        # pay less and the bar-of-5 coin game can sit near 1/100 spins at 96.50%.
+        # Exact Le Bandit cluster pays. Every mode pays this table at scale 1.0.
         self.bonus_cluster_pay_scale = 1.0
         # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table.
         self.paytable_scale = 1.0
-        # Base / ante only. 0.25× the Le Bandit cluster table during the base spin
-        # (free spins keep the full table). Coin faces are the labeled values in
-        # every mode, including base and ante. There is no extra coin-face scale.
-        self.base_cluster_pay_scale = 0.25
+        # Base and ante pay the same cluster table. Coin faces are the labeled
+        # values in every mode. There is no extra coin-face scale.
+        self.base_cluster_pay_scale = 1.0
         self.base_coin_game_scale = 1.0
         # Always pay face as labeled (1.0). Do not soft-scale coin values.
         self.coin_tile_scale_by_mode = {

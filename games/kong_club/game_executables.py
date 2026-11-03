@@ -734,8 +734,7 @@ class GameExecutables(GameCalculations):
         amount = self.win_data["totalWin"]
         if amount <= 0:
             return
-        # Sticky FS boards light most cells — downscale cluster pays in bonus only.
-        # Base and ante use base_cluster_pay_scale. Free spins keep the full table.
+        # Cluster scales are 1.0, so base, ante, free spins, and bonus pay the table.
         # Coin faces are not scaled.
         pay_scale = 1.0
         if self.is_bonus_mode():

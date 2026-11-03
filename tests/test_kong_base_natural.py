@@ -67,11 +67,11 @@ def test_base_and_ante_draw_random_stops():
 
 
 def test_base_pay_scales_leave_bonus_table_alone():
-    """Base clusters stay at 0.25×. Every mode pays the labeled coin faces."""
+    """Every mode pays the plain cluster table and the labeled coin faces."""
     config = GameConfig()
     assert config.paytable_scale == 1.0
     assert config.bonus_cluster_pay_scale == 1.0
-    assert config.base_cluster_pay_scale == 0.25
+    assert config.base_cluster_pay_scale == 1.0
     assert config.base_coin_game_scale == 1.0
     assert not hasattr(config, "base_locked_coin_values")
     assert config.multiplier_table == [2, 5, 10]
