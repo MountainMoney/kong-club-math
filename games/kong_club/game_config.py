@@ -105,17 +105,17 @@ class GameConfig(Config):
         self.tile_level_multipliers = self.multiplier_table
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}
-        # Frontend hard faces. Books may only reveal these values.
-        # Weights lean low so a gold board does not print the 250 / 500 faces.
+        # Faces are multiples of bet. Every mode pays these directly.
+        # Weights lean low. 1000 is the rarest gold face.
         self.coin_values = {
-            "CB": [1, 2, 3, 4],
-            "CS": [5, 7, 10, 15, 20],
-            "CG": [25, 50, 100, 250, 500],
+            "CB": [0.2, 0.5, 1, 2, 3, 4],
+            "CS": [5, 10, 15, 20],
+            "CG": [25, 50, 100, 250, 500, 1000],
         }
         self.coin_value_weights = {
-            "CB": [70, 20, 7, 3],
-            "CS": [60, 24, 10, 4, 2],
-            "CG": [82, 12, 4, 1, 1],
+            "CB": [58, 22, 10, 6, 3, 1],
+            "CS": [70, 18, 8, 4],
+            "CG": [410, 60, 20, 6, 3, 1],
         }
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
         self.activation_coin_value_pools = self._build_activation_coin_pools()
@@ -174,11 +174,10 @@ class GameConfig(Config):
         # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table.
         self.paytable_scale = 1.0
         # Base / ante only. 0.25× the Le Bandit cluster table during the base spin
-        # (free spins keep the full table). Coin faces in the base-game coin feature
-        # are 0.04× so a bar of 5 about once per 100 spins still fits in 96.50%.
-        # Bonus, feature, and peak coin games stay on the labeled faces.
+        # (free spins keep the full table). Coin faces are the labeled values in
+        # every mode, including base and ante. There is no extra coin-face scale.
         self.base_cluster_pay_scale = 0.25
-        self.base_coin_game_scale = 0.04
+        self.base_coin_game_scale = 1.0
         # Always pay face as labeled (1.0). Do not soft-scale coin values.
         self.coin_tile_scale_by_mode = {
             "base": 1.0,
@@ -367,9 +366,9 @@ class GameConfig(Config):
             return "CS"
         return "CG"
 
-    def _build_activation_coin_pools(self) -> dict[int, list[int]]:
-        """Map tile levels to integer coin face pools."""
-        pools: dict[int, list[int]] = {}
+    def _build_activation_coin_pools(self) -> dict[int, list[float]]:
+        """Map tile levels to coin face pools."""
+        pools: dict[int, list[float]] = {}
         for level in range(1, self.max_tile_level + 1):
             symbol = self._coin_symbol_for_tile_level(level)
             pools[level] = list(self.coin_values[symbol])

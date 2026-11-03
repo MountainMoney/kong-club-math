@@ -69,25 +69,21 @@ def _coin_metal_for_face(face: int, current_level: int = 1) -> tuple[str, int]:
 
 
 def base_coin_game_scale(gamestate: "GameExecutables") -> float:
-    """Shrink base/ante coin faces. Free spins and the other modes pay the label."""
-    if getattr(gamestate, "betmode", None) not in ("base", "base_ante"):
-        return 1.0
-    freegame = getattr(gamestate.config, "freegame_type", "freegame")
-    if getattr(gamestate, "gametype", None) == freegame:
-        return 1.0
-    return float(getattr(gamestate.config, "base_coin_game_scale", 1.0) or 1.0)
+    """Labeled coin faces. Base and ante are not shrunk."""
+    del gamestate
+    return 1.0
 
 
 def _pick_weighted_coin_value(
     gamestate: "GameExecutables", tile_level: int, rng: random.Random
-) -> int:
+) -> float:
     pools = getattr(gamestate.config, "activation_coin_value_pools", {}) or {}
     weights_by_level = getattr(gamestate.config, "activation_coin_value_weights", {}) or {}
     pool = pools.get(tile_level) or pools.get(1) or [1]
     weights = weights_by_level.get(tile_level)
     if not weights or len(weights) != len(pool):
         weights = [1] * len(pool)
-    return int(rng.choices(pool, weights=weights, k=1)[0])
+    return float(rng.choices(pool, weights=weights, k=1)[0])
 
 
 def _pick_multi_value(gamestate: "GameExecutables", rng: random.Random) -> int:
