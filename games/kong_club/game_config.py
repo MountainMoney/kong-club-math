@@ -106,26 +106,28 @@ class GameConfig(Config):
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}
         # Faces are multiples of bet. Every mode pays these directly.
-        # TEST weights, not a final publish. Gold 250/500/1000 are much rarer
-        # than 6/3/1. 1000 stays the rarest face.
+        # TEST weights, not a final publish. Mass sits on the small face of
+        # each metal. 250/500/1000 and the top clovers still exist. 1000 stays
+        # the rarest gold face.
         self.coin_values = {
             "CB": [0.2, 0.5, 1, 2, 3, 4],
             "CS": [5, 10, 15, 20],
             "CG": [25, 50, 100, 250, 500, 1000],
         }
         self.coin_value_weights = {
-            "CB": [58, 22, 10, 6, 3, 1],
-            "CS": [70, 18, 8, 4],
-            "CG": [20000, 400, 40, 3, 2, 1],
+            "CB": [72, 18, 6, 2, 1, 1],
+            "CS": [84, 10, 4, 2],
+            "CG": [1600, 80, 20, 4, 2, 1],
         }
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
         self.activation_coin_value_pools = self._build_activation_coin_pools()
         self.activation_coin_value_weights = self._build_activation_coin_weights()
 
-        # See / Hear / Madness fill in 5 cluster connections (Cole 2026-09-02).
+        # See / Hear / Madness still fill in 5 cluster connections.
+        # TEST: base and ante fill on 4, so the coin game lands about 1 in 100.
         self.progress_thresholds = {
-            "base": 5,
-            "base_ante": 5,
+            "base": 4,
+            "base_ante": 4,
             "feature_spin": 5,
             "peak_spin": 1,
             "bonus_see": 5,
@@ -136,9 +138,9 @@ class GameConfig(Config):
         # One coin game per spin. The old Hear cap of 3 is not used.
         self.max_board_activations_hear = 1
         self.coin_game_max_reruns = 10
-        # MULTI faces — values unchanged. TEST weights: x10 and x20 are much rarer.
+        # MULTI faces — values unchanged. TEST weights: mostly ×2/×3, ×10/×20 still live.
         self.coin_game_multi_values = [2, 3, 4, 5, 10, 20]
-        self.coin_game_multi_weights = [200, 160, 100, 60, 1, 1]
+        self.coin_game_multi_weights = [180, 90, 36, 12, 2, 1]
         # Baseline vs power weights when rolling each lit cell's prize kind.
         self.coin_game_coin_weight = 100
         # Per-tile-tier powers (same table in every priced mode). Coin 100 vs:
@@ -168,9 +170,8 @@ class GameConfig(Config):
             "bonus_madness": {"multiplier": 3, "collector": 0, "tier_shift": 0},
             "bonus_mystery": {"multiplier": 3, "collector": 0, "tier_shift": 0},
         }
-        # Exact Le Bandit cluster pays. Every mode pays this table at scale 1.0.
+        # Cluster scales stay 1.0. The paytable values themselves are the TEST cut.
         self.bonus_cluster_pay_scale = 1.0
-        # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table.
         self.paytable_scale = 1.0
         # Base and ante pay the same cluster table. Coin faces are the labeled
         # values in every mode. There is no extra coin-face scale.
@@ -187,10 +188,11 @@ class GameConfig(Config):
             "bonus_madness": 1.0,
             "bonus_mystery": 1.0,
         }
-        # Every lit tile pays a virtual coin. None = no sample cap.
+        # TEST: base and ante flip 8 of the lit cells, keeping the metal mix.
+        # Bonus, feature, and peak still flip every lit cell.
         self.max_activation_coins_by_mode = {
-            "base": None,
-            "base_ante": None,
+            "base": 8,
+            "base_ante": 8,
             "feature_spin": None,
             "peak_spin": None,
             "bonus_see": None,
@@ -381,22 +383,23 @@ class GameConfig(Config):
         return weights
 
     def _build_paytable(self) -> dict[tuple[int, str], float]:
-        """TEST paytable: 0.25× the Jul 2 Le Bandit table. Not a final publish.
+        """TEST paytable, not a final publish. Scales stay 1.0.
 
-        Scales stay 1.0. These are the pay values themselves. Bands are
-        5, 6, 7, 8, 9–10, 11–12, 13+.
+        Reshape of the Jul 2 table. Band factors 0.24, 0.30, 0.38, 0.45,
+        0.60, 0.78, 0.95 so a 5-oak is cut harder than an 11–12 or a 13+.
+        Bands are 5, 6, 7, 8, 9–10, 11–12, 13+.
         """
         payouts = {
-            "T": [0.025, 0.05, 0.075, 0.125, 0.375, 1.25, 3.75],
-            "J": [0.025, 0.05, 0.075, 0.125, 0.375, 1.25, 3.75],
-            "Q": [0.025, 0.05, 0.075, 0.125, 0.375, 1.25, 3.75],
-            "K": [0.025, 0.05, 0.075, 0.125, 0.375, 1.25, 3.75],
-            "A": [0.025, 0.05, 0.075, 0.125, 0.375, 1.25, 3.75],
-            "LE": [0.075, 0.10, 0.125, 0.175, 0.625, 1.875, 6.25],
-            "CO": [0.075, 0.10, 0.125, 0.175, 0.625, 1.875, 6.25],
-            "OR": [0.125, 0.175, 0.25, 0.375, 1.25, 3.75, 12.50],
-            "GR": [0.125, 0.175, 0.25, 0.375, 1.25, 3.75, 12.50],
-            "BA": [0.25, 0.375, 0.50, 0.75, 2.50, 7.50, 25.00],
+            "T": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
+            "J": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
+            "Q": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
+            "K": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
+            "A": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
+            "LE": [0.072, 0.12, 0.19, 0.315, 1.50, 5.85, 23.75],
+            "CO": [0.072, 0.12, 0.19, 0.315, 1.50, 5.85, 23.75],
+            "OR": [0.12, 0.21, 0.38, 0.675, 3.00, 11.70, 47.50],
+            "GR": [0.12, 0.21, 0.38, 0.675, 3.00, 11.70, 47.50],
+            "BA": [0.24, 0.45, 0.76, 1.35, 6.00, 23.40, 95.00],
         }
         band_to_index = {5: 0, 6: 1, 7: 2, 8: 3, 9: 4, 11: 5, 13: 6}
         scale = float(getattr(self, "paytable_scale", 1.0))
@@ -640,9 +643,9 @@ class GameConfig(Config):
         """Base and ante draw these stops. Mystery keeps the planted sets above.
 
         Opening runs are only 1–2 symbols, so a 5-high window cannot be one
-        face. TEST refill: run weights 36/42/22 instead of 8/37/55, still
-        capped at 3, so the bar of 5 fills about once per 200 spins.
-        Weights are set so a random stop wins about one spin in five.
+        face. Refill run weights stay 36/42/22, capped at 3. The base bar
+        fills on 4 clusters, about once per 100 spins. A random stop wins
+        about one spin in five.
         """
         initial = {
             "T": 11.2,

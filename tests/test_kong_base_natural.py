@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "games" / "kong_club"))
 
-from game_coin_feature import base_coin_game_scale
+from game_coin_feature import base_coin_game_scale, resolve_coin_game
 from game_config import GameConfig
 from gamestate import GameState
 
@@ -80,18 +80,29 @@ def test_base_pay_scales_leave_bonus_table_alone():
         "CS": [5, 10, 15, 20],
         "CG": [25, 50, 100, 250, 500, 1000],
     }
-    assert config.coin_value_weights["CB"] == [58, 22, 10, 6, 3, 1]
-    assert config.coin_value_weights["CS"] == [70, 18, 8, 4]
-    assert config.coin_value_weights["CG"] == [20000, 400, 40, 3, 2, 1]
+    assert config.coin_value_weights["CB"] == [72, 18, 6, 2, 1, 1]
+    assert config.coin_value_weights["CS"] == [84, 10, 4, 2]
+    assert config.coin_value_weights["CG"] == [1600, 80, 20, 4, 2, 1]
     assert config.coin_value_weights["CG"][-1] < min(config.coin_value_weights["CG"][:-1])
     assert config.coin_game_multi_values == [2, 3, 4, 5, 10, 20]
-    assert config.coin_game_multi_weights == [200, 160, 100, 60, 1, 1]
+    assert config.coin_game_multi_weights == [180, 90, 36, 12, 2, 1]
     assert config.coin_game_power_by_tile_level[1] == {"multiplier": 3, "collector": 0, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level[2] == {"multiplier": 6, "collector": 2, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level[3] == {"multiplier": 8, "collector": 3, "tier_shift": 0}
-    assert config.paytable[(5, "T")] == 0.025
-    assert config.paytable[(5, "BA")] == 0.25
-    assert config.paytable[(13, "BA")] == 25.0
+    assert config.progress_thresholds["base"] == 4
+    assert config.progress_thresholds["base_ante"] == 4
+    assert config.progress_thresholds["bonus_see"] == 5
+    assert config.progress_thresholds["bonus_hear"] == 5
+    assert config.progress_thresholds["bonus_madness"] == 5
+    assert config.max_activation_coins_by_mode["base"] == 8
+    assert config.max_activation_coins_by_mode["base_ante"] == 8
+    assert config.max_activation_coins_by_mode["bonus_see"] is None
+    assert config.max_activation_coins_by_mode["bonus_hear"] is None
+    assert config.max_activation_coins_by_mode["peak_spin"] is None
+    assert config.paytable[(5, "T")] == 0.024
+    assert config.paytable[(5, "BA")] == 0.24
+    assert config.paytable[(11, "BA")] == 23.40
+    assert config.paytable[(13, "BA")] == 95.00
     assert config.wincap == 25000.0
 
     base = GameState(config)
@@ -126,3 +137,20 @@ def test_mystery_shared_entry_still_plants():
     gs.draw_prepared_board()
     assert gs.reel_positions == [0, 0, 0, 0, 0, 0]
     assert gs.reel_set_name == "base_quiet"
+
+
+def test_base_coin_game_flips_eight_cells_from_a_full_board():
+    config = GameConfig()
+    gs = GameState(config)
+    gs.betmode = "base"
+    gs.gametype = config.basegame_type
+    gs.simulation_seed = 7
+    gs.progress_activation_count = 0
+    gs.reset_grid_mults()
+    for reel in range(6):
+        for row in range(5):
+            gs.seed_tile_to_level(reel, row, 1 + (reel + row) % 3)
+    _total, items, _rounds = resolve_coin_game(gs)
+    first_round = [item for item in items if item.get("round") == 1]
+    assert len(first_round) == 8
+    assert {item["level"] for item in first_round} <= {1, 2, 3}

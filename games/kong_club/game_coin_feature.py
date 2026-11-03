@@ -660,7 +660,7 @@ def _mode_coin_cap(gamestate: "GameExecutables") -> int | None:
     freegame = getattr(gamestate.config, "freegame_type", "freegame")
     if getattr(gamestate, "gametype", None) == freegame:
         variant = getattr(gamestate, "bonus_variant", None)
-        if variant in ("hear", "madness"):
+        if variant in ("see", "hear", "madness"):
             return caps.get(f"bonus_{variant}")
     mode = getattr(gamestate, "betmode", "base")
     return caps.get(mode)
@@ -760,6 +760,10 @@ def _resolve_rerun_coin_game(gamestate, rng: random.Random) -> tuple[float, list
     items: list[dict] = []
     clover_values: list[int] = []
     pending = _lit_positions(gamestate)
+    cell_cap = _mode_coin_cap(gamestate)
+    if cell_cap is not None and len(pending) > int(cell_cap):
+        # Keep the natural metal mix. Gold cells that are drawn still use gold odds.
+        pending = sorted(rng.sample(pending, int(cell_cap)))
     reruns_done = 0
 
     def _stats(cap_hit: bool) -> dict:
