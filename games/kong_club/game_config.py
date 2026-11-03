@@ -167,15 +167,16 @@ class GameConfig(Config):
         }
         # Exact Le Bandit cluster pays. Bonus modes read this table at scale 1.0.
         # Base and ante apply base_cluster_pay_scale on top, so regular clusters
-        # pay less and the bar-of-5 coin game can sit near 1/500 spins at 96.50%.
+        # pay less and the bar-of-5 coin game can sit near 1/100 spins at 96.50%.
         self.bonus_cluster_pay_scale = 1.0
         # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table.
         self.paytable_scale = 1.0
-        # Base / ante only. 0.55× the Le Bandit cluster table during the base spin
+        # Base / ante only. 0.25× the Le Bandit cluster table during the base spin
         # (free spins keep the full table). Coin faces in the base-game coin feature
-        # are 0.20×; bonus, feature, and peak coin games stay on the labeled faces.
-        self.base_cluster_pay_scale = 0.55
-        self.base_coin_game_scale = 0.20
+        # are 0.04× so a bar of 5 about once per 100 spins still fits in 96.50%.
+        # Bonus, feature, and peak coin games stay on the labeled faces.
+        self.base_cluster_pay_scale = 0.25
+        self.base_coin_game_scale = 0.04
         # Always pay face as labeled (1.0). Do not soft-scale coin values.
         self.coin_tile_scale_by_mode = {
             "base": 1.0,
@@ -636,9 +637,9 @@ class GameConfig(Config):
         """Base and ante draw these stops. Mystery keeps the planted sets above.
 
         Opening runs are only 1–2 symbols, so a 5-high window cannot be one
-        face. Refills stay mixed (runs of 1–3, no low-symbol pile) so a win
-        can tumble again, but a chain long enough to fill the bar of 5 is
-        about 1 spin in 400 rather than a sticky low-symbol cascade.
+        face. Refills lean on the low symbols and runs of 3, still capped at
+        3, so a chain reaches the bar of 5 about once per 100 spins without
+        dropping a full column of one symbol.
         Weights are set so a random stop wins about one spin in five.
         """
         initial = {
@@ -655,16 +656,16 @@ class GameConfig(Config):
             "MW": 0.7,
         }
         refill = {
-            "T": 12.0,
-            "J": 12.0,
-            "Q": 11.0,
-            "K": 10.0,
-            "A": 10.0,
-            "LE": 8.0,
-            "CO": 7.0,
-            "OR": 6.0,
-            "GR": 5.0,
-            "BA": 4.0,
+            "T": 18.0,
+            "J": 17.0,
+            "Q": 15.0,
+            "K": 12.0,
+            "A": 11.0,
+            "LE": 6.0,
+            "CO": 5.0,
+            "OR": 3.0,
+            "GR": 2.0,
+            "BA": 1.2,
         }
         self.reels["base_natural"] = self.build_capped_reel_strips(
             initial,
@@ -677,7 +678,7 @@ class GameConfig(Config):
             refill,
             seed=2417,
             run_lengths=(1, 2, 3),
-            run_weights=(20, 50, 30),
+            run_weights=(8, 37, 55),
             max_run=3,
         )
         self.reel_set_weights["base_play"] = {"base_natural": 1}

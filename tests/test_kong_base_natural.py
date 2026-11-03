@@ -71,8 +71,8 @@ def test_base_pay_scales_leave_bonus_table_alone():
     config = GameConfig()
     assert config.paytable_scale == 1.0
     assert config.bonus_cluster_pay_scale == 1.0
-    assert config.base_cluster_pay_scale == 0.55
-    assert config.base_coin_game_scale == 0.20
+    assert config.base_cluster_pay_scale == 0.25
+    assert config.base_coin_game_scale == 0.04
     assert config.multiplier_table == [2, 5, 10]
     assert config.coin_values["CB"] == [1, 2, 3, 4]
     assert config.coin_values["CG"][0] == 25
@@ -82,12 +82,12 @@ def test_base_pay_scales_leave_bonus_table_alone():
     base = GameState(config)
     base.betmode = "base"
     base.gametype = config.basegame_type
-    assert base_coin_game_scale(base) == 0.20
+    assert base_coin_game_scale(base) == 0.04
 
     ante = GameState(config)
     ante.betmode = "base_ante"
     ante.gametype = config.basegame_type
-    assert base_coin_game_scale(ante) == 0.20
+    assert base_coin_game_scale(ante) == 0.04
 
     free = GameState(config)
     free.betmode = "base"

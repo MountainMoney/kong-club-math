@@ -198,7 +198,7 @@ def classify(mode: str, payout: int, criteria: str, coin: bool = False) -> str:
 def _natural_play_probs(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float], str, str]:
     """Pin the hit rate, the coin game, and the bonus quota. Leave cascades alone.
 
-    Zero stays at 80% (about a 20% hit rate). The coin band is 1/500 spins.
+    Zero stays at 80% (about a 20% hit rate). The coin band is 1/100 spins.
     Freegame books outside 6–280× stay at weight 0, and that quota is split
     across the kept freegame bands the way it was before this rebalance.
     Everything else — short wins and long tumbles that never fill the bar —
@@ -222,7 +222,7 @@ def _natural_play_probs(mode: str, bands: dict[str, list[int]]) -> tuple[dict[st
     if bands.get("zero"):
         probs["zero"] = 0.80
     if bands.get("coin"):
-        probs["coin"] = 0.002
+        probs["coin"] = 0.01
     if bands.get("fg_low"):
         probs["fg_low"] = fg_low
     if bands.get("fg_high"):

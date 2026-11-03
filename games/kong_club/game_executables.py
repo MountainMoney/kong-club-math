@@ -736,7 +736,7 @@ class GameExecutables(GameCalculations):
             return
         # Sticky FS boards light most cells — downscale cluster pays in bonus only.
         # Base and ante scale the Le Bandit table down so a published coin game
-        # near 1/500 still fits inside 96.50%. Free spins keep the full table.
+        # near 1/100 still fits inside 96.50%. Free spins keep the full table.
         pay_scale = 1.0
         if self.is_bonus_mode():
             pay_scale = float(getattr(self.config, "bonus_cluster_pay_scale", 1.0))
