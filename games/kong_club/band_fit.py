@@ -52,9 +52,29 @@ def _iter_books(path: Path):
                     yield json.loads(line)
 
 
-def load_criteria(mode: str) -> dict[int, str]:
+def load_book_meta(mode: str) -> tuple[dict[int, str], set[int]]:
+    """Criteria per book, plus base-game spins whose progress bar fired the coin game.
+
+    Free-spin books can also activate. Those stay in the freegame bands.
+    """
     path = PUBLISH / f"books_{mode}.jsonl.zst"
-    return {int(book["id"]): str(book.get("criteria") or "") for book in _iter_books(path)}
+    criteria: dict[int, str] = {}
+    coins: set[int] = set()
+    for book in _iter_books(path):
+        sim_id = int(book["id"])
+        crit = str(book.get("criteria") or "")
+        criteria[sim_id] = crit
+        if crit == "freegame":
+            continue
+        events = book.get("events") or []
+        if any(event.get("type") == "boardActivation" for event in events):
+            coins.add(sim_id)
+    return criteria, coins
+
+
+def load_criteria(mode: str) -> dict[int, str]:
+    criteria, _coins = load_book_meta(mode)
+    return criteria
 
 
 def _band(xbet: float, edges: list[tuple[str, float, float]]) -> str:
@@ -64,7 +84,7 @@ def _band(xbet: float, edges: list[tuple[str, float, float]]) -> str:
     return "tail"
 
 
-def classify(mode: str, payout: int, criteria: str) -> str:
+def classify(mode: str, payout: int, criteria: str, coin: bool = False) -> str:
     if payout >= MAX_PAY:
         return "cap"
     xbet = payout / 100.0
@@ -75,6 +95,10 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             if 50 < xbet <= 280:
                 return "fg_high"
             return "fg_out"
+        # The bar-of-5 coin game is its own band so a long cascade that never
+        # fills the bar is not tied to the coin-game weight.
+        if coin:
+            return "coin"
         if xbet <= 0:
             return "zero"
         if xbet <= 1:
@@ -83,8 +107,6 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             return "profit"
         if xbet <= 12:
             return "kicker"
-        # Split the old open spike. 12–60× is a long cascade. Above that is
-        # almost always the coin game, whose mean is too wide to share one weight.
         if xbet <= 60:
             return "spike"
         return "tail"
@@ -95,6 +117,8 @@ def classify(mode: str, payout: int, criteria: str) -> str:
             if 50 < xbet <= 280:
                 return "fg_high"
             return "fg_out"
+        if coin:
+            return "coin"
         if xbet <= 0:
             return "zero"
         if xbet <= 1.4:
@@ -171,46 +195,64 @@ def classify(mode: str, payout: int, criteria: str) -> str:
     raise KeyError(mode)
 
 
+def _natural_play_probs(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float], str, str]:
+    """Pin the hit rate, the coin game, and the bonus quota. Leave cascades alone.
+
+    Zero stays at 80% (about a 20% hit rate). The coin band is 1/500 spins.
+    Freegame books outside 6–280× stay at weight 0, and that quota is split
+    across the kept freegame bands the way it was before this rebalance.
+    Everything else — short wins and long tumbles that never fill the bar —
+    keeps its natural share of whatever probability is left. Profit ↔ small
+    is only the last nudge to 96.50%.
+    """
+    max_p = MODE_MAX_P[mode]
+    quota = (1 / 260) if mode == "base" else (1 / 130)
+    if mode == "base":
+        fg_low, fg_high = 0.0023, quota - 0.0023
+    else:
+        # Ante's bonus quota is twice base and the cost is 1.4×. Keeping the
+        # old 6–50× heavy split left the mode short, so the solver had to
+        # promote a lot of small wins into profit and that shuffled tumble
+        # lengths. A slightly richer 50–280× share lets the cascade bands
+        # stay on their natural weights.
+        fg_low, fg_high = 0.003853, quota - 0.003853
+    probs = {name: 0.0 for name in bands}
+    if bands.get("cap"):
+        probs["cap"] = max_p
+    if bands.get("zero"):
+        probs["zero"] = 0.80
+    if bands.get("coin"):
+        probs["coin"] = 0.002
+    if bands.get("fg_low"):
+        probs["fg_low"] = fg_low
+    if bands.get("fg_high"):
+        probs["fg_high"] = fg_high
+    play = [name for name in ("small", "profit", "kicker", "spike", "tail") if bands.get(name)]
+    natural = {name: len(idxs) for name, idxs in bands.items()}
+    play_count = sum(natural[name] for name in play) or 1
+    remain = 1.0 - sum(probs.values())
+    if remain < 0:
+        # Pins overlap an empty play section. Shrink zero first.
+        probs["zero"] = max(0.0, probs.get("zero", 0.0) + remain)
+        remain = 0.0
+    for name in play:
+        probs[name] = remain * natural[name] / play_count
+    gap = 1.0 - sum(probs.values())
+    sink = "small" if bands.get("small") else (play[0] if play else "zero")
+    probs[sink] = probs.get(sink, 0.0) + gap
+    donor = "profit" if bands.get("profit") and probs.get("profit", 0.0) > 0 else (play[-1] if play else "zero")
+    recv = "small" if bands.get("small") else donor
+    return probs, donor, recv
+
+
 def _probs_for(mode: str, bands: dict[str, list[int]]) -> tuple[dict[str, float], str, str]:
     """Return starting probabilities plus the donor and receiver used to hit RTP."""
     max_p = MODE_MAX_P[mode]
     probs = {name: 0.0 for name in bands}
     if bands.get("cap"):
         probs["cap"] = max_p
-    if mode == "base":
-        # Misses stay near 80% so the published hit rate is about 20%.
-        # Profit ↔ small is the RTP lever. Kicker / spike / tail are pinned
-        # low enough that a coin-game tail cannot hold the mode above 96.50%.
-        probs.update(
-            {
-                "zero": 0.80,
-                "small": 0.100,
-                "profit": 0.078033,
-                "kicker": 0.012,
-                "spike": 0.006,
-                "tail": 0.00012,
-                "fg_low": 0.0023,
-                "fg_high": 1 / 260 - 0.0023,
-            }
-        )
-        donor, recv = "profit", "small"
-    elif mode == "base_ante":
-        probs.update(
-            {
-                "zero": 0.80,
-                "small": 0.090,
-                "profit": 0.0801,
-                "kicker": 0.014,
-                "spike": 0.008,
-                "tail": 0.00020,
-                # More of the ante quota sits in the 6–50× band. The 50–280×
-                # slice is fat enough that the old split held ante above 96.50%
-                # even after every profit book had been moved into small.
-                "fg_low": 0.004935,
-                "fg_high": 1 / 130 - 0.004935,
-            }
-        )
-        donor, recv = "profit", "small"
+    if mode in ("base", "base_ante"):
+        return _natural_play_probs(mode, bands)
     elif mode == "feature_spin":
         probs.update({"zero": 0.56, "small": 0.18, "profit": 0.18, "upper": 0.08})
         donor, recv = "small", "upper"
@@ -341,11 +383,17 @@ def _solve(rows, bands, probs, donor, recv, cost):
     return best_rows, best_probs
 
 
-def fit_rows(mode: str, rows: list[tuple[int, int, int]], criteria: dict[int, str]):
+def fit_rows(
+    mode: str,
+    rows: list[tuple[int, int, int]],
+    criteria: dict[int, str],
+    coin_ids: set[int] | None = None,
+):
     cost = GAMBLE_COST if mode == "bonus_mystery" else MODE_COSTS[mode]
+    coins = coin_ids or set()
     bands: dict[str, list[int]] = {}
     for index, (sim_id, _, payout) in enumerate(rows):
-        name = classify(mode, payout, criteria.get(sim_id, ""))
+        name = classify(mode, payout, criteria.get(sim_id, ""), sim_id in coins)
         bands.setdefault(name, []).append(index)
     probs, donor, recv = _probs_for(mode, bands)
     _drop_empty(bands, probs, recv)
@@ -411,11 +459,15 @@ def mode_stats(weighted, cost: float) -> dict:
     }
 
 
-def fit_mode(mode: str, criteria: dict[int, str] | None = None):
+def fit_mode(mode: str, criteria: dict[int, str] | None = None, coin_ids: set[int] | None = None):
     rows = read_lut(LOOKUP / f"lookUpTable_{mode}.csv")
-    if criteria is None:
-        criteria = load_criteria(mode)
-    weighted, bands, probs, cost = fit_rows(mode, rows, criteria)
+    if criteria is None or coin_ids is None:
+        loaded_criteria, loaded_coins = load_book_meta(mode)
+        if criteria is None:
+            criteria = loaded_criteria
+        if coin_ids is None:
+            coin_ids = loaded_coins
+    weighted, bands, probs, cost = fit_rows(mode, rows, criteria, coin_ids)
     counts = {name: len(idxs) for name, idxs in sorted(bands.items())}
     return weighted, mode_stats(weighted, cost), counts, probs, cost
 

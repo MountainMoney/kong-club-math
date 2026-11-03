@@ -735,13 +735,21 @@ class GameExecutables(GameCalculations):
         if amount <= 0:
             return
         # Sticky FS boards light most cells — downscale cluster pays in bonus only.
+        # Base and ante scale the Le Bandit table down so a published coin game
+        # near 1/500 still fits inside 96.50%. Free spins keep the full table.
+        pay_scale = 1.0
         if self.is_bonus_mode():
-            bonus_scale = float(getattr(self.config, "bonus_cluster_pay_scale", 1.0))
-            if bonus_scale != 1.0:
-                amount = round(amount * bonus_scale, 6)
-                for win in self.win_data["wins"]:
-                    win["win"] = round(float(win["win"]) * bonus_scale, 6)
-                self.win_data["totalWin"] = amount
+            pay_scale = float(getattr(self.config, "bonus_cluster_pay_scale", 1.0))
+        elif getattr(self, "betmode", "") in ("base", "base_ante"):
+            pay_scale = float(getattr(self.config, "base_cluster_pay_scale", 1.0))
+        if pay_scale != 1.0:
+            amount = round(amount * pay_scale, 6)
+            for win in self.win_data["wins"]:
+                win["win"] = round(float(win["win"]) * pay_scale, 6)
+                meta = win.get("meta")
+                if isinstance(meta, dict) and "winWithoutMult" in meta:
+                    meta["winWithoutMult"] = round(float(meta["winWithoutMult"]) * pay_scale, 6)
+            self.win_data["totalWin"] = amount
         remaining = max(0.0, self.config.wincap - self.win_manager.running_bet_win)
         paid = min(amount, remaining)
         if paid < amount:

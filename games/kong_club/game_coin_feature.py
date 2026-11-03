@@ -68,6 +68,16 @@ def _coin_metal_for_face(face: int, current_level: int = 1) -> tuple[str, int]:
     return _virtual_coin_symbol(level), level
 
 
+def base_coin_game_scale(gamestate: "GameExecutables") -> float:
+    """Shrink base/ante coin faces. Free spins and the other modes pay the label."""
+    if getattr(gamestate, "betmode", None) not in ("base", "base_ante"):
+        return 1.0
+    freegame = getattr(gamestate.config, "freegame_type", "freegame")
+    if getattr(gamestate, "gametype", None) == freegame:
+        return 1.0
+    return float(getattr(gamestate.config, "base_coin_game_scale", 1.0) or 1.0)
+
+
 def _pick_weighted_coin_value(
     gamestate: "GameExecutables", tile_level: int, rng: random.Random
 ) -> int:
@@ -732,7 +742,8 @@ def _flip_cell(gamestate, level: int, rng: random.Random, *, rerun: bool = False
         return {"kind": "clover", "value": float(_pick_multi_value(gamestate, rng)), "used": False}
     if kind == "pot":
         return {"kind": "pot", "value": 0.0, "valued": False, "spent": False}
-    return {"kind": "coin", "value": float(_pick_weighted_coin_value(gamestate, level, rng))}
+    face = float(_pick_weighted_coin_value(gamestate, level, rng))
+    return {"kind": "coin", "value": face * base_coin_game_scale(gamestate)}
 
 
 def _lit_positions(gamestate) -> list[tuple[int, int]]:

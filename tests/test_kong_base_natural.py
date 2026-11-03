@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "games" / "kong_club"))
 
+from game_coin_feature import base_coin_game_scale
 from game_config import GameConfig
 from gamestate import GameState
 
@@ -63,6 +64,40 @@ def test_base_and_ante_draw_random_stops():
     # Planted boards always used stop 0. Random stops should not.
     assert planted < 2
     assert columns == 0
+
+
+def test_base_pay_scales_leave_bonus_table_alone():
+    """Base clusters and base coin faces are cheaper. Bonus modes keep the labels."""
+    config = GameConfig()
+    assert config.paytable_scale == 1.0
+    assert config.bonus_cluster_pay_scale == 1.0
+    assert config.base_cluster_pay_scale == 0.55
+    assert config.base_coin_game_scale == 0.20
+    assert config.multiplier_table == [2, 5, 10]
+    assert config.coin_values["CB"] == [1, 2, 3, 4]
+    assert config.coin_values["CG"][0] == 25
+    assert config.paytable[(5, "BA")] == 1.0
+    assert config.wincap == 25000.0
+
+    base = GameState(config)
+    base.betmode = "base"
+    base.gametype = config.basegame_type
+    assert base_coin_game_scale(base) == 0.20
+
+    ante = GameState(config)
+    ante.betmode = "base_ante"
+    ante.gametype = config.basegame_type
+    assert base_coin_game_scale(ante) == 0.20
+
+    free = GameState(config)
+    free.betmode = "base"
+    free.gametype = config.freegame_type
+    assert base_coin_game_scale(free) == 1.0
+
+    bonus = GameState(config)
+    bonus.betmode = "bonus_hear"
+    bonus.gametype = config.freegame_type
+    assert base_coin_game_scale(bonus) == 1.0
 
 
 def test_mystery_shared_entry_still_plants():
