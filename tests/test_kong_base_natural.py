@@ -82,8 +82,13 @@ def test_base_pay_scales_leave_bonus_table_alone():
     }
     assert config.coin_value_weights["CB"] == [58, 22, 10, 6, 3, 1]
     assert config.coin_value_weights["CS"] == [70, 18, 8, 4]
-    assert config.coin_value_weights["CG"] == [410, 60, 20, 6, 3, 1]
+    assert config.coin_value_weights["CG"] == [20000, 400, 40, 3, 2, 1]
     assert config.coin_value_weights["CG"][-1] < min(config.coin_value_weights["CG"][:-1])
+    assert config.coin_game_multi_values == [2, 3, 4, 5, 10, 20]
+    assert config.coin_game_multi_weights == [200, 160, 100, 60, 1, 1]
+    assert config.coin_game_power_by_tile_level[1] == {"multiplier": 3, "collector": 0, "tier_shift": 0}
+    assert config.coin_game_power_by_tile_level[2] == {"multiplier": 6, "collector": 2, "tier_shift": 0}
+    assert config.coin_game_power_by_tile_level[3] == {"multiplier": 8, "collector": 3, "tier_shift": 0}
     assert config.paytable[(5, "BA")] == 1.0
     assert config.wincap == 25000.0
 

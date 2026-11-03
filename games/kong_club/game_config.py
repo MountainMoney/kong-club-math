@@ -106,7 +106,8 @@ class GameConfig(Config):
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}
         # Faces are multiples of bet. Every mode pays these directly.
-        # Weights lean low. 1000 is the rarest gold face.
+        # TEST weights, not a final publish. Gold 250/500/1000 are much rarer
+        # than 6/3/1. 1000 stays the rarest face.
         self.coin_values = {
             "CB": [0.2, 0.5, 1, 2, 3, 4],
             "CS": [5, 10, 15, 20],
@@ -115,7 +116,7 @@ class GameConfig(Config):
         self.coin_value_weights = {
             "CB": [58, 22, 10, 6, 3, 1],
             "CS": [70, 18, 8, 4],
-            "CG": [410, 60, 20, 6, 3, 1],
+            "CG": [20000, 400, 40, 3, 2, 1],
         }
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
         self.activation_coin_value_pools = self._build_activation_coin_pools()
@@ -135,9 +136,9 @@ class GameConfig(Config):
         # One coin game per spin. The old Hear cap of 3 is not used.
         self.max_board_activations_hear = 1
         self.coin_game_max_reruns = 10
-        # MULTI faces — LOCKED Cole 2026-07-18 (COIN_POWERS_LOCKED.md).
+        # MULTI faces — values unchanged. TEST weights: x10 and x20 are much rarer.
         self.coin_game_multi_values = [2, 3, 4, 5, 10, 20]
-        self.coin_game_multi_weights = [35, 28, 18, 12, 5, 2]
+        self.coin_game_multi_weights = [200, 160, 100, 60, 1, 1]
         # Baseline vs power weights when rolling each lit cell's prize kind.
         self.coin_game_coin_weight = 100
         # Per-tile-tier powers (same table in every priced mode). Coin 100 vs:
@@ -635,9 +636,8 @@ class GameConfig(Config):
         """Base and ante draw these stops. Mystery keeps the planted sets above.
 
         Opening runs are only 1–2 symbols, so a 5-high window cannot be one
-        face. Refills lean on the low symbols and runs of 3, still capped at
-        3, so a chain reaches the bar of 5 about once per 100 spins without
-        dropping a full column of one symbol.
+        face. TEST refill: run weights 36/42/22 instead of 8/37/55, still
+        capped at 3, so the bar of 5 fills about once per 200 spins.
         Weights are set so a random stop wins about one spin in five.
         """
         initial = {
@@ -676,7 +676,7 @@ class GameConfig(Config):
             refill,
             seed=2417,
             run_lengths=(1, 2, 3),
-            run_weights=(8, 37, 55),
+            run_weights=(36, 42, 22),
             max_run=3,
         )
         self.reel_set_weights["base_play"] = {"base_natural": 1}
