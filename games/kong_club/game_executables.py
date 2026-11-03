@@ -176,7 +176,7 @@ class GameExecutables(GameCalculations):
         if self.should_force_initial_scatters():
             self.force_initial_scatters(self.resolve_forced_scatter_count())
             self.apply_scatter_anticipation()
-        self.apply_gamble_two_bait()
+        self.apply_bonus_mystery_two_bait()
 
         # Phase A: sticky HEAR disabled — never apply / refresh / level stickies.
         self.sticky_wild_positions = []
@@ -522,8 +522,8 @@ class GameExecutables(GameCalculations):
             )
             self.board[reel][row] = self.create_symbol(alt)
 
-    def draw_gamble_dead_board(self):
-        """Gamble miss: no 5-connect. Always 2 ST on reels 0–1 as tease bait."""
+    def draw_bonus_mystery_dead_board(self):
+        """Mystery Bonus miss: no 5-connect. Always 2 ST on reels 0–1 as tease bait."""
         filled = False
         for _ in range(80):
             self._fill_initial_board()
@@ -536,11 +536,11 @@ class GameExecutables(GameCalculations):
                 if not GameCluster.find_winning_clusters(self.board, self.config):
                     break
                 self._break_winning_clusters()
-        self.apply_gamble_two_bait()
+        self.apply_bonus_mystery_two_bait()
         self._finalize_initial_board()
 
-    def apply_gamble_two_bait(self):
-        """Every gamble trigger land: ST on reels 0 and 1, then tease. No rate."""
+    def apply_bonus_mystery_two_bait(self):
+        """Every Mystery Bonus trigger land: ST on reels 0 and 1, then tease. No rate."""
         if getattr(self, "betmode", None) != "bonus_mystery":
             return
         if getattr(self, "gametype", None) == self.config.freegame_type:

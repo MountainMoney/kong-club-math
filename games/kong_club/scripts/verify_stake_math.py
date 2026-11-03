@@ -135,7 +135,7 @@ def main() -> int:
     cfg = GameConfig()
     print("Kong Club Stake-brief verification")
     print("Mode map: ante=base_ante feature=feature_spin summit=peak_spin")
-    print("          bonus_3=bonus_see bonus_4=bonus_hear gamble=bonus_mystery")
+    print("          bonus_3=bonus_see bonus_4=bonus_hear Mystery Bonus=bonus_mystery")
     print(
         f"{'mode':<14} {'n':>8} {'RTP':>8} {'E/c':>8} {'hit':>7} {'dead':>7} "
         f"{'>=c':>7} {'Pcap':>8} {'capPts':>7} {'max':>8}"

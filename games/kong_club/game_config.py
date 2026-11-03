@@ -18,7 +18,7 @@ from game_criteria import (
     BASE_CAP_QUOTA,
     FEATURE_CAP_QUOTA,
     FEATURE_DEAD_QUOTA,
-    GAMBLE_CAP_QUOTA,
+    BONUS_MYSTERY_CAP_QUOTA,
     HEAR_CAP_QUOTA,
     SEE_CAP_QUOTA,
     FEATURE_NIBBLE_QUOTA,
@@ -36,7 +36,7 @@ STAKE_SLUG = "kong-club"
 
 # Organic bonus entry — same pattern as Football Fiesta:
 # quota picks "freegame" criteria → force N scatters from weighted table → no organic land on base strips.
-# See / Hear / Madness given a bonus. Madness stays rare so a 3,000× floor
+# See / Hear / Madness given a bonus. Madness stays rare so a 2,000× floor
 # does not blow base or ante RTP. Ante uses the same mix; only the rate doubles.
 SCATTER_TRIGGERS = {3: 989, 4: 10, 5: 1}
 SCATTER_TRIGGERS_ANTE = {3: 989, 4: 10, 5: 1}
@@ -45,18 +45,20 @@ SCATTER_TRIGGERS_ANTE = {3: 989, 4: 10, 5: 1}
 BASE_FREEGAME_QUOTA = 1 / 260
 ANTE_FREEGAME_QUOTA = 1 / 130
 
-# Gamble — 50% dead / 45% Hear / 5% Madness.
+# Mystery Bonus. Display name "Mystery Bonus". Internal key stays bonus_mystery.
+# 50% dead / 45% Hear No Evil / 5% Monkey Madness.
 # Cost = (0.45·E[Hear] + 0.05·E[Madness] + 25000/4500) / 0.965.
 # Raised with the restored coin faces and tile multipliers. Still under the old 1,567×.
-GAMBLE_BUY_COST = 380.0
+# Planned, not built: Risky Mystery Bonus (internal key bonus_risky_mystery).
+BONUS_MYSTERY_COST = 380.0
 SEE_BUY_COST = 115.0
 HEAR_BUY_COST = 250.0
 FEATURE_BUY_COST = 65.0
-GAMBLE_DEAD_QUOTA = 0.50
-GAMBLE_HEAR_QUOTA = 0.45
-GAMBLE_MADNESS_QUOTA = 0.05
+BONUS_MYSTERY_DEAD_QUOTA = 0.50
+BONUS_MYSTERY_HEAR_QUOTA = 0.45
+BONUS_MYSTERY_MADNESS_QUOTA = 0.05
 # Dead spins: always plant 2 ST on reels 0–1 and tease the rest (no bonus).
-GAMBLE_DEAD_BAIT_RATE = 1.0
+BONUS_MYSTERY_DEAD_BAIT_RATE = 1.0
 
 
 class GameConfig(Config):
@@ -204,8 +206,8 @@ class GameConfig(Config):
         # PEAK: light every cell gold (level 3) before the drop. Progress still starts at 0.
         self.peak_spin_seed_gold = True
         self.peak_spin_cost = 1400.0
-        self.gamble_buy_cost = GAMBLE_BUY_COST
-        self.gamble_dead_bait_rate = GAMBLE_DEAD_BAIT_RATE
+        self.bonus_mystery_cost = BONUS_MYSTERY_COST
+        self.bonus_mystery_dead_bait_rate = BONUS_MYSTERY_DEAD_BAIT_RATE
         self.see_buy_cost = SEE_BUY_COST
         self.bonus_spins = 10
         self.scatter_pays = {}
@@ -610,7 +612,7 @@ class GameConfig(Config):
             "madness": {"madness_low": 88, "madness_mid": 10, "madness_high": 2},
             "feature": {"feature_mild": 30, "feature_rich": 70},
             "peak": {"peak_a": 55, "peak_b": 45},
-            "gamble_dead": {"base_quiet": 1},
+            "bonus_mystery_dead": {"base_quiet": 1},
         }
         self.reel_set_weights_flat = set(specs)
         for name, (weights, runs, seed, refill_runs) in specs.items():
@@ -774,20 +776,20 @@ class GameConfig(Config):
                 self._distribution("bonus_hear", 1.0 - HEAR_CAP_QUOTA, bonus_variant="hear"),
                 self._distribution("cap", HEAR_CAP_QUOTA, force_wincap=True, bonus_variant="hear"),
             ]),
-            BetMode("bonus_mystery", self.gamble_buy_cost, self.rtp, self.wincap, False, True, False, [
-                self._distribution("gamble_dead", GAMBLE_DEAD_QUOTA - GAMBLE_CAP_QUOTA),
+            BetMode("bonus_mystery", self.bonus_mystery_cost, self.rtp, self.wincap, False, True, False, [
+                self._distribution("bonus_mystery_dead", BONUS_MYSTERY_DEAD_QUOTA - BONUS_MYSTERY_CAP_QUOTA),
                 self._distribution(
-                    "gamble_hear",
-                    GAMBLE_HEAR_QUOTA,
+                    "bonus_mystery_hear",
+                    BONUS_MYSTERY_HEAR_QUOTA,
                     force_freegame=True,
                     scatter_triggers={4: 1},
                 ),
                 self._distribution(
-                    "gamble_madness",
-                    GAMBLE_MADNESS_QUOTA,
+                    "bonus_mystery_madness",
+                    BONUS_MYSTERY_MADNESS_QUOTA,
                     force_freegame=True,
                     scatter_triggers={5: 1},
                 ),
-                self._distribution("cap", GAMBLE_CAP_QUOTA, force_wincap=True),
+                self._distribution("cap", BONUS_MYSTERY_CAP_QUOTA, force_wincap=True),
             ]),
         ]

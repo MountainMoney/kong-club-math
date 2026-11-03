@@ -180,8 +180,8 @@ def smoke_bonus_mystery() -> None:
     saw_dead = False
     saw_hear = False
     for criteria, seeds in (
-        ("gamble_dead", range(1, 8)),
-        ("gamble_hear", range(1, 6)),
+        ("bonus_mystery_dead", range(1, 8)),
+        ("bonus_mystery_hear", range(1, 6)),
     ):
         for seed in seeds:
             gs, book = run_book("bonus_mystery", criteria, seed)

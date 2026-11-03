@@ -146,13 +146,13 @@ class OptimizationSetup:
             },
             "bonus_mystery": {
                 "conditions": {
-                    "gamble_dead": ConstructConditions(rtp=0.0, av_win=0, hr="x", search_conditions=0).return_dict(),
-                    "gamble_hear": ConstructConditions(rtp=0.6401, hr="x").return_dict(),
-                    "gamble_madness": ConstructConditions(rtp=0.3200, hr="x").return_dict(),
+                    "bonus_mystery_dead": ConstructConditions(rtp=0.0, av_win=0, hr="x", search_conditions=0).return_dict(),
+                    "bonus_mystery_hear": ConstructConditions(rtp=0.6401, hr="x").return_dict(),
+                    "bonus_mystery_madness": ConstructConditions(rtp=0.3200, hr="x").return_dict(),
                 },
                 "scaling": ConstructScaling(
                     [
-                        {"criteria": "gamble_hear", "scale_factor": 1.0, "win_range": (20, 400), "probability": 1.0},
+                        {"criteria": "bonus_mystery_hear", "scale_factor": 1.0, "win_range": (20, 400), "probability": 1.0},
                     ]
                 ).return_dict(),
                 "parameters": params([10, 50, 100]),

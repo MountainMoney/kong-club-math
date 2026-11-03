@@ -104,7 +104,7 @@ def test_mystery_shared_entry_still_plants():
     config = GameConfig()
     gs = GameState(config)
     gs.betmode = "bonus_mystery"
-    gs.criteria = "gamble_hear"
+    gs.criteria = "bonus_mystery_hear"
     gs.reset_book()
     gs.gametype = config.basegame_type
     gs.use_reel_family("base", "base_quiet")

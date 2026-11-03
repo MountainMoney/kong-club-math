@@ -49,7 +49,7 @@ MODE_CRITERIA = {
     "peak_spin": "nibble",
     "bonus_see": "bonus_see",
     "bonus_hear": "bonus_hear",
-    "bonus_mystery": "gamble_dead",
+    "bonus_mystery": "bonus_mystery_dead",
 }
 
 
@@ -155,7 +155,7 @@ def generate_mode(mode: str, n: int) -> tuple[list[dict], list[dict]]:
         n_hear = int(round(n * 0.40))
         n_madness = max(0, n - n_dead - n_hear)
         criteria_list = (
-            ["gamble_dead"] * n_dead + ["gamble_hear"] * n_hear + ["gamble_madness"] * n_madness
+            ["bonus_mystery_dead"] * n_dead + ["bonus_mystery_hear"] * n_hear + ["bonus_mystery_madness"] * n_madness
         )
         rng = random.Random(404)
         rng.shuffle(criteria_list)

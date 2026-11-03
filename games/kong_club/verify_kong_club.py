@@ -51,7 +51,7 @@ def get_smoke_distribution(config, mode):
         "peak_spin": "nibble",
         "bonus_see": "bonus_see",
         "bonus_hear": "bonus_hear",
-        "bonus_mystery": "gamble_hear",
+        "bonus_mystery": "bonus_mystery_hear",
     }[mode]
     for bet_mode in config.bet_modes:
         if bet_mode.get_name() == mode:

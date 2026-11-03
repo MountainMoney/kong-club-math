@@ -187,7 +187,7 @@ def assign_weights(
     uniform_rtp = (sum(payouts) / len(payouts) / 100.0 / cost) if payouts else 0.0
     zero_count = sum(1 for payout in payouts if payout <= 0)
     # Already near the target: only move weight between misses and hits.
-    # Crushing the tail here would delete the 50/40/10 gamble mix.
+    # Crushing the tail here would delete the 50/40/10 Mystery Bonus mix.
     if zero_count and abs(uniform_rtp - target_rtp) / target_rtp <= 0.05:
         hit_idx = [i for i, payout in enumerate(payouts) if payout > 0]
         zero_idx = [i for i, payout in enumerate(payouts) if payout <= 0]

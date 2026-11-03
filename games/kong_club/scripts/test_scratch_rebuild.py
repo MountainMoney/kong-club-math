@@ -128,11 +128,11 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert config.bonus_variant_map[4] == "hear"
     assert config.bonus_variant_map[5] == "madness"
     assert "bonus_mystery" in {mode.get_name() for mode in config.bet_modes}
-    gamble = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_mystery")
-    quotas = {dist.get_criteria(): dist.get_quota() for dist in gamble.get_distributions()}
-    assert abs(quotas["gamble_dead"] - 0.50) < 1e-9
-    assert abs(quotas["gamble_hear"] - 0.40) < 1e-9
-    assert abs(quotas["gamble_madness"] - 0.10) < 1e-9
+    bonus_mystery_mode = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_mystery")
+    quotas = {dist.get_criteria(): dist.get_quota() for dist in bonus_mystery_mode.get_distributions()}
+    assert abs(quotas["bonus_mystery_dead"] - 0.50) < 1e-9
+    assert abs(quotas["bonus_mystery_hear"] - 0.40) < 1e-9
+    assert abs(quotas["bonus_mystery_madness"] - 0.10) < 1e-9
     assert config.peak_spin_seed_gold is True
     assert config.peak_spin_cost == 1000.0
     assert config.progress_thresholds["peak_spin"] == 1
@@ -1436,17 +1436,17 @@ def test_three_scatters_trigger_see_bonus():
     )
 
 
-def test_gamble_forced_scatters_never_see():
-    """Gamble hear/madness force 4/5 ST only — never 3 / See."""
+def test_bonus_mystery_forced_scatters_never_see():
+    """Mystery Bonus hear/madness force 4/5 ST only — never 3 / See."""
     gs = state()
     gs.betmode = "bonus_mystery"
-    gs.criteria = "gamble_hear"
+    gs.criteria = "bonus_mystery_hear"
     assert gs.resolve_forced_scatter_count() == 4
     assert gs.resolve_bonus_variant_from_scatters(gs.resolve_forced_scatter_count()) == "hear"
-    gs.criteria = "gamble_madness"
+    gs.criteria = "bonus_mystery_madness"
     assert gs.resolve_forced_scatter_count() == 5
     assert gs.resolve_bonus_variant_from_scatters(gs.resolve_forced_scatter_count()) == "madness"
-    gs.criteria = "gamble_dead"
+    gs.criteria = "bonus_mystery_dead"
     gs.get_current_distribution_conditions = lambda: {"scatter_triggers": {3: 1}}
     assert gs.resolve_forced_scatter_count() >= 4
 
@@ -1459,10 +1459,10 @@ def test_five_scatters_resolve_to_madness():
     assert gs.resolve_bonus_variant_from_scatters(6) == "madness"
 
 
-def test_gamble_dead_has_no_cluster_or_bonus():
+def test_bonus_mystery_dead_has_no_cluster_or_bonus():
     gs = state()
     gs.betmode = "bonus_mystery"
-    gs.criteria = "gamble_dead"
+    gs.criteria = "bonus_mystery_dead"
     gs.reset_book()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink):
@@ -1483,9 +1483,9 @@ def test_gamble_dead_has_no_cluster_or_bonus():
     assert getattr(gs, "bonus_variant", None) != "see"
 
 
-def test_gamble_always_baits_two_on_trigger_land():
+def test_bonus_mystery_always_baits_two_on_trigger_land():
     """Dead / Hear / Madness first reveal always has ST on reels 0 and 1."""
-    cases = (("gamble_dead", 7), ("gamble_hear", 11), ("gamble_madness", 13))
+    cases = (("bonus_mystery_dead", 7), ("bonus_mystery_hear", 11), ("bonus_mystery_madness", 13))
     for criteria, seed in cases:
         gs = state()
         gs.betmode = "bonus_mystery"
@@ -1506,11 +1506,11 @@ def test_gamble_always_baits_two_on_trigger_land():
         assert 0 in st_reels and 1 in st_reels, f"{criteria}: first two reels must bait ST, got {st_reels}"
 
 
-def test_gamble_dead_baits_two_every_seed():
+def test_bonus_mystery_dead_baits_two_every_seed():
     for seed in range(1, 21):
         gs = state()
         gs.betmode = "bonus_mystery"
-        gs.criteria = "gamble_dead"
+        gs.criteria = "bonus_mystery_dead"
         gs.reset_book()
         sink = io.StringIO()
         with contextlib.redirect_stdout(sink):
@@ -1564,10 +1564,10 @@ def test_fifth_st_on_reel_four_slams_last_reel():
     assert gs.anticipation[5] == 0
 
 
-def test_gamble_dead_bait_two_st_tease():
+def test_bonus_mystery_dead_bait_two_st_tease():
     gs = state()
     gs.betmode = "bonus_mystery"
-    gs.criteria = "gamble_dead"
+    gs.criteria = "bonus_mystery_dead"
     gs.reset_book()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink):
@@ -1586,10 +1586,10 @@ def test_gamble_dead_bait_two_st_tease():
     assert "freeSpinEnd" not in [event["type"] for event in gs.book.events]
 
 
-def test_gamble_hear_emits_freespins():
+def test_bonus_mystery_hear_emits_freespins():
     gs = state()
     gs.betmode = "bonus_mystery"
-    gs.criteria = "gamble_hear"
+    gs.criteria = "bonus_mystery_hear"
     gs.reset_book()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink):
@@ -1618,10 +1618,10 @@ def test_gamble_hear_emits_freespins():
     )
 
 
-def test_gamble_madness_emits_freespins():
+def test_bonus_mystery_madness_emits_freespins():
     gs = state()
     gs.betmode = "bonus_mystery"
-    gs.criteria = "gamble_madness"
+    gs.criteria = "bonus_mystery_madness"
     gs.reset_book()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink):
@@ -2239,14 +2239,14 @@ def main():
     test_sticky_hear_disabled()
     test_hear_threshold_is_five()
     test_three_scatters_trigger_see_bonus()
-    test_gamble_forced_scatters_never_see()
+    test_bonus_mystery_forced_scatters_never_see()
     test_five_scatters_resolve_to_madness()
-    test_gamble_dead_has_no_cluster_or_bonus()
-    test_gamble_always_baits_two_on_trigger_land()
-    test_gamble_dead_baits_two_every_seed()
-    test_gamble_dead_bait_two_st_tease()
-    test_gamble_hear_emits_freespins()
-    test_gamble_madness_emits_freespins()
+    test_bonus_mystery_dead_has_no_cluster_or_bonus()
+    test_bonus_mystery_always_baits_two_on_trigger_land()
+    test_bonus_mystery_dead_baits_two_every_seed()
+    test_bonus_mystery_dead_bait_two_st_tease()
+    test_bonus_mystery_hear_emits_freespins()
+    test_bonus_mystery_madness_emits_freespins()
     test_madness_progress_stays_full()
     test_madness_skips_bronze_coins()
     test_madness_tiles_skip_bronze()

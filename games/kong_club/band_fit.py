@@ -27,8 +27,8 @@ PUBLISH = GAME_DIR / "library" / "publish_files"
 LOOKUP = GAME_DIR / "library" / "lookup_tables"
 MAX_PAY = 2_500_000
 
-# Gamble price is the 50/45/5 formula, raised with the restored faces and tile multipliers.
-GAMBLE_COST = 380.0
+# Mystery Bonus price is the 50/45/5 formula, raised with the restored faces and tile multipliers.
+BONUS_MYSTERY_COST = 380.0
 
 
 def _iter_books(path: Path):
@@ -131,9 +131,9 @@ def classify(mode: str, payout: int, criteria: str, coin: bool = False) -> str:
             return "spike"
         return "tail"
     if mode == "bonus_mystery":
-        if criteria == "gamble_dead":
+        if criteria == "bonus_mystery_dead":
             return "dead"
-        if criteria == "gamble_hear":
+        if criteria == "bonus_mystery_hear":
             if xbet <= 0:
                 return "hear_zero"
             if xbet <= 100:
@@ -145,7 +145,7 @@ def classify(mode: str, payout: int, criteria: str, coin: bool = False) -> str:
             if xbet <= 900:
                 return "hear_profit"
             return "hear_tail"
-        if criteria == "gamble_madness":
+        if criteria == "bonus_mystery_madness":
             if 2200 <= xbet <= 9000:
                 return "mad_body"
             return "mad_out"
@@ -389,7 +389,7 @@ def fit_rows(
     criteria: dict[int, str],
     coin_ids: set[int] | None = None,
 ):
-    cost = GAMBLE_COST if mode == "bonus_mystery" else MODE_COSTS[mode]
+    cost = BONUS_MYSTERY_COST if mode == "bonus_mystery" else MODE_COSTS[mode]
     coins = coin_ids or set()
     bands: dict[str, list[int]] = {}
     for index, (sim_id, _, payout) in enumerate(rows):

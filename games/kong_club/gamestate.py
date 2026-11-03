@@ -29,7 +29,7 @@ class GameState(GameStateOverride):
             elif self.betmode == "bonus_hear":
                 self.run_bonus_buy("hear")
             elif self.betmode == "bonus_mystery":
-                self.run_gamble_spin()
+                self.run_bonus_mystery_spin()
             else:
                 self.run_base_spin()
             self.check_repeat()
@@ -46,7 +46,7 @@ class GameState(GameStateOverride):
             if self.reel_set_name == "base_teaser" and (
                 self.should_force_initial_scatters() or self.outcome_bucket() == "cap"
             ):
-                self.use_reel_family("gamble_dead")
+                self.use_reel_family("bonus_mystery_dead")
         if self.outcome_bucket() == "cap":
             self.seed_peak_gold_tiles()
         self.draw_prepared_board()
@@ -129,25 +129,25 @@ class GameState(GameStateOverride):
         self.win_manager.update_gametype_wins(self.gametype)
         self.evaluate_finalwin()
 
-    def run_gamble_spin(self):
+    def run_bonus_mystery_spin(self):
         if self.outcome_bucket() == "cap":
             self.run_base_spin()
             return
         if self.should_force_initial_scatters():
             self.run_base_spin()
             return
-        self.run_gamble_dead_spin()
+        self.run_bonus_mystery_dead_spin()
 
-    def run_gamble_dead_spin(self):
+    def run_bonus_mystery_dead_spin(self):
         """Hard miss: board drops, no clusters, no ST, no bar, no coins."""
         self.board_activation_fired_this_spin = False
         self.tumbles_this_spin = 0
         self.gametype = self.config.basegame_type
-        self.use_reel_family("gamble_dead")
-        self.draw_gamble_dead_board()
+        self.use_reel_family("bonus_mystery_dead")
+        self.draw_bonus_mystery_dead_board()
         self.win_data = {"totalWin": 0.0, "wins": []}
         self.set_end_tumble_event()
-        self.log_spin_end("gamble_dead")
+        self.log_spin_end("bonus_mystery_dead")
         self.win_manager.update_gametype_wins(self.gametype)
         self.evaluate_finalwin()
 
