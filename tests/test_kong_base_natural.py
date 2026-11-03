@@ -89,20 +89,16 @@ def test_base_pay_scales_leave_bonus_table_alone():
     assert config.coin_game_power_by_tile_level[1] == {"multiplier": 3, "collector": 0, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level[2] == {"multiplier": 6, "collector": 2, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level[3] == {"multiplier": 8, "collector": 3, "tier_shift": 0}
-    assert config.progress_thresholds["base"] == 4
-    assert config.progress_thresholds["base_ante"] == 4
+    assert config.progress_thresholds["base"] == 5
+    assert config.progress_thresholds["base_ante"] == 5
     assert config.progress_thresholds["bonus_see"] == 5
     assert config.progress_thresholds["bonus_hear"] == 5
     assert config.progress_thresholds["bonus_madness"] == 5
-    assert config.max_activation_coins_by_mode["base"] == 8
-    assert config.max_activation_coins_by_mode["base_ante"] == 8
-    assert config.max_activation_coins_by_mode["bonus_see"] is None
-    assert config.max_activation_coins_by_mode["bonus_hear"] is None
-    assert config.max_activation_coins_by_mode["peak_spin"] is None
-    assert config.paytable[(5, "T")] == 0.024
-    assert config.paytable[(5, "BA")] == 0.24
-    assert config.paytable[(11, "BA")] == 23.40
-    assert config.paytable[(13, "BA")] == 95.00
+    assert not hasattr(config, "max_activation_coins_by_mode")
+    assert config.paytable[(5, "T")] == round(0.10 * 0.67, 6)
+    assert config.paytable[(5, "BA")] == round(1.00 * 0.67, 6)
+    assert config.paytable[(11, "BA")] == round(30.00 * 0.67, 6)
+    assert config.paytable[(13, "BA")] == round(100.00 * 0.67, 6)
     assert config.wincap == 25000.0
 
     base = GameState(config)
@@ -139,18 +135,20 @@ def test_mystery_shared_entry_still_plants():
     assert gs.reel_set_name == "base_quiet"
 
 
-def test_base_coin_game_flips_eight_cells_from_a_full_board():
+def test_coin_game_flips_every_lit_tile():
+    """Every connected cell flips. No mode samples a subset."""
     config = GameConfig()
-    gs = GameState(config)
-    gs.betmode = "base"
-    gs.gametype = config.basegame_type
-    gs.simulation_seed = 7
-    gs.progress_activation_count = 0
-    gs.reset_grid_mults()
-    for reel in range(6):
-        for row in range(5):
-            gs.seed_tile_to_level(reel, row, 1 + (reel + row) % 3)
-    _total, items, _rounds = resolve_coin_game(gs)
-    first_round = [item for item in items if item.get("round") == 1]
-    assert len(first_round) == 8
-    assert {item["level"] for item in first_round} <= {1, 2, 3}
+    for betmode in ("base", "base_ante", "bonus_see", "bonus_hear", "peak_spin", "feature_spin"):
+        gs = GameState(config)
+        gs.betmode = betmode
+        gs.gametype = config.basegame_type
+        gs.simulation_seed = 11
+        gs.progress_activation_count = 0
+        gs.reset_grid_mults()
+        for reel in range(6):
+            for row in range(5):
+                gs.seed_tile_to_level(reel, row, 1 + (reel + row) % 3)
+        lit = [(reel, row) for reel in range(6) for row in range(5)]
+        _total, items, _rounds = resolve_coin_game(gs)
+        first_round = [(item["reel"], item["row"]) for item in items if item.get("round") == 1]
+        assert sorted(first_round) == lit

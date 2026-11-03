@@ -123,11 +123,11 @@ class GameConfig(Config):
         self.activation_coin_value_pools = self._build_activation_coin_pools()
         self.activation_coin_value_weights = self._build_activation_coin_weights()
 
-        # See / Hear / Madness still fill in 5 cluster connections.
-        # TEST: base and ante fill on 4, so the coin game lands about 1 in 100.
+        # Every mode that uses the bar of 5 fills on 5 cluster connections.
+        # Peak still fills on 1. The coin game flips every lit cell.
         self.progress_thresholds = {
-            "base": 4,
-            "base_ante": 4,
+            "base": 5,
+            "base_ante": 5,
             "feature_spin": 5,
             "peak_spin": 1,
             "bonus_see": 5,
@@ -187,18 +187,6 @@ class GameConfig(Config):
             "bonus_hear": 1.0,
             "bonus_madness": 1.0,
             "bonus_mystery": 1.0,
-        }
-        # TEST: base and ante flip 8 of the lit cells, keeping the metal mix.
-        # Bonus, feature, and peak still flip every lit cell.
-        self.max_activation_coins_by_mode = {
-            "base": 8,
-            "base_ante": 8,
-            "feature_spin": None,
-            "peak_spin": None,
-            "bonus_see": None,
-            "bonus_hear": None,
-            "bonus_madness": None,
-            "bonus_mystery": None,
         }
         # Dead once Hear is uncapped.
         self.hear_coin_cap_boost_chance = 0.0
@@ -385,21 +373,25 @@ class GameConfig(Config):
     def _build_paytable(self) -> dict[tuple[int, str], float]:
         """TEST paytable, not a final publish. Scales stay 1.0.
 
-        Reshape of the Jul 2 table. Band factors 0.24, 0.30, 0.38, 0.45,
-        0.60, 0.78, 0.95 so a 5-oak is cut harder than an 11–12 or a 13+.
-        Bands are 5, 6, 7, 8, 9–10, 11–12, 13+.
+        Flat 0.67× the Jul 2 table, every band. Bands are 5, 6, 7, 8,
+        9–10, 11–12, 13+.
         """
+        flat = 0.67
+        jul2 = {
+            "T": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
+            "J": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
+            "Q": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
+            "K": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
+            "A": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
+            "LE": [0.30, 0.40, 0.50, 0.70, 2.50, 7.50, 25.00],
+            "CO": [0.30, 0.40, 0.50, 0.70, 2.50, 7.50, 25.00],
+            "OR": [0.50, 0.70, 1.00, 1.50, 5.00, 15.00, 50.00],
+            "GR": [0.50, 0.70, 1.00, 1.50, 5.00, 15.00, 50.00],
+            "BA": [1.00, 1.50, 2.00, 3.00, 10.00, 30.00, 100.00],
+        }
         payouts = {
-            "T": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
-            "J": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
-            "Q": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
-            "K": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
-            "A": [0.024, 0.06, 0.114, 0.225, 0.90, 3.90, 14.25],
-            "LE": [0.072, 0.12, 0.19, 0.315, 1.50, 5.85, 23.75],
-            "CO": [0.072, 0.12, 0.19, 0.315, 1.50, 5.85, 23.75],
-            "OR": [0.12, 0.21, 0.38, 0.675, 3.00, 11.70, 47.50],
-            "GR": [0.12, 0.21, 0.38, 0.675, 3.00, 11.70, 47.50],
-            "BA": [0.24, 0.45, 0.76, 1.35, 6.00, 23.40, 95.00],
+            symbol: [round(value * flat, 6) for value in values]
+            for symbol, values in jul2.items()
         }
         band_to_index = {5: 0, 6: 1, 7: 2, 8: 3, 9: 4, 11: 5, 13: 6}
         scale = float(getattr(self, "paytable_scale", 1.0))
@@ -644,8 +636,7 @@ class GameConfig(Config):
 
         Opening runs are only 1–2 symbols, so a 5-high window cannot be one
         face. Refill run weights stay 36/42/22, capped at 3. The base bar
-        fills on 4 clusters, about once per 100 spins. A random stop wins
-        about one spin in five.
+        fills on 5 clusters. A random stop wins about one spin in five.
         """
         initial = {
             "T": 11.2,

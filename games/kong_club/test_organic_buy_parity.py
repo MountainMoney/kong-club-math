@@ -14,7 +14,7 @@ SDK_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(SDK_ROOT))
 sys.path.insert(0, str(GAME_ROOT))
 
-from game_coin_feature import _mode_coin_cap, _mode_coin_scale, resolve_coin_game
+from game_coin_feature import _mode_coin_scale, resolve_coin_game
 from game_config import GameConfig
 from gamestate import GameState
 
@@ -57,12 +57,10 @@ def test_no_organic_only_weight_fork():
     )
 
 
-def test_hear_caps_identical_for_buy_and_organic():
-    """Buy betmode and organic freegame+variant must resolve the same coin cap."""
+def test_hear_scales_identical_for_buy_and_organic():
+    """Buy betmode and organic freegame+variant pay the same coin scale."""
     config = fresh_config()
-    assert config.max_activation_coins_by_mode["bonus_hear"] == config.max_activation_coins_by_mode.get(
-        "bonus_hear"
-    )
+    assert not hasattr(config, "max_activation_coins_by_mode")
 
     buy_hear = state("bonus_hear")
     buy_hear.gametype = buy_hear.config.freegame_type
@@ -71,7 +69,6 @@ def test_hear_caps_identical_for_buy_and_organic():
     organic_hear.gametype = organic_hear.config.freegame_type
     organic_hear.bonus_variant = "hear"
 
-    assert _mode_coin_cap(buy_hear) == _mode_coin_cap(organic_hear) == config.max_activation_coins_by_mode["bonus_hear"]
     assert _mode_coin_scale(buy_hear) == _mode_coin_scale(organic_hear) == 1.0
 
 
@@ -120,15 +117,15 @@ def test_organic_and_buy_activation_use_same_hard_faces():
     buy_total, buy_items, _ = resolve_coin_game(buy)
     org_total, org_items, _ = resolve_coin_game(organic)
 
-    cap = buy.config.max_activation_coins_by_mode["bonus_hear"]
-    lit = sum(1 for reel in buy.tile_levels for level in reel if level > 0)
-    expected = lit if cap is None else cap
-    assert len(buy_items) == len(org_items) == expected
+    lit = [(reel, row) for reel in range(6) for row in range(5) if buy.tile_levels[reel][row] > 0]
+    buy_first = [(item["reel"], item["row"]) for item in buy_items if item.get("round") == 1]
+    org_first = [(item["reel"], item["row"]) for item in org_items if item.get("round") == 1]
+    assert sorted(buy_first) == sorted(org_first) == lit
     assert buy_total == org_total
     for b, o in zip(buy_items, org_items):
-        assert b["displayValue"] == b["payout"] == o["displayValue"] == o["payout"]
-        assert b["displayValue"] in buy.config.coin_values["CG"]
-        assert float(b["displayValue"]).is_integer()
+        assert b["value"] == o["value"]
+        assert b["value"] in buy.config.coin_values["CG"]
+        assert float(b["value"]).is_integer()
 
 
 def test_fs_strips_have_no_scatters():

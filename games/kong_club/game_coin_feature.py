@@ -654,18 +654,6 @@ def _mode_coin_scale(gamestate: "GameExecutables") -> float:
     return float(scales.get(mode, 1.0))
 
 
-def _mode_coin_cap(gamestate: "GameExecutables") -> int | None:
-    """Max lit tiles that pay coins this activation (None = all lit)."""
-    caps = getattr(gamestate.config, "max_activation_coins_by_mode", {}) or {}
-    freegame = getattr(gamestate.config, "freegame_type", "freegame")
-    if getattr(gamestate, "gametype", None) == freegame:
-        variant = getattr(gamestate, "bonus_variant", None)
-        if variant in ("see", "hear", "madness"):
-            return caps.get(f"bonus_{variant}")
-    mode = getattr(gamestate, "betmode", "base")
-    return caps.get(mode)
-
-
 def _physical_coins_land(gamestate: "GameExecutables") -> bool:
     """Feature Spin and free spins land CB/CS/CG. Base and TRIFECTA stay virtual."""
     if getattr(gamestate, "betmode", None) == "feature_spin":
@@ -760,10 +748,6 @@ def _resolve_rerun_coin_game(gamestate, rng: random.Random) -> tuple[float, list
     items: list[dict] = []
     clover_values: list[int] = []
     pending = _lit_positions(gamestate)
-    cell_cap = _mode_coin_cap(gamestate)
-    if cell_cap is not None and len(pending) > int(cell_cap):
-        # Keep the natural metal mix. Gold cells that are drawn still use gold odds.
-        pending = sorted(rng.sample(pending, int(cell_cap)))
     reruns_done = 0
 
     def _stats(cap_hit: bool) -> dict:

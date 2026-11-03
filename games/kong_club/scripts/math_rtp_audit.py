@@ -188,7 +188,7 @@ def main() -> None:
     print(
         f"target={TARGET_RTP} paytable_scale={config.paytable_scale} "
         f"bonus_cluster_pay_scale={config.bonus_cluster_pay_scale} "
-        f"caps={config.max_activation_coins_by_mode}"
+        f"caps=none"
     )
     print("---")
 
