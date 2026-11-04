@@ -10,33 +10,33 @@ Payout units: book/LUT payouts are hundredths of stake, so 9600 means 96.00x.
 
 ### base
 - Spins: 4
-- Mean payout / EV: 0.0000x
-- Hit rate: 0.00%
-- Std dev: 0.0000
-- Max observed: 0.00x
+- Mean payout / EV: 0.0400x
+- Hit rate: 25.00%
+- Std dev: 0.0693
+- Max observed: 0.16x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 0.00x / 0.00x
-- CVaR95 / CVaR99: 0.00x / 0.00x
+- P95 / P99: 0.16x / 0.16x
+- CVaR95 / CVaR99: 0.16x / 0.16x
 
 ### base_ante
 - Spins: 4
-- Mean payout / EV: 0.0000x
-- Hit rate: 0.00%
-- Std dev: 0.0000
-- Max observed: 0.00x
+- Mean payout / EV: 0.0400x
+- Hit rate: 25.00%
+- Std dev: 0.0693
+- Max observed: 0.16x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 0.00x / 0.00x
-- CVaR95 / CVaR99: 0.00x / 0.00x
+- P95 / P99: 0.16x / 0.16x
+- CVaR95 / CVaR99: 0.16x / 0.16x
 
 ### hunt_2
 - Spins: 4
-- Mean payout / EV: 0.0000x
-- Hit rate: 0.00%
-- Std dev: 0.0000
-- Max observed: 0.00x
+- Mean payout / EV: 0.0400x
+- Hit rate: 25.00%
+- Std dev: 0.0693
+- Max observed: 0.16x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 0.00x / 0.00x
-- CVaR95 / CVaR99: 0.00x / 0.00x
+- P95 / P99: 0.16x / 0.16x
+- CVaR95 / CVaR99: 0.16x / 0.16x
 
 ### feature_spin
 - Spins: 4
@@ -50,13 +50,13 @@ Payout units: book/LUT payouts are hundredths of stake, so 9600 means 96.00x.
 
 ### peak_spin
 - Spins: 4
-- Mean payout / EV: 10062.5000x
+- Mean payout / EV: 2243.7500x
 - Hit rate: 100.00%
-- Std dev: 8689.8738
-- Max observed: 25000.00x
-- Near max rate (>=90% cap): 25.00%
-- P95 / P99: 25000.00x / 25000.00x
-- CVaR95 / CVaR99: 25000.00x / 25000.00x
+- Std dev: 598.7944
+- Max observed: 3275.00x
+- Near max rate (>=90% cap): 0.00%
+- P95 / P99: 3275.00x / 3275.00x
+- CVaR95 / CVaR99: 3275.00x / 3275.00x
 
 ### bonus_see
 - Spins: 4
@@ -70,13 +70,13 @@ Payout units: book/LUT payouts are hundredths of stake, so 9600 means 96.00x.
 
 ### bonus_hear
 - Spins: 4
-- Mean payout / EV: 507.5825x
+- Mean payout / EV: 157.0825x
 - Hit rate: 100.00%
-- Std dev: 719.6244
-- Max observed: 1748.05x
+- Std dev: 132.0130
+- Max observed: 354.05x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 1748.05x / 1748.05x
-- CVaR95 / CVaR99: 1748.05x / 1748.05x
+- P95 / P99: 354.05x / 354.05x
+- CVaR95 / CVaR99: 354.05x / 354.05x
 
 ### bonus_pick
 - Spins: 4
@@ -108,13 +108,12 @@ Observed events:
 - freeSpinEnd: 12
 - freeSpinRetrigger: 5
 - kongClubMode: 16
-- progressFill: 81
+- progressFill: 84
 - reveal: 154
 - setTotalWin: 154
-- setWin: 37
-- tumbleBoard: 43
+- setWin: 41
+- tumbleBoard: 46
 - updateFreeSpin: 130
-- updateLevelUpTiles: 59
-- updateTumbleWin: 49
-- winInfo: 43
-- wincap: 1
+- updateLevelUpTiles: 62
+- updateTumbleWin: 52
+- winInfo: 46

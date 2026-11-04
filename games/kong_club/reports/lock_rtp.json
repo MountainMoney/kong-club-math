@@ -1,92 +1,103 @@
 {
   "base": {
     "cost": 1.0,
-    "rtp": 0.963000087628,
-    "books": 500,
+    "rtp": 0.963000027176,
     "probs": {
-      "basegame": 0.997646,
-      "bar_pay": 0.000354,
+      "basegame": 0.995256,
+      "bar_pay": 0.002744,
       "freegame": 0.002
     }
   },
   "base_ante": {
     "cost": 1.4,
-    "rtp": 0.9630000800235715,
-    "books": 500,
+    "rtp": 0.9630000255900001,
     "probs": {
-      "basegame": 0.995923,
-      "bar_pay": 7.7e-05,
+      "basegame": 0.992877,
+      "bar_pay": 0.003123,
       "freegame": 0.004
     }
   },
   "hunt_2": {
     "cost": 5.0,
-    "rtp": 0.962999975796,
-    "books": 500,
+    "rtp": 0.9630000135344,
     "probs": {
-      "basegame": 0.97156,
-      "bar_pay": 0.000348,
-      "freegame": 0.028092
+      "freegame": 0.034173,
+      "bar_pay": 0.002744,
+      "basegame": 0.963083
     }
   },
   "hunt_3": {
     "cost": 6.0,
-    "rtp": 0.9629999836123333,
-    "books": 500,
+    "rtp": 0.9630000097566667,
     "probs": {
-      "basegame": 0.963157,
-      "bar_pay": 0.000371,
-      "freegame": 0.036473
+      "freegame": 0.047183,
+      "bar_pay": 0.002744,
+      "basegame": 0.950073
     }
   },
   "hunt_4": {
     "cost": 10.0,
-    "rtp": 0.9629999982299999,
-    "books": 500,
+    "rtp": 0.9630000026336001,
     "probs": {
-      "basegame": 0.955991,
-      "bar_pay": 0.000304,
-      "freegame": 0.043704
+      "freegame": 0.068529,
+      "bar_pay": 0.002744,
+      "basegame": 0.928726
     }
   },
   "hunt_5": {
     "cost": 25.0,
-    "rtp": 0.96300001627132,
-    "books": 500,
+    "rtp": 0.96299999631784,
     "probs": {
-      "basegame": 0.914717,
-      "bar_pay": 0.000196,
-      "freegame": 0.085087
+      "freegame": 0.135368,
+      "bar_pay": 0.002744,
+      "basegame": 0.861888
     }
   },
   "feature_spin": {
-    "cost": 125.3726,
-    "rtp": 0.9629998899281021,
-    "books": 500
+    "cost": 75.0,
+    "rtp": 0.9629999975908267,
+    "probs": {
+      "run": 1.0
+    }
   },
   "peak_spin": {
-    "cost": 7947.4039,
-    "rtp": 0.9630000055741473,
-    "books": 500
+    "cost": 1000.0,
+    "rtp": 0.9630000000075001,
+    "probs": {
+      "dead_juicy": 0.5,
+      "live": 0.5
+    }
   },
   "bonus_see": {
-    "cost": 194.364,
-    "rtp": 0.9630001440595995,
-    "books": 500
+    "cost": 112.6465,
+    "rtp": 0.9629998268920916,
+    "probs": {
+      "bonus_see": 1.0
+    }
   },
   "bonus_hear": {
-    "cost": 816.5175,
-    "rtp": 0.9630000091853512,
-    "books": 500
+    "cost": 502.0854,
+    "rtp": 0.9629999597678005,
+    "probs": {
+      "bonus_hear": 1.0
+    }
   },
   "bonus_pick": {
-    "cost": 936.3731,
-    "rtp": 0.9630000050193668,
-    "books": 500
+    "cost": 550.9647,
+    "rtp": 0.9629999889285105,
+    "probs": {
+      "pick_hear": 0.45,
+      "pick_see": 0.5,
+      "pick_speak": 0.05
+    }
   },
   "bonus_risky": {
-    "cost": 1057.9378,
-    "rtp": 0.9629999797719677,
-    "books": 500
+    "cost": 625.3584,
+    "rtp": 0.9630000332609271,
+    "probs": {
+      "risky_hear": 0.4,
+      "risky_speak": 0.1,
+      "risky_dead": 0.5
+    }
   }
 }

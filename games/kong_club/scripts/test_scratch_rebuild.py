@@ -174,7 +174,9 @@ def test_reel_strips_are_run_based_and_refill_rules():
         2: {"multiplier": 6, "collector": 2, "tier_shift": 0},
         3: {"multiplier": 8, "collector": 3, "tier_shift": 0},
     }
-    assert config.coin_game_power_peak_gold == {"multiplier": 8, "collector": 3, "tier_shift": 0}
+    assert config.coin_game_power_peak_gold == {"multiplier": 0, "collector": 0, "tier_shift": 0}
+    assert config.peak_spin_cost == 1000.0
+    assert config.feature_buy_cost == 75.0
 
 
 def test_paytable_size_bands():

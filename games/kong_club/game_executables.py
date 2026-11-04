@@ -244,11 +244,21 @@ class GameExecutables(GameCalculations):
             self._plant_short_chain(steps=10, vary_size=True, pool=list(self.config.low_symbols))
             return
         roll = random.random()
-        small_p = float(getattr(self.config, "base_small_rate", 0.12))
+        small_p = float(getattr(self.config, "base_small_rate", 0.28))
         if roll < small_p:
-            # Two low tumbles: the bar moves and the pay stays in the body.
+            # Most hits are one fresh cluster: a sub-1x face pay and a bronze rank.
+            # A minority chain once more so silver shows up, still short of the bar.
             self.progress_cap_override = max(1, self.progress_threshold - 1)
-            self._plant_short_chain(steps=2, vary_size=False, pool=list(self.config.low_symbols))
+            kind = random.random()
+            lows = list(self.config.low_symbols)
+            mids = list(self.config.low_symbols) + ["LE", "CO"]
+            if kind < 0.72:
+                pool = mids if random.random() < 0.22 else lows
+                self._plant_single_column(pool, vary_size=True)
+            elif kind < 0.90:
+                self._plant_two_fresh_columns(mids if random.random() < 0.22 else lows)
+            else:
+                self._plant_short_chain(steps=2, vary_size=False, pool=lows)
         else:
             self._plant_quiet_miss()
 
@@ -343,6 +353,28 @@ class GameExecutables(GameCalculations):
         paint(reel_a, reel_b, left)
         paint(reel_b, reel_a, right)
         self._install_planted_grid(grid, fillers[0], fillers[-1])
+
+    def _plant_two_fresh_columns(self, pool: list[str]) -> None:
+        """Two separated size-5 clusters. One tumble, two bronze ranks, no chain."""
+        symbols = list(pool)
+        random.shuffle(symbols)
+        left, right = symbols[0], symbols[1 % len(symbols)]
+        fillers = [symbol for symbol in symbols if symbol not in (left, right)]
+        if len(fillers) < 2:
+            fillers = [symbol for symbol in self.config.paying_symbols if symbol not in (left, right)]
+        reels = list(range(self.config.num_reels))
+        random.shuffle(reels)
+        reel_a, reel_b = 0, 3
+        for a, b in ((reels[i], reels[j]) for i in range(6) for j in range(i + 1, 6)):
+            if abs(a - b) >= 2:
+                reel_a, reel_b = a, b
+                break
+        grid = [[fillers[(reel + row) % len(fillers)] for row in range(5)] for reel in range(6)]
+        for row in range(5):
+            grid[reel_a][row] = left
+            grid[reel_b][row] = right
+        self._install_planted_grid(grid, fillers[0], fillers[-1])
+        self.refill_strip = [list(column) for column in self.config.reels["base_quiet_REFILL"]]
 
     def _plant_single_column(self, pool: list[str], vary_size: bool = False) -> None:
         """One winning column, then a quiet refill so the cascade does not continue."""
@@ -966,9 +998,19 @@ class GameExecutables(GameCalculations):
                     mode_state_event(self, "max_tumble_safety_stop")
                     break
                 winning_types = {cluster.symbol for cluster in clusters}
-                # Light the connected cells, then pay base × sum of those tile multipliers.
-                self.mark_level_up_tiles(clusters)
-                self.award_clusters(clusters)
+                # Base, Ante, and Hunt pay the plain face first, then rank the tiles up,
+                # so a small cluster is often under 1x and still leaves bronze or silver.
+                # Bonuses light first and pay face × the new multiplier sum.
+                rank_after_pay = (
+                    getattr(self, "betmode", "") in getattr(self.config, "base_like_modes", set())
+                    and getattr(self, "gametype", None) != self.config.freegame_type
+                )
+                if rank_after_pay:
+                    self.award_clusters(clusters)
+                    self.mark_level_up_tiles(clusters)
+                else:
+                    self.mark_level_up_tiles(clusters)
+                    self.award_clusters(clusters)
                 self.mark_removed_symbols(winning_types, clusters)
                 win_info_event(self)
                 update_tumble_win_event(self)

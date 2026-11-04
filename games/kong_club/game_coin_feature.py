@@ -71,6 +71,12 @@ def _pick_weighted_coin_value(
 ) -> int:
     pools = getattr(gamestate.config, "activation_coin_value_pools", {}) or {}
     weights_by_level = getattr(gamestate.config, "activation_coin_value_weights", {}) or {}
+    if getattr(gamestate, "betmode", None) == "peak_spin":
+        pool = list((getattr(gamestate.config, "coin_values", {}) or {}).get("CG") or [25, 50, 100, 250, 500])
+        weights = list(getattr(gamestate.config, "peak_coin_value_weights", None) or [])
+        if len(weights) != len(pool):
+            weights = [1] * len(pool)
+        return int(rng.choices(pool, weights=weights, k=1)[0])
     pool = pools.get(tile_level) or pools.get(1) or [1]
     weights = weights_by_level.get(tile_level)
     if not weights or len(weights) != len(pool):

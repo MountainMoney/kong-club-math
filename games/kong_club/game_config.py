@@ -49,8 +49,8 @@ ANTE_PAY_BOOK_QUOTA = 8 / 500
 # mode_prices.json overrides these after the solve step.
 SEE_BUY_COST = 115.0
 HEAR_BUY_COST = 250.0
-FEATURE_BUY_COST = 65.0
-PEAK_SPIN_COST = 1400.0
+FEATURE_BUY_COST = 75.0
+PEAK_SPIN_COST = 1000.0
 MYSTERY_BUY_COST = 180.0
 RISKY_BUY_COST = 220.0
 GAMBLE_DEAD_BAIT_RATE = 1.0
@@ -138,9 +138,9 @@ class GameConfig(Config):
             "CS": [5, 7, 10, 15, 20],
             "CG": [25, 50, 100, 250, 500],
         }
-        spread_name = os.environ.get("MM_COIN_SPREAD", "gold")
+        spread_name = os.environ.get("MM_COIN_SPREAD", "silver")
         if spread_name not in COIN_SPREADS:
-            spread_name = "gold"
+            spread_name = "silver"
         self.coin_spread_name = spread_name
         self.coin_value_weights = {key: list(values) for key, values in COIN_SPREADS[spread_name].items()}
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
@@ -167,7 +167,7 @@ class GameConfig(Config):
         # Tuned so a basegame spin averages TARGET_BASE_SPIN_EV. Pay spins are
         # the rare bar fills; small spins move the bar and stop short of 10.
         # Share of non-pay basegame spins that award a short cluster (the bait).
-        self.base_small_rate = float(os.environ.get("MM_BASE_SMALL", "0.10"))
+        self.base_small_rate = float(os.environ.get("MM_BASE_SMALL", "0.28"))
         self.base_pay_rate = float(os.environ.get("MM_BASE_PAY", "0.0"))
         self.base_miss_rate = max(0.0, 1.0 - self.base_small_rate - self.base_pay_rate)
         self.hear_to_speak_rate = 1 / 500
@@ -197,7 +197,11 @@ class GameConfig(Config):
             3: {"multiplier": 8, "collector": 3, "tier_shift": 0},
         }
         # PEAK uses the gold table. Regen cannot spawn pots, so 8/3 stays finite.
-        self.coin_game_power_peak_gold = {"multiplier": 8, "collector": 3, "tier_shift": 0}
+        # Trifecta live half must average ~1,926x so a 1,000x price is 96.3% at 50% dead.
+        # Same gold faces as the rest of the game, weighted to that average, without a
+        # clover/pot chain that would print the 25,000x cap on a full gold board.
+        self.coin_game_power_peak_gold = {"multiplier": 0, "collector": 0, "tier_shift": 0}
+        self.peak_coin_value_weights = [440, 330, 165, 50, 15]
         # Reruns use the same opening rates: coin 100 vs bronze 3/0, silver 6/2, gold 8/3.
         self.coin_game_rerun_power_by_tile_level = {
             1: {"coin": 100, "multiplier": 3, "collector": 0, "tier_shift": 0},
