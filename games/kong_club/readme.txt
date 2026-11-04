@@ -4,8 +4,10 @@ Clusters of 5 or more like-symbols are removed from the board, and symbols above
 fall to fill their place.
 
 #### Basegame:
-Standard tumbling game with Scatter and Wild symbols.
-Minimum of 4 Scatter symbols are required for freeSpin triggers
+6x5 cluster game. Minimum cluster is 5, pays scale with size, and are uncapped.
+The base, Ante, and Hunt bars fill at 10 connections. Bonuses fill at 5.
+3 scatters start See No Evil, 4 start Hear No Evil, 5+ start Speak No Evil.
+Wilds are uncapped and may land in tumbles. Max win is 25,000x. Target RTP is 96.3%.
 
 #### Freegame:
 Same basegame rule, except grid positions have multipliers. Grid positions start in a 'deactivated' state. Once one win occurs,

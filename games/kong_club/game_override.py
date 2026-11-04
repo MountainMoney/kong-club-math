@@ -9,6 +9,9 @@ class GameStateOverride(GameExecutables):
     def reset_book(self):
         super().reset_book()
         self.bonus_variant = None
+        self.speak_direct = False
+        self.upgraded_to_speak = False
+        self.coin_game_cap_hit = False
         self.sticky_wild_positions = []
         self.reset_spin_state(keep_tiles=False)
 
@@ -41,8 +44,15 @@ class GameStateOverride(GameExecutables):
             bucket, pay, tumbles, float(self.config.wincap)
         ):
             self.repeat = True
+        elif self.betmode == "peak_spin" and bucket == "live" and pay <= 1e-9:
+            self.repeat = True
         elif bucket == "cap" and abs(pay - float(self.config.wincap)) > 1e-6:
             self.repeat = True
-        elif getattr(self, "bonus_variant", None) == "madness" and pay < 2000:
-            # Floor is a reject, not a top-up. Cap books at 25,000× stay.
+        elif getattr(self, "coin_game_cap_hit", False):
+            # The 10-rerun cap is a reject. Shipped books never record it.
             self.repeat = True
+        elif getattr(self, "speak_direct", False) and not getattr(self, "upgraded_to_speak", False):
+            floor = float(getattr(self.config, "speak_direct_min_win", 1000.0) or 0.0)
+            # Direct Speak only. An upgrade out of Hear does not take the floor.
+            if pay + 1e-9 < floor and abs(pay - float(self.config.wincap)) > 1e-6:
+                self.repeat = True

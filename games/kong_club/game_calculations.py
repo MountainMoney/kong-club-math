@@ -12,6 +12,8 @@ class GameCalculations(Executables):
     """Pay each cluster base × sum of lit tile multipliers × monkey mult."""
 
     def cluster_base_payout(self, cluster) -> float:
+        if hasattr(self.config, "cluster_pay"):
+            return self.config.cluster_pay(cluster.size, cluster.symbol)
         size = GameCluster.paytable_size(cluster.size)
         return self.config.paytable[(size, cluster.symbol)]
 

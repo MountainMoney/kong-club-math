@@ -61,14 +61,16 @@ class GameExecutables(GameCalculations):
         variant = getattr(self, "bonus_variant", None)
         if variant == "hear":
             key = "bonus_hear"
-        elif variant == "madness":
-            key = "bonus_madness"
+        elif variant in ("speak", "madness"):
+            key = "bonus_speak"
+        elif variant == "see":
+            key = "bonus_see"
         else:
             key = mode
-        self.progress_threshold = self.config.progress_thresholds.get(key, 5)
-        self.progress_value = (
-            self.progress_threshold if mode == "feature_spin" or variant == "madness" else 0
-        )
+        default_bar = 10 if mode in getattr(self.config, "base_like_modes", set()) or mode == "feature_spin" else 5
+        self.progress_threshold = self.config.progress_thresholds.get(key, default_bar)
+        # Speak No Evil refills the bar at the start of every spin.
+        self.progress_value = self.progress_threshold if variant in ("speak", "madness") else 0
         self.progress_activation_count = 0
 
     def reset_spin_state(self, keep_tiles=False):
@@ -78,6 +80,7 @@ class GameExecutables(GameCalculations):
         self.board_activation_fired_this_spin = False
         self.board_activations_this_spin = 0
         self.progress_cap_override = None
+        self.force_bar_fill = False
         self.board_coin_values: dict[tuple[int, int], float] = {}
         self.sticky_wild_positions = []
         betmode = getattr(self, "betmode", "base")
@@ -109,14 +112,17 @@ class GameExecutables(GameCalculations):
         return self.gametype == self.config.freegame_type or self.betmode in (
             "bonus_see",
             "bonus_hear",
-            "bonus_madness",
+            "bonus_speak",
         )
 
     def is_hear_bonus(self) -> bool:
         return self.is_bonus_mode() and getattr(self, "bonus_variant", None) == "hear"
 
+    def is_speak_bonus(self) -> bool:
+        return self.is_bonus_mode() and getattr(self, "bonus_variant", None) in ("speak", "madness")
+
     def is_madness_bonus(self) -> bool:
-        return self.is_bonus_mode() and getattr(self, "bonus_variant", None) == "madness"
+        return self.is_speak_bonus()
 
     def is_see_bonus(self) -> bool:
         return self.is_bonus_mode() and getattr(self, "bonus_variant", None) == "see"
@@ -140,7 +146,7 @@ class GameExecutables(GameCalculations):
                 count = 4
             else:
                 count = int(get_random_outcome(triggers))
-        floor = 4 if getattr(self, "betmode", None) == "bonus_pick" else 3
+        floor = 3
         return min(max(count, floor), self.config.num_reels)
 
     def _fill_initial_board(self):
@@ -166,11 +172,11 @@ class GameExecutables(GameCalculations):
                     self.create_symbol(strip[(start + self.config.num_rows[reel]) % len(strip)])
                 )
                 board.append(column)
-            if wild_count <= self.config.max_initial_wilds or attempts >= 20:
-                self.board = board
-                self.top_symbols = top_symbols
-                self.bottom_symbols = bottom_symbols
-                break
+            # Wilds are uncapped. More than four can land; the strip weights keep that rare.
+            self.board = board
+            self.top_symbols = top_symbols
+            self.bottom_symbols = bottom_symbols
+            break
 
     def _finalize_initial_board(self):
         if self.should_force_initial_scatters():
@@ -181,6 +187,9 @@ class GameExecutables(GameCalculations):
         # Phase A: sticky HEAR disabled — never apply / refresh / level stickies.
         self.sticky_wild_positions = []
 
+        need = int(getattr(self, "_plant_scatters_on_reveal", 0) or 0)
+        if need and self.betmode not in ("feature_spin", "peak_spin"):
+            self._ensure_min_scatters(need)
         self.get_special_symbols_on_board()
         self.prepare_landed_specials(initial_fill=True)
         reveal_event(self)
@@ -209,12 +218,46 @@ class GameExecutables(GameCalculations):
         if third == window:
             hot = f"{variant}_burst"
             mid = f"{variant}_steady"
-            hot_p = 0.24 if variant == "hear" else 0.08
+            hot_p = 0.12 if variant == "hear" else 0.03
             return hot if random.random() < hot_p else mid
         return f"{variant}_slow" if random.random() < 0.88 else f"{variant}_steady"
 
+    def _uses_base_mix(self) -> bool:
+        mode = getattr(self, "betmode", "")
+        if mode not in getattr(self.config, "base_like_modes", set()):
+            return False
+        if getattr(self, "gametype", None) == self.config.freegame_type:
+            return False
+        if self.outcome_bucket() == "cap":
+            return False
+        return True
+
+    def _draw_base_mix_board(self) -> None:
+        """Miss, a short bait chain, or a 10-connection pay chain."""
+        bucket = self.outcome_bucket()
+        if self.should_force_initial_scatters() or bucket == "freegame":
+            self._plant_quiet_miss()
+            return
+        if bucket == "bar_pay":
+            self.progress_cap_override = None
+            self.force_bar_fill = True
+            self._plant_short_chain(steps=10, vary_size=True, pool=list(self.config.low_symbols))
+            return
+        roll = random.random()
+        small_p = float(getattr(self.config, "base_small_rate", 0.12))
+        if roll < small_p:
+            # Two low tumbles: the bar moves and the pay stays in the body.
+            self.progress_cap_override = max(1, self.progress_threshold - 1)
+            self._plant_short_chain(steps=2, vary_size=False, pool=list(self.config.low_symbols))
+        else:
+            self._plant_quiet_miss()
+
     def draw_prepared_board(self):
         """Initial fill: choose a random start per column and read 5 symbols downward."""
+        if self._uses_base_mix():
+            self._draw_base_mix_board()
+            self._finalize_initial_board()
+            return
         if getattr(self, "reel_set_name", "") == "base_teaser":
             self._plant_dead_teaser()
             self._finalize_initial_board()
@@ -527,7 +570,7 @@ class GameExecutables(GameCalculations):
 
     def apply_gamble_two_bait(self):
         """Every gamble trigger land: ST on reels 0 and 1, then tease. No rate."""
-        if getattr(self, "betmode", None) != "bonus_pick":
+        if getattr(self, "betmode", None) != "bonus_risky":
             return
         if getattr(self, "gametype", None) == self.config.freegame_type:
             return
@@ -568,12 +611,12 @@ class GameExecutables(GameCalculations):
         self.anticipation = anticipation
 
     def resolve_bonus_variant_from_scatters(self, scatter_count: int) -> str:
-        """3 ST = See. 4 ST = Hear. 5+ ST = Monkey Madness."""
-        variant_map = getattr(self.config, "bonus_variant_map", {3: "see", 4: "hear", 5: "madness", 6: "madness"})
+        """3 ST = See. 4 ST = Hear. 5+ ST = Speak No Evil."""
+        variant_map = getattr(self.config, "bonus_variant_map", {3: "see", 4: "hear", 5: "speak", 6: "speak"})
         if scatter_count in variant_map:
             return variant_map[scatter_count]
         if scatter_count >= 5:
-            return "madness"
+            return "speak"
         if scatter_count >= 4:
             return "hear"
         if scatter_count >= 3:
@@ -632,11 +675,8 @@ class GameExecutables(GameCalculations):
 
     def increment_tile(self, reel: int, row: int):
         current = max(self.tile_levels[reel][row], 0)
-        # 5ST / Monkey Madness: no bronze — first connection is silver, then gold.
-        if self.is_madness_bonus() and current < 2:
-            next_level = 2
-        else:
-            next_level = current + 1
+        # plain -> bronze -> silver -> gold. Gold does not upgrade further.
+        next_level = current + 1
         self.tile_levels[reel][row] = min(next_level, self.config.max_tile_level)
         self.position_multipliers[reel][row] = self.level_to_multiplier(self.tile_levels[reel][row])
 
@@ -741,6 +781,39 @@ class GameExecutables(GameCalculations):
             self.wincap_triggered = True
             wincap_event(self)
 
+    def _maybe_tumble_special(self, sym):
+        """Wilds can land in a tumble. Scatters that tumble in count."""
+        name = getattr(sym, "name", None)
+        if name in {self.config.standard_wild, self.config.scatter_symbol, *self.config.coin_symbols}:
+            return sym
+        if self.betmode in ("feature_spin", "peak_spin"):
+            scatter_p = 0.0
+        elif self.is_bonus_mode():
+            scatter_p = float(getattr(self.config, "tumble_scatter_chance_bonus", 0.0))
+        else:
+            scatter_p = float(getattr(self.config, "tumble_scatter_chance_base", 0.0))
+        wild_p = float(getattr(self.config, "tumble_wild_chance", 0.0))
+        roll = random.random()
+        if roll < wild_p:
+            return self.create_symbol(self.config.standard_wild)
+        if roll < wild_p + scatter_p:
+            return self.create_symbol(self.config.scatter_symbol)
+        return sym
+
+    def _ensure_min_scatters(self, count: int) -> None:
+        """Place scatters until the board shows at least `count` of them."""
+        scatter = self.config.scatter_symbol
+        have = self.count_special_symbols("scatter")
+        guard = 0
+        while have < count and guard < 40:
+            guard += 1
+            reel = random.randrange(self.config.num_reels)
+            row = random.randrange(self.config.num_rows[reel])
+            if self.board[reel][row].name == scatter:
+                continue
+            self.board[reel][row] = self.create_symbol(scatter)
+            have += 1
+
     def gravity_and_refill(self, emit_event=True):
         self.board_before_tumble = copy(self.board)
         old_coin_values = dict(getattr(self, "board_coin_values", {}) or {})
@@ -759,6 +832,7 @@ class GameExecutables(GameCalculations):
             new_column = [None] * gap_count + survivors
             for slot in range(gap_count):
                 sym = self._draw_from_strip(reel, self.refill_strip)
+                sym = self._maybe_tumble_special(sym)
                 sym.explode = False
                 new_column[slot] = sym
                 self.new_symbols_from_tumble[reel].append(sym)
@@ -846,14 +920,14 @@ class GameExecutables(GameCalculations):
             update_tumble_win_event(self)
 
         removed = remove_coins_from_board(self)
-        # See clears ranks after a coin game. Hear and Madness keep them.
+        # See clears ranks after a coin game. Hear and Speak keep them.
         # One coin game per spin — the bar does not arm a second one.
         if self.is_see_bonus():
             self.reset_grid_mults()
             update_tile_event(self)
         self.progress_value = 0
         progress_fill_event(self)
-        if self.is_madness_bonus():
+        if self.is_speak_bonus():
             self.progress_value = self.progress_threshold
             progress_fill_event(self)
         if refill_after and removed:
@@ -916,6 +990,15 @@ class GameExecutables(GameCalculations):
             if self.detect_clusters() and not self.wincap_triggered:
                 continue
             break
+        if (
+            getattr(self, "force_bar_fill", False)
+            and not self.board_activation_fired_this_spin
+            and not self.wincap_triggered
+        ):
+            self.progress_value = self.progress_threshold
+            progress_fill_event(self)
+            self.tumbles_this_spin = max(int(getattr(self, "tumbles_this_spin", 0) or 0), 1)
+            self.execute_board_activation(refill_after=False)
 
     def award_scatter_payout(self):
         if not self.config.scatter_pays:

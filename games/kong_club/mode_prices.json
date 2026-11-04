@@ -1,0 +1,14 @@
+{
+  "base": 1.0,
+  "base_ante": 1.4,
+  "hunt_2": 5.0,
+  "hunt_3": 6.0,
+  "hunt_4": 10.0,
+  "hunt_5": 25.0,
+  "feature_spin": 125.3726,
+  "peak_spin": 7947.4039,
+  "bonus_see": 194.364,
+  "bonus_hear": 816.5175,
+  "bonus_pick": 936.3731,
+  "bonus_risky": 1057.9378
+}
