@@ -229,6 +229,35 @@ class GameConfig(Config):
         # Exact Le Bandit cluster pays in base AND bonus (do not dilute the table).
         # RTP levers: shorter strip runs (fewer tumbles), trigger rarity — not pay scales.
         self.bonus_cluster_pay_scale = 1.0
+        # Priced buys only. Base, Ante, Hunt, Feature, and Trifecta keep their spreads.
+        # These levers pull See toward 100x, Hear toward 300x, and the two Speaks
+        # toward the Mystery (330x) and Risky (500x) mixes.
+        self.buy_cluster_pay_scale = 1.0
+        self.buy_power_scale = 1.0
+        # See only needs a light trim (about 100x). Hear needs the clover/pot tail cut (about 300x).
+        self.see_power_scale = 0.85
+        self.see_cluster_pay_scale = 0.96
+        self.hear_power_scale = 0.62
+        self.hear_cluster_pay_scale = 0.90
+        self.mystery_speak_power_scale = 0.55
+        self.risky_speak_power_scale = 0.90
+        self.mystery_speak_cluster_scale = 0.95
+        self.risky_speak_cluster_scale = 1.0
+        self.buy_coin_value_weights = {
+            "CB": [84, 10, 4, 2],
+            "CS": [28, 26, 24, 14, 8],
+            "CG": [975, 16, 5, 3, 1],
+        }
+        self.mystery_speak_coin_weights = {
+            "CB": [86, 9, 3, 2],
+            "CS": [32, 28, 22, 12, 6],
+            "CG": [972, 16, 7, 3, 2],
+        }
+        self.risky_speak_coin_weights = {
+            "CB": [82, 12, 4, 2],
+            "CS": [24, 26, 26, 16, 8],
+            "CG": [968, 20, 7, 3, 2],
+        }
         # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table — DO NOT dilute.
         self.paytable_scale = 1.0
         # Always pay face as labeled (1.0). Do not soft-scale coin values.

@@ -50,25 +50,25 @@
         },
         {
             "name": "bonus_see",
-            "cost": 112.6465,
+            "cost": 100.0,
             "events": "books_bonus_see.jsonl.zst",
             "weights": "lookUpTable_bonus_see_0.csv"
         },
         {
             "name": "bonus_hear",
-            "cost": 502.0854,
+            "cost": 300.0,
             "events": "books_bonus_hear.jsonl.zst",
             "weights": "lookUpTable_bonus_hear_0.csv"
         },
         {
             "name": "bonus_pick",
-            "cost": 550.9647,
+            "cost": 330.0,
             "events": "books_bonus_pick.jsonl.zst",
             "weights": "lookUpTable_bonus_pick_0.csv"
         },
         {
             "name": "bonus_risky",
-            "cost": 625.3584,
+            "cost": 500.0,
             "events": "books_bonus_risky.jsonl.zst",
             "weights": "lookUpTable_bonus_risky_0.csv"
         }

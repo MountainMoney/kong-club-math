@@ -60,33 +60,33 @@ Payout units: book/LUT payouts are hundredths of stake, so 9600 means 96.00x.
 
 ### bonus_see
 - Spins: 4
-- Mean payout / EV: 25.2000x
+- Mean payout / EV: 24.1925x
 - Hit rate: 100.00%
-- Std dev: 19.8161
-- Max observed: 58.82x
+- Std dev: 19.0248
+- Max observed: 56.47x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 58.82x / 58.82x
-- CVaR95 / CVaR99: 58.82x / 58.82x
+- P95 / P99: 56.47x / 56.47x
+- CVaR95 / CVaR99: 56.47x / 56.47x
 
 ### bonus_hear
 - Spins: 4
-- Mean payout / EV: 157.0825x
+- Mean payout / EV: 139.5000x
 - Hit rate: 100.00%
-- Std dev: 132.0130
-- Max observed: 354.05x
+- Std dev: 116.7754
+- Max observed: 313.75x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 354.05x / 354.05x
-- CVaR95 / CVaR99: 354.05x / 354.05x
+- P95 / P99: 313.75x / 313.75x
+- CVaR95 / CVaR99: 313.75x / 313.75x
 
 ### bonus_pick
 - Spins: 4
-- Mean payout / EV: 25.2000x
+- Mean payout / EV: 24.1925x
 - Hit rate: 100.00%
-- Std dev: 19.8161
-- Max observed: 58.82x
+- Std dev: 19.0248
+- Max observed: 56.47x
 - Near max rate (>=90% cap): 0.00%
-- P95 / P99: 58.82x / 58.82x
-- CVaR95 / CVaR99: 58.82x / 58.82x
+- P95 / P99: 56.47x / 56.47x
+- CVaR95 / CVaR99: 56.47x / 56.47x
 
 ### bonus_risky
 - Spins: 4

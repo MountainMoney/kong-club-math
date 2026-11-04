@@ -1263,7 +1263,7 @@ def test_bonus_clusters_apply_pay_scale():
     gs.mark_level_up_tiles(clusters)
     raw_total = gs.evaluate_clusters(clusters)["totalWin"]
     gs.award_clusters(clusters)
-    scale = float(gs.config.bonus_cluster_pay_scale)
+    scale = float(gs.config.bonus_cluster_pay_scale) * float(gs.config.hear_cluster_pay_scale)
     expected = round(raw_total * scale, 6)
     assert gs.win_data["totalWin"] == expected
     assert all(win["win"] > 0.0 for win in gs.win_data["wins"])

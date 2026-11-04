@@ -77,11 +77,59 @@ def _pick_weighted_coin_value(
         if len(weights) != len(pool):
             weights = [1] * len(pool)
         return int(rng.choices(pool, weights=weights, k=1)[0])
+    buy_weights = _buy_coin_weights(gamestate, tile_level)
+    if buy_weights is not None:
+        pool, weights = buy_weights
+        return int(rng.choices(pool, weights=weights, k=1)[0])
     pool = pools.get(tile_level) or pools.get(1) or [1]
     weights = weights_by_level.get(tile_level)
     if not weights or len(weights) != len(pool):
         weights = [1] * len(pool)
     return int(rng.choices(pool, weights=weights, k=1)[0])
+
+
+def _direct_buy(gamestate: "GameExecutables") -> bool:
+    return getattr(gamestate, "betmode", None) in {
+        "bonus_see",
+        "bonus_hear",
+        "bonus_pick",
+        "bonus_risky",
+    }
+
+
+def _buy_power_scale(gamestate: "GameExecutables") -> float:
+    """Clover/pot rate scale for the priced buys only. Base and the other modes stay put."""
+    if not _direct_buy(gamestate):
+        return 1.0
+    variant = getattr(gamestate, "bonus_variant", None)
+    mode = getattr(gamestate, "betmode", None)
+    if variant == "speak" and mode == "bonus_pick":
+        return float(getattr(gamestate.config, "mystery_speak_power_scale", 1.0) or 1.0)
+    if variant == "speak" and mode == "bonus_risky":
+        return float(getattr(gamestate.config, "risky_speak_power_scale", 1.0) or 1.0)
+    if variant == "hear" or mode == "bonus_hear":
+        return float(getattr(gamestate.config, "hear_power_scale", None) or getattr(gamestate.config, "buy_power_scale", 1.0) or 1.0)
+    if variant == "see" or mode == "bonus_see":
+        return float(getattr(gamestate.config, "see_power_scale", None) or getattr(gamestate.config, "buy_power_scale", 1.0) or 1.0)
+    return float(getattr(gamestate.config, "buy_power_scale", 1.0) or 1.0)
+
+
+def _buy_coin_weights(gamestate: "GameExecutables", tile_level: int):
+    if not _direct_buy(gamestate):
+        return None
+    table = getattr(gamestate.config, "buy_coin_value_weights", None) or {}
+    symbol = "CB" if tile_level <= 1 else "CS" if tile_level == 2 else "CG"
+    variant = getattr(gamestate, "bonus_variant", None)
+    mode = getattr(gamestate, "betmode", None)
+    if variant == "speak" and mode == "bonus_pick":
+        table = getattr(gamestate.config, "mystery_speak_coin_weights", None) or table
+    elif variant == "speak" and mode == "bonus_risky":
+        table = getattr(gamestate.config, "risky_speak_coin_weights", None) or table
+    weights = table.get(symbol)
+    pool = list((getattr(gamestate.config, "coin_values", {}) or {}).get(symbol) or [])
+    if not weights or not pool or len(weights) != len(pool):
+        return None
+    return pool, list(weights)
 
 
 def _pick_multi_value(gamestate: "GameExecutables", rng: random.Random) -> int:
@@ -141,11 +189,12 @@ def _pick_cell_kind(
         coin_w = int(getattr(gamestate.config, "coin_game_coin_weight", 100) or 100)
     labels = ["coin"]
     weights = [max(coin_w, 0)]
-    multi_w = int(power.get("multiplier", 0) or 0)
+    scale = _buy_power_scale(gamestate)
+    multi_w = int(round(int(power.get("multiplier", 0) or 0) * scale))
     if multi_w > 0:
         labels.append("multiplier")
         weights.append(multi_w)
-    collector_w = int(power.get("collector", 0) or 0)
+    collector_w = int(round(int(power.get("collector", 0) or 0) * scale))
     if collector_w > 0:
         labels.append("collector")
         weights.append(collector_w)

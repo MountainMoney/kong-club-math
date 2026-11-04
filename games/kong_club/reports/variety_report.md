@@ -40,19 +40,19 @@
 
 <!-- peak_spin reels peak_a:58%,peak_b:42% -->
 <!-- peak_spin scatters==2 0.00% big10x books 0 -->
-| bonus_see | 3 | 460 | 0.4% | 2.2% | 459 | 0 | 48.4% / 1.00% | 31.4% | 84%/0%/16%/8% | 29%/31%/40% | eff 459 |
+| bonus_see | 3 | 460 | 0.5% | 2.3% | 459 | 0 | 47.3% / 0.95% | 31.2% | 84%/0%/16%/7% | 29%/31%/40% | eff 459 |
 
 <!-- bonus_see reels see_steady:57%,see_slow:42%,see_burst:1% -->
-<!-- bonus_see scatters==2 22.60% big10x books 0 -->
-| bonus_hear | 3 | 484 | 0.4% | 2.1% | 483 | 0 | 71.4% / 5.20% | 33.0% | 79%/0%/21%/10% | 25%/33%/42% | eff 483, cap books 5 |
+<!-- bonus_see scatters==2 22.56% big10x books 0 -->
+| bonus_hear | 3 | 484 | 0.5% | 2.3% | 481 | 0 | 69.6% / 5.02% | 33.5% | 86%/0%/14%/4% | 25%/33%/42% | eff 481, cap books 1 |
 
 <!-- bonus_hear reels hear_steady:49%,hear_slow:44%,hear_burst:7% -->
-<!-- bonus_hear scatters==2 21.80% big10x books 0 -->
-| bonus_pick | 9 | 479 | 0.2% | 2.1% | 479 | 0 | 63.6% / 4.00% | 34.4% | 72%/0%/28%/13% |  | eff 479, cap books 7 |
+<!-- bonus_hear scatters==2 21.71% big10x books 0 -->
+| bonus_pick | 9 | 479 | 0.2% | 2.1% | 479 | 0 | 63.3% / 4.16% | 34.4% | 76%/0%/24%/9% |  | eff 479, cap books 2 |
 
-<!-- bonus_pick reels see_steady:29%,hear_steady:23%,see_slow:20%,hear_slow:18%,hear_burst:4%,speak_low:3%,speak_mid:2%,speak_high:1%,see_burst:1% -->
-<!-- bonus_pick scatters==2 23.60% big10x books 0 -->
-| bonus_risky | 7 | 246 | 0.4% | 4.1% | 246 | 0 | 38.8% / 3.60% | 13.8% | 57%/0%/43%/19% |  | eff 246, cap books 8 |
+<!-- bonus_pick reels see_steady:29%,hear_steady:23%,see_slow:20%,hear_slow:18%,hear_burst:4%,speak_low:3%,speak_mid:1%,see_burst:1%,speak_high:1% -->
+<!-- bonus_pick scatters==2 23.80% big10x books 0 -->
+| bonus_risky | 7 | 246 | 0.6% | 5.8% | 239 | 0 | 36.1% / 3.39% | 14.4% | 61%/0%/39%/19% |  | top10 5.8%, eff 239, cap books 7 |
 
-<!-- bonus_risky reels base_quiet:50%,hear_steady:20%,hear_slow:16%,speak_low:5%,hear_burst:4%,speak_mid:4%,speak_high:1% -->
-<!-- bonus_risky scatters==2 61.20% big10x books 0 -->
+<!-- bonus_risky reels base_quiet:50%,hear_steady:20%,hear_slow:16%,speak_low:5%,hear_burst:4%,speak_mid:4%,speak_high:2% -->
+<!-- bonus_risky scatters==2 61.43% big10x books 0 -->
