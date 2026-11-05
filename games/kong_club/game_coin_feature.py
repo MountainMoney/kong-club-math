@@ -179,6 +179,9 @@ def _pick_cell_kind(
     reactivate: bool = False,
 ) -> str:
     """Roll coin vs clover vs pot. Reruns may spawn pots (silver and gold)."""
+    # Trifecta reruns are plain coins. The opening board is composed, not rolled.
+    if getattr(gamestate, "betmode", None) == "peak_spin":
+        return "coin"
     if reactivate:
         table = getattr(gamestate.config, "coin_game_rerun_power_by_tile_level", None) or {}
         level = max(1, min(3, int(tile_level or 1)))
@@ -441,6 +444,89 @@ MAX_COLLECTOR_REGENS = MAX_POWER_ACTIONS
 COIN_FEATURE_WINCAP = 25000
 
 
+# Trifecta live board: clovers sit on corners so each one multiplies its own coins.
+_PEAK_CLOVER_SPOTS = [(1, 0), (1, 4), (4, 0), (4, 4)]
+_PEAK_POT_SPOT = (0, 2)
+
+
+def _peak_show_roll(
+    gamestate: "GameExecutables",
+    rng: random.Random,
+    positions: list[tuple[int, int]],
+    round_index: int,
+) -> tuple[list[dict], list[tuple[int, int, int]], list[tuple[int, int]]]:
+    """Several 2x/3x clovers and one pot, on small gold faces.
+
+    Reruns replace the spent cells with 25-coins, so the resolved total stays
+    near the 1,926x live average instead of running away to the cap.
+    """
+    spot = set(positions)
+    pot = _PEAK_POT_SPOT if _PEAK_POT_SPOT in spot else positions[0]
+    clover_spots = [pos for pos in _PEAK_CLOVER_SPOTS if pos in spot and pos != pot]
+    roll = rng.random()
+    count = 4 if roll < 0.62 else 3 if roll < 0.92 else 2
+    chosen = clover_spots[:count]
+    items: list[dict] = [_build_collector_reveal(pot[0], pot[1], 3, round_index=round_index)]
+    multis: list[tuple[int, int, int]] = []
+    for index, (reel, row) in enumerate(chosen):
+        # Mostly 2x, with a 3x often enough that the board reads as an event.
+        multi = 3 if rng.random() < (0.42 if index == 0 else 0.28) else 2
+        items.append(_build_multi_reveal(reel, row, multi, 3, round_index=round_index))
+        multis.append((reel, row, multi))
+    chosen_set = set(chosen)
+    for reel, row in positions:
+        if (reel, row) == pot or (reel, row) in chosen_set:
+            continue
+        value = 50 if rng.random() < 0.06 else 25
+        items.append(_build_coin_reveal(reel, row, "CG", 3, value, round_index=round_index))
+    return items, multis, [pot]
+
+
+def _ensure_small_game_clover(
+    gamestate: "GameExecutables", rng: random.Random, working: list[dict]
+) -> list[dict]:
+    """A small stack of coins shows a 2x or 3x even when the roll missed.
+
+    The clover replaces the smallest coin that actually touches another coin,
+    so the extra multiplier is a couple of small faces, not a gold chain.
+    """
+    if getattr(gamestate, "betmode", None) == "peak_spin":
+        return working
+    # Tests park every tier at 0 clovers when they want a coin-only resolve.
+    table = getattr(gamestate.config, "coin_game_power_by_tile_level", {}) or {}
+    if table and all(int((profile or {}).get("multiplier", 0) or 0) <= 0 for profile in table.values()):
+        return working
+    if any(item.get("kind") == "multiplier" for item in working):
+        return working
+    coins = [item for item in working if item.get("kind") == "coin"]
+    if len(coins) < 2:
+        return working
+    opening = sum(int(item.get("value") or 0) for item in coins)
+    if opening >= 60:
+        return working
+
+    def neighbors(item: dict) -> int:
+        reel, row = _item_pos(item)
+        return sum(
+            1
+            for other in coins
+            if other is not item and _is_adjacent_8(reel, row, *_item_pos(other))
+        )
+
+    coins.sort(key=lambda item: (-neighbors(item), int(item.get("value") or 0), _item_pos(item)))
+    victim = coins[0]
+    multi = 2 if rng.random() < 0.68 else 3
+    replacement = _build_multi_reveal(
+        int(victim["reel"]),
+        int(victim["row"]),
+        multi,
+        int(victim.get("tileLevel") or 1),
+        round_index=int(victim.get("round") or 1),
+    )
+    victim_pos = _item_pos(victim)
+    return [replacement if _item_pos(item) == victim_pos else item for item in working]
+
+
 def _roll_prizes(
     gamestate: "GameExecutables",
     rng: random.Random,
@@ -449,6 +535,8 @@ def _roll_prizes(
     *,
     reactivate: bool = False,
 ) -> tuple[list[dict], list[tuple[int, int, int]], list[tuple[int, int]]]:
+    if getattr(gamestate, "betmode", None) == "peak_spin" and not reactivate:
+        return _peak_show_roll(gamestate, rng, positions, round_index)
     round_items: list[dict] = []
     multis: list[tuple[int, int, int]] = []
     collectors: list[tuple[int, int]] = []
@@ -801,6 +889,7 @@ def _resolve_virtual_coins(
     )
     if not working:
         return 0.0, [], 0
+    working = _ensure_small_game_clover(gamestate, rng, working)
     working = _stamp_round(working, round_index, "spawn")
     all_items.extend(working)
 

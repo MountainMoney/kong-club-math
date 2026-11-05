@@ -228,12 +228,14 @@ class GameState(GameStateOverride):
             extra = 4
             mode_state_event(self, "upgrade_bonus_hear")
         elif self.is_hear_bonus() and count >= 5:
-            # Upgrade keeps ranks and does not take the direct-entry 1,000× floor.
+            # Upgrade keeps the tiles and does not take the direct-entry 1,000× floor.
+            # Each carried rank drops one step so this path averages with a direct Speak.
             self.upgraded_to_speak = True
             self.speak_direct = False
             self.bonus_variant = "speak"
             extra = 4
             mode_state_event(self, "upgrade_bonus_speak")
+            self.ease_upgrade_ranks()
         elif count >= 3:
             extra = 4
         else:

@@ -163,16 +163,16 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert config.max_activation_coins_by_mode["base_ante"] is None
     assert "REFILL_BONUS" in config.reels
     assert config.tumble_refill_reel_ids["INITIAL_BONUS"] == "REFILL_BONUS"
-    assert config.coin_game_multi_weights == [35, 28, 18, 12, 5, 2]
+    assert config.coin_game_multi_weights == [58, 28, 10, 3, 1, 0]
     assert config.coin_game_coin_weight == 100
     assert "base_ante" in config.coin_game_power_weights
     for profile in config.coin_game_power_weights.values():
         # Mode fallback matches bronze; TIER_SHIFT retired.
-        assert profile == {"multiplier": 3, "collector": 0, "tier_shift": 0}
+        assert profile == {"multiplier": 12, "collector": 0, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level == {
-        1: {"multiplier": 3, "collector": 0, "tier_shift": 0},
-        2: {"multiplier": 6, "collector": 2, "tier_shift": 0},
-        3: {"multiplier": 8, "collector": 3, "tier_shift": 0},
+        1: {"multiplier": 12, "collector": 0, "tier_shift": 0},
+        2: {"multiplier": 10, "collector": 1, "tier_shift": 0},
+        3: {"multiplier": 8, "collector": 2, "tier_shift": 0},
     }
     assert config.coin_game_power_peak_gold == {"multiplier": 0, "collector": 0, "tier_shift": 0}
     assert config.peak_spin_cost == 1000.0
@@ -1102,7 +1102,7 @@ def test_extra_chance_rolls_the_same_powers():
     gs = state()
     gs.betmode = "base_ante"
     weights = _mode_power_weights(gs)
-    assert weights["multiplier"] == 3
+    assert weights["multiplier"] == 12
     assert weights["collector"] == 0
     assert weights["tier_shift"] == 0
 
@@ -1111,14 +1111,14 @@ def test_power_weights_follow_tile_level():
     from game_coin_feature import _tile_power_weights
 
     gs = state()
-    assert _tile_power_weights(gs, 1) == {"multiplier": 3, "collector": 0, "tier_shift": 0}
-    assert _tile_power_weights(gs, 2) == {"multiplier": 6, "collector": 2, "tier_shift": 0}
-    assert _tile_power_weights(gs, 3) == {"multiplier": 8, "collector": 3, "tier_shift": 0}
+    assert _tile_power_weights(gs, 1) == {"multiplier": 12, "collector": 0, "tier_shift": 0}
+    assert _tile_power_weights(gs, 2) == {"multiplier": 10, "collector": 1, "tier_shift": 0}
+    assert _tile_power_weights(gs, 3) == {"multiplier": 8, "collector": 2, "tier_shift": 0}
     assert _tile_power_weights(gs, 0) == _tile_power_weights(gs, 1)
     assert _tile_power_weights(gs, 99) == _tile_power_weights(gs, 3)
     gs.betmode = "peak_spin"
-    assert _tile_power_weights(gs, 3) == {"multiplier": 8, "collector": 3, "tier_shift": 0}
-    assert _tile_power_weights(gs, 2) == {"multiplier": 6, "collector": 2, "tier_shift": 0}
+    assert _tile_power_weights(gs, 3) == {"multiplier": 0, "collector": 0, "tier_shift": 0}
+    assert _tile_power_weights(gs, 2) == {"multiplier": 10, "collector": 1, "tier_shift": 0}
 
 
 def test_progress_fills_per_tumble_not_per_cluster():

@@ -167,7 +167,7 @@ class GameConfig(Config):
         # Tuned so a basegame spin averages TARGET_BASE_SPIN_EV. Pay spins are
         # the rare bar fills; small spins move the bar and stop short of 10.
         # Share of non-pay basegame spins that award a short cluster (the bait).
-        self.base_small_rate = float(os.environ.get("MM_BASE_SMALL", "0.28"))
+        self.base_small_rate = float(os.environ.get("MM_BASE_SMALL", "0.46"))
         self.base_pay_rate = float(os.environ.get("MM_BASE_PAY", "0.0"))
         self.base_miss_rate = max(0.0, 1.0 - self.base_small_rate - self.base_pay_rate)
         self.hear_to_speak_rate = 1 / 500
@@ -184,45 +184,44 @@ class GameConfig(Config):
         self.max_board_activations_hear = 1
         self.coin_game_max_reruns = 10
         # MULTI faces — LOCKED Cole 2026-07-18 (COIN_POWERS_LOCKED.md).
+        # Weights sit on 2x and 3x. The 10x and 20x faces stay legal but almost never
+        # roll, which pays for clovers showing up on small coin games.
         self.coin_game_multi_values = [2, 3, 4, 5, 10, 20]
-        self.coin_game_multi_weights = [35, 28, 18, 12, 5, 2]
+        self.coin_game_multi_weights = [58, 28, 10, 3, 1, 0]
         # Baseline vs power weights when rolling each lit cell's prize kind.
         self.coin_game_coin_weight = 100
-        # Per-tile-tier powers (same table in every priced mode). Coin 100 vs:
-        # bronze 3/0 (~2.9% clover · 0% pot), silver 6/2, gold 8/3.
-        # TIER_SHIFT stays retired.
+        # Bronze clovers are common (a 2x on a short stack). Silver clovers are a bit
+        # more common than before, and the pot rate is trimmed to fund that.
+        # Gold clover rate stays put. TIER_SHIFT stays retired.
         self.coin_game_power_by_tile_level = {
-            1: {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            2: {"multiplier": 6, "collector": 2, "tier_shift": 0},
-            3: {"multiplier": 8, "collector": 3, "tier_shift": 0},
+            1: {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            2: {"multiplier": 10, "collector": 1, "tier_shift": 0},
+            3: {"multiplier": 8, "collector": 2, "tier_shift": 0},
         }
-        # PEAK uses the gold table. Regen cannot spawn pots, so 8/3 stays finite.
-        # Trifecta live half must average ~1,926x so a 1,000x price is 96.3% at 50% dead.
-        # Same gold faces as the rest of the game, weighted to that average, without a
-        # clover/pot chain that would print the 25,000x cap on a full gold board.
+        # Trifecta live boards are composed (several clovers and one pot) rather than
+        # rolled from this table. Reruns are plain 25-coins so the live half stays ~1,926x.
         self.coin_game_power_peak_gold = {"multiplier": 0, "collector": 0, "tier_shift": 0}
-        self.peak_coin_value_weights = [440, 330, 165, 50, 15]
-        # Reruns use the same opening rates: coin 100 vs bronze 3/0, silver 6/2, gold 8/3.
+        self.peak_coin_value_weights = [1, 0, 0, 0, 0]
         self.coin_game_rerun_power_by_tile_level = {
-            1: {"coin": 100, "multiplier": 3, "collector": 0, "tier_shift": 0},
-            2: {"coin": 100, "multiplier": 6, "collector": 2, "tier_shift": 0},
-            3: {"coin": 100, "multiplier": 8, "collector": 3, "tier_shift": 0},
+            1: {"coin": 100, "multiplier": 12, "collector": 0, "tier_shift": 0},
+            2: {"coin": 100, "multiplier": 10, "collector": 1, "tier_shift": 0},
+            3: {"coin": 100, "multiplier": 8, "collector": 2, "tier_shift": 0},
         }
         # Mode fallback matches bronze so Extra Chance / unknown modes do not invent pots.
         self.coin_game_power_weights = {
-            "base": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "base_ante": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "feature_spin": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "peak_spin": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_see": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_hear": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_speak": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_pick": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_risky": {"multiplier": 3, "collector": 0, "tier_shift": 0},
+            "base": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "base_ante": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "feature_spin": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "peak_spin": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_see": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_hear": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_speak": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_pick": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_risky": {"multiplier": 12, "collector": 0, "tier_shift": 0},
         }
         for hunt_name in HUNT_COSTS:
             self.coin_game_power_weights[hunt_name] = {
-                "multiplier": 3,
+                "multiplier": 12,
                 "collector": 0,
                 "tier_shift": 0,
             }
@@ -239,25 +238,31 @@ class GameConfig(Config):
         self.see_cluster_pay_scale = 0.96
         self.hear_power_scale = 0.62
         self.hear_cluster_pay_scale = 0.90
-        self.mystery_speak_power_scale = 0.55
-        self.risky_speak_power_scale = 0.90
-        self.mystery_speak_cluster_scale = 0.95
-        self.risky_speak_cluster_scale = 1.0
+        # Direct Speak (Mystery / Risky) is lifted so it averages with a Hear→Speak
+        # upgrade. Upgrades drop carried gold and silver to bronze, which takes the
+        # other side of that gap. Prices stay put via the lookup weights.
+        self.mystery_speak_power_scale = 0.72
+        self.risky_speak_power_scale = 1.12
+        self.mystery_speak_cluster_scale = 0.98
+        self.risky_speak_cluster_scale = 1.02
         self.buy_coin_value_weights = {
             "CB": [84, 10, 4, 2],
             "CS": [28, 26, 24, 14, 8],
             "CG": [975, 16, 5, 3, 1],
         }
         self.mystery_speak_coin_weights = {
-            "CB": [86, 9, 3, 2],
-            "CS": [32, 28, 22, 12, 6],
-            "CG": [972, 16, 7, 3, 2],
+            "CB": [78, 14, 5, 3],
+            "CS": [22, 26, 26, 16, 10],
+            "CG": [955, 28, 10, 5, 2],
         }
         self.risky_speak_coin_weights = {
-            "CB": [82, 12, 4, 2],
-            "CS": [24, 26, 26, 16, 8],
-            "CG": [968, 20, 7, 3, 2],
+            "CB": [74, 16, 6, 4],
+            "CS": [18, 24, 28, 18, 12],
+            "CG": [945, 32, 14, 6, 3],
         }
+        # Share of base-game hits that stop at 8/10 on the bar (4 of 5 full).
+        # Fraction of ordinary basegame spins that walk the bar to about 8/10.
+        self.base_near_miss_share = 0.05
         # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table — DO NOT dilute.
         self.paytable_scale = 1.0
         # Always pay face as labeled (1.0). Do not soft-scale coin values.
@@ -514,6 +519,8 @@ class GameConfig(Config):
         seed: int,
         strip_len: int = 50,
         run_weights: tuple[int, int, int] = (40, 45, 15),
+        *,
+        organic: bool = False,
     ) -> list[list[str]]:
         """Build six independent run-based strips.
 
@@ -529,13 +536,62 @@ class GameConfig(Config):
             strip: list[str] = []
             while len(strip) < strip_len:
                 symbol = reel_rng.choices(symbols, weights=weight_values, k=1)[0]
+                if organic and strip and symbol == strip[-1]:
+                    for _ in range(5):
+                        symbol = reel_rng.choices(symbols, weights=weight_values, k=1)[0]
+                        if symbol != strip[-1]:
+                            break
+                    if symbol == strip[-1]:
+                        alternatives = [
+                            name
+                            for name, weight in zip(symbols, weight_values)
+                            if weight > 0 and name != strip[-1]
+                        ]
+                        if alternatives:
+                            symbol = alternatives[reel_rng.randrange(len(alternatives))]
                 run_len = reel_rng.choices([1, 2, 3], weights=list(run_weights), k=1)[0]
-                strip.extend([symbol] * run_len)
+                strip.extend([symbol] * min(run_len, 3))
             strip = strip[:strip_len]
             self._light_shuffle_runs(strip, rng=random.Random(seed + reel * 37))
             self._ensure_coin_stop(strip, weights, rng=random.Random(seed + reel * 73))
+            if organic:
+                # A window of 5 cannot be a solid column. Runs of 4 still cascade.
+                self._cap_runs(strip, 4)
             strips.append(strip)
         return strips
+
+    @staticmethod
+    def _cap_runs(strip: list[str], limit: int = 3) -> None:
+        """No reel window of 5 is a solid stack. Runs stay at 3."""
+        pool = list(dict.fromkeys(strip))
+        if len(pool) < 2:
+            return
+        for _ in range(6):
+            run = 1
+            changed = False
+            for index in range(1, len(strip)):
+                if strip[index] == strip[index - 1]:
+                    run += 1
+                    if run > limit:
+                        for alt in pool:
+                            if alt != strip[index] and (index + 1 == len(strip) or alt != strip[index + 1]):
+                                strip[index] = alt
+                                changed = True
+                                run = 1
+                                break
+                else:
+                    run = 1
+            if not changed:
+                break
+        if len(strip) > limit + 1 and strip[0] == strip[-1]:
+            left = 0
+            while left < len(strip) and strip[left] == strip[0]:
+                left += 1
+            right = 0
+            while right < len(strip) and strip[-1 - right] == strip[0]:
+                right += 1
+            if limit < left + right < len(strip):
+                strip[0] = next(symbol for symbol in pool if symbol != strip[1])
 
     @staticmethod
     def _light_shuffle_runs(strip: list[str], rng: random.Random) -> None:
@@ -583,6 +639,22 @@ class GameConfig(Config):
         specs: dict[str, tuple] = {
             "base_quiet": (even(MW=0.02), (96, 3, 1), 411, (97, 2, 1)),
             "base_normal": (even(OR=8, GR=8, BA=7, MW=0.15), (88, 10, 2), 422, (92, 7, 1)),
+            # Small irregular clusters. Lows dominate so a hit is usually under 1x,
+            # and runs stay short so a column is never painted solid.
+            "base_small": (
+                even(T=16, J=16, Q=14, K=12, A=12, LE=5, CO=4, OR=2, GR=1, BA=1, MW=0.04),
+                (40, 45, 15),
+                466,
+                (70, 24, 6),
+            ),
+            # Busier lows. The refill keeps connecting, so some spins walk the bar
+            # up without a scripted column chain.
+            "base_link": (
+                even(T=18, J=16, Q=14, K=12, A=10, LE=4, CO=3, OR=2, GR=1, BA=1, MW=0.12),
+                (12, 38, 50),
+                477,
+                (10, 34, 56),
+            ),
             "base_hot": (even(Q=12, K=12, BA=9, MW=1.2), (36, 40, 24), 433, (55, 32, 13)),
             "base_teaser": (even(MW=0.2), (80, 18, 2), 444, (85, 12, 3)),
             # Slow spins rarely fill the bar. Steady / burst are the spotlight third.
@@ -613,10 +685,10 @@ class GameConfig(Config):
         }
         self.reel_set_weights_flat = set(specs)
         for name, (weights, runs, seed, refill_runs) in specs.items():
-            self.reels[name] = self.build_reel_strips(weights, seed=seed, run_weights=runs)
+            self.reels[name] = self.build_reel_strips(weights, seed=seed, run_weights=runs, organic=True)
             refill = {symbol: weight for symbol, weight in weights.items() if symbol not in {"MW", "ST"}}
             self.reels[f"{name}_REFILL"] = self.build_reel_strips(
-                refill, seed=seed + 17, run_weights=refill_runs
+                refill, seed=seed + 17, run_weights=refill_runs, organic=True
             )
         # Teaser refills stay quiet so the planted 3–4 clusters do not chain to 5.
         self.reels["base_teaser_REFILL"] = self.reels["base_quiet_REFILL"]

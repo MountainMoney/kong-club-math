@@ -118,9 +118,10 @@ def solve_bar(groups, cost: float, freegame_prob: float) -> dict[str, float]:
         p_pay = 0.0
     else:
         p_pay = (target - base_mean - freegame_prob * (fg_mean - base_mean)) / slope
-    # Base and Ante are asked to fill the bar every 300–600 spins.
+    # Don't fill the base bar more often than about 1 in 300. Rarer is allowed
+    # when near-miss clusters carry more of the return.
     if cost in (1.0, 1.4):
-        p_pay = min(1 / 300, max(1 / 600, p_pay))
+        p_pay = min(1 / 300, max(0.0, p_pay))
     else:
         p_pay = min(0.2, max(0.0, p_pay))
     p_fg = freegame_prob if "freegame" in means else 0.0
@@ -181,7 +182,12 @@ def renormalize(rows: list[tuple[int, int, int]]) -> list[tuple[int, int, int]]:
     return [(row[0], row[1], row[2]) for row in scaled_l]
 
 
-def nudge_toward(rows: list[tuple[int, int, int]], cost: float, protected: set[int] | None = None) -> list[tuple[int, int, int]]:
+def nudge_toward(
+    rows: list[tuple[int, int, int]],
+    cost: float,
+    protected: set[int] | None = None,
+    pool: set[int] | None = None,
+) -> list[tuple[int, int, int]]:
     """Move weight between two unprotected rows until the RTP matches."""
     protected = protected or set()
     target_sum = TARGET * cost * 100.0 * TOTAL
@@ -192,7 +198,11 @@ def nudge_toward(rows: list[tuple[int, int, int]], cost: float, protected: set[i
         delta = target_sum - current
         if abs(delta) < 1:
             break
-        candidates = [index for index, row in enumerate(weighted) if row[0] not in protected]
+        candidates = [
+            index
+            for index, row in enumerate(weighted)
+            if row[0] not in protected and (pool is None or row[0] in pool)
+        ]
         if len(candidates) < 2:
             break
         candidates.sort(key=lambda index: weighted[index][2])
@@ -214,16 +224,277 @@ def rtp(rows: list[tuple[int, int, int]], cost: float) -> float:
     return sum(weight * payout for _sid, weight, payout in rows) / total_w / 100.0 / cost
 
 
+BUY_COSTS = {"bonus_see": 100.0, "bonus_hear": 300.0, "bonus_pick": 330.0, "bonus_risky": 500.0}
+BUY_MIX = {
+    "bonus_pick": {"pick_see": 0.50, "pick_hear": 0.45, "pick_speak": 0.05},
+    "bonus_risky": {"risky_dead": 0.50, "risky_hear": 0.40, "risky_speak": 0.10},
+}
+
+
+def is_upgrade(book: dict) -> bool:
+    return any(
+        ev.get("type") == "kongClubMode" and ev.get("state") == "upgrade_bonus_speak"
+        for ev in book.get("events") or []
+    )
+
+
+def weighted_median(pays: list[float], weights: list[float]) -> float:
+    order = sorted(range(len(pays)), key=lambda index: (pays[index], index))
+    total = sum(weights) or 1.0
+    acc = 0.0
+    for index in order:
+        acc += weights[index]
+        if acc >= total * 0.5:
+            return pays[index]
+    return pays[order[-1]]
+
+
+def see_weights(pays: list[float]) -> list[float]:
+    """Median near 45x and mean on 96.3x. The top is trimmed, the middle is lifted."""
+    best: tuple | None = None
+    for low_share in (0.42, 0.45, 0.47, 0.49):
+        for mid_lo, mid_hi in ((38, 48), (40, 50), (40, 52), (42, 55)):
+            mid_idx = [i for i, payout in enumerate(pays) if mid_lo <= payout <= mid_hi]
+            low_idx = [i for i, payout in enumerate(pays) if payout < mid_lo]
+            high_idx = [i for i, payout in enumerate(pays) if payout > mid_hi]
+            if not mid_idx or not high_idx or not low_idx:
+                continue
+            low_mean = mean([pays[i] for i in low_idx])
+            mid_mean = mean([pays[i] for i in mid_idx])
+            # Mean identity: low_share * L + mid_share * M + high_share * H = 96.3
+            for mid_share in (0.04, 0.06, 0.08, 0.10, 0.12):
+                high_share = 1.0 - low_share - mid_share
+                if high_share <= 0.05:
+                    continue
+                high_target = (96.3 - low_share * low_mean - mid_share * mid_mean) / high_share
+                high_pays = [pays[i] for i in high_idx]
+                if not (min(high_pays) < high_target < max(high_pays)):
+                    continue
+                high_raw = gamma_weights(high_pays, high_target)
+                raw = [0.0] * len(pays)
+                for index in low_idx:
+                    raw[index] = low_share / len(low_idx)
+                for index in mid_idx:
+                    raw[index] = mid_share / len(mid_idx)
+                for weight, index in zip(high_raw, high_idx):
+                    raw[index] = weight
+                # Renormalize the high piece to high_share.
+                high_sum = sum(raw[index] for index in high_idx) or 1.0
+                for index in high_idx:
+                    raw[index] = raw[index] / high_sum * high_share
+                med = weighted_median(pays, raw)
+                avg = sum(payout * weight for payout, weight in zip(pays, raw))
+                med_pen = 0.0 if 40 <= med <= 50 else min(abs(med - 40), abs(med - 50))
+                err = abs(avg - 96.3) + med_pen * 8
+                if best is None or err < best[0]:
+                    best = (err, raw, med, avg)
+    if best is None:
+        return [1.0] * len(pays)
+    return best[1]
+
+
+def attach(members: list[tuple[int, int]], raw: list[float], budget: int) -> list[tuple[int, int, int]]:
+    if not members:
+        return []
+    weights = integers(raw, max(budget, len(members)))
+    return [
+        (sim_id, weight, payout)
+        for (sim_id, payout), weight in zip(members, weights)
+    ]
+
+
+def fit_group_mean(members: list[tuple[int, int]], target: float, budget: int) -> list[tuple[int, int, int]]:
+    pays = [payout / 100.0 for _sid, payout in members]
+    if not pays:
+        return []
+    lo, hi = min(pays), max(pays)
+    goal = min(max(target, lo + 1e-6), hi - 1e-6) if hi > lo else lo
+    raw = gamma_weights(pays, goal) if hi > lo else [1.0] * len(pays)
+    return attach(members, raw, budget)
+
+
+def fit_buy(mode: str, books: list[dict], cost: float) -> tuple[list[tuple[int, int, int]], dict[str, float]]:
+    """Hold the published price, the outcome mix, and the Hear→Speak rate.
+
+    Upgrade books and direct-Speak books stay equally weighted, so those path
+    averages stay at the book means. Other books are reshaped to the price.
+    """
+    target = TARGET * cost
+    upgrades = {int(book["id"]) for book in books if is_upgrade(book)}
+    if mode == "bonus_see":
+        ordered = [(int(book["id"]), int(book["payoutMultiplier"])) for book in books]
+        pays = [payout / 100.0 for _sid, payout in ordered]
+        raw = see_weights(pays)
+        rows = attach(ordered, raw, TOTAL)
+        rows = renormalize(rows)
+        band = {sid for sid, payout in ordered if 35 <= payout / 100.0 <= 60}
+        rows = nudge_toward(rows, cost, protected=band)
+        by_id = {sid: weight for sid, weight, _pay in rows}
+        med = weighted_median(pays, [by_id[sid] for sid, _pay in ordered])
+        print(f"  see weighted median {med:.2f}x")
+        return rows, {"bonus_see": 1.0, "median": round(med, 2)}
+
+    mix = BUY_MIX.get(mode)
+    grouped: dict[str, list[tuple[int, int]]] = defaultdict(list)
+    for book in books:
+        grouped[str(book.get("criteria") or mode)].append((int(book["id"]), int(book["payoutMultiplier"])))
+    if mix is None:
+        mix = {mode: 1.0}
+
+    # (members, budget, flexible)
+    pieces: list[tuple[list[tuple[int, int]], int, bool]] = []
+    probs: dict[str, float] = {}
+    for name, share in mix.items():
+        members = grouped.get(name, [])
+        probs[name] = share
+        if not members:
+            continue
+        budget = int(round(share * TOTAL))
+        pinned = name.endswith("speak") or name.endswith("dead")
+        if pinned:
+            pieces.append((members, budget, False))
+            continue
+        upgraded = [row for row in members if row[0] in upgrades]
+        rest = [row for row in members if row[0] not in upgrades]
+        rate = len(upgraded) / len(members) if members else 0.0
+        up_budget = int(round(budget * rate))
+        if upgraded:
+            pieces.append((upgraded, max(up_budget, len(upgraded)), False))
+        rest_budget = max(budget - max(up_budget, 0), len(rest) if rest else 0)
+        if rest:
+            pieces.append((rest, rest_budget, True))
+        if name == "bonus_hear" or name.endswith("hear"):
+            probs["upgrade_rate"] = round(rate if mix.get(name, 1) == 1 and len(mix) == 1 else share * rate, 6)
+
+    def piece_mean(members: list[tuple[int, int]], gamma: float, flexible: bool) -> float:
+        pays = [payout / 100.0 for _sid, payout in members]
+        if not flexible or len(set(pays)) <= 1:
+            return mean(pays)
+        raw = [(payout + 0.05) ** (-gamma) for payout in pays]
+        return sum(weight * payout for weight, payout in zip(raw, pays)) / sum(raw)
+
+    def mixture(gamma: float) -> float:
+        total_w = sum(budget for _m, budget, _f in pieces) or 1
+        return sum(budget * piece_mean(members, gamma, flexible) for members, budget, flexible in pieces) / total_w
+
+    lo, hi = -3.0, 8.0
+    for _ in range(48):
+        gamma = (lo + hi) / 2.0
+        if mixture(gamma) > target:
+            lo = gamma
+        else:
+            hi = gamma
+    gamma = (lo + hi) / 2.0
+    rows: list[tuple[int, int, int]] = []
+    flex_ids: set[int] = set()
+    widest: tuple[float, set[int]] = (0.0, set())
+    for members, budget, flexible in pieces:
+        pays = [payout / 100.0 for _sid, payout in members]
+        raw = [(payout + 0.05) ** (-gamma) for payout in pays] if flexible else [1.0] * len(members)
+        rows += attach(members, raw, budget)
+        if flexible:
+            ids = {sid for sid, _p in members}
+            flex_ids |= ids
+            span = (max(pays) - min(pays)) if pays else 0.0
+            if span > widest[0]:
+                widest = (span, ids)
+    rows = renormalize(rows)
+    rows = nudge_toward(rows, cost, protected=upgrades, pool=widest[1] or flex_ids)
+    return rows, probs
+
+
+# Certified scatter rates. Hunt 5 is a clear step above Hunt 4. The freegame
+# books are reweighted so each price still returns 96.3%.
+HUNT_SCATTER_RATE = {
+    "hunt_2": 0.09,
+    "hunt_3": 0.13,
+    "hunt_4": 0.18,
+    "hunt_5": 0.45,
+}
+
+
+def fit_hunt(groups, cost: float, rate: float, bar_prob: float):
+    """Hold a scatter rate and reshape the bonus books to the locked price."""
+    base_rows = groups.get("basegame", [])
+    bar_rows = groups.get("bar_pay", [])
+    fg_rows = groups.get("freegame", [])
+    eb = mean([payout / 100.0 for _sid, payout in base_rows]) if base_rows else 0.0
+    ep = mean([payout / 100.0 for _sid, payout in bar_rows]) if bar_rows else eb
+    fg_pays = [payout / 100.0 for _sid, payout in fg_rows]
+    target = TARGET * cost
+    pb = bar_prob if bar_rows else 0.0
+    # Shrink the rate if the bonus sample cannot reach the conditional mean.
+    chosen = rate
+    for _ in range(12):
+        gap = max(chosen, 1e-6)
+        ef = (target - (1.0 - chosen - pb) * eb - pb * ep) / gap
+        if fg_pays and min(fg_pays) < ef < max(fg_pays):
+            break
+        chosen = max(0.02, chosen * 0.85)
+    else:
+        ef = mean(fg_pays) if fg_pays else 0.0
+    p_base = max(0.0, 1.0 - chosen - pb)
+    rows = fit_group_mean(fg_rows, ef, int(round(chosen * TOTAL)))
+    rows += attach(bar_rows, [1.0] * len(bar_rows), int(round(pb * TOTAL)))
+    rows += attach(base_rows, [1.0] * len(base_rows), int(round(p_base * TOTAL)))
+    rows = renormalize(rows)
+    rows = nudge_toward(rows, cost, pool={sid for sid, _p in fg_rows})
+    probs = {"freegame": chosen, "bar_pay": pb, "basegame": p_base}
+    return rows, probs
+
+
+def fit_hunt5(groups, cost: float, hunt4_rate: float, base_bar: float):
+    """Scatter rate clearly above Hunt 4. Bar weight and the bonus tail pay for it."""
+    base_rows = groups.get("basegame", [])
+    bar_rows = groups.get("bar_pay", [])
+    fg_rows = groups.get("freegame", [])
+    eb = mean([payout / 100.0 for _sid, payout in base_rows])
+    ep = mean([payout / 100.0 for _sid, payout in bar_rows]) if bar_rows else eb
+    fg_pays = [payout / 100.0 for _sid, payout in fg_rows]
+    fg_pays_sorted = sorted(fg_pays)
+    floor = fg_pays_sorted[max(0, len(fg_pays_sorted) // 8)] if fg_pays_sorted else 0.0
+    ceiling = fg_pays_sorted[min(len(fg_pays_sorted) - 1, (len(fg_pays_sorted) * 7) // 8)] if fg_pays_sorted else 0.0
+    target = TARGET * cost
+    desired = max(2.75 * hunt4_rate, hunt4_rate + 0.08, 0.16)
+    pb = base_bar if bar_rows else 0.0
+
+    def needed(pf: float, bar: float) -> float:
+        gap = max(pf, 1e-9)
+        return (target - (1.0 - pf - bar) * eb - bar * ep) / gap
+
+    ef = needed(desired, pb)
+    if ef < floor:
+        pb = 0.0
+        ef = needed(desired, pb)
+    if ef < floor or ef > ceiling:
+        # Highest scatter rate whose conditional mean still sits in the sample.
+        pb = 0.0
+        ef = min(max(mean(fg_pays), floor), ceiling)
+        desired = (target - eb) / max(ef - eb, 1e-6)
+        desired = min(0.45, max(hunt4_rate, desired))
+        ef = needed(desired, pb)
+        ef = min(max(ef, floor), ceiling)
+    p_base = max(0.0, 1.0 - desired - pb)
+    rows = fit_group_mean(fg_rows, ef, int(round(desired * TOTAL)))
+    rows += attach(bar_rows, [1.0] * len(bar_rows), int(round(pb * TOTAL)))
+    rows += attach(base_rows, [1.0] * len(base_rows), int(round(p_base * TOTAL)))
+    rows = renormalize(rows)
+    rows = nudge_toward(rows, cost, pool={sid for sid, _p in fg_rows})
+    probs = {"freegame": desired, "bar_pay": pb, "basegame": p_base}
+    return rows, probs
+
+
 def main() -> None:
     prices = json.loads((GAME / "mode_prices.json").read_text(encoding="utf-8"))
     modes = list(prices)
-    # Base bar rate is solved first and reused so Ante/Hunt share the same fill
-    # when that still hits their RTP. Ante may need its own fill rate.
+    # Base bar rate is solved first. Ante solves its own. Hunt 2–4 hold the base
+    # bar rate. Hunt 5's scatter rate is set above Hunt 4, and its bar rate gives.
     base_books = read_books("base")
     base_groups = group_rows(base_books)
     base_probs = solve_bar(base_groups, 1.0, 1 / 500)
     base_bar = base_probs["bar_pay"]
     summary = {}
+    hunt4_rate = 0.0
     for mode in modes:
         books = read_books(mode)
         groups = group_rows(books)
@@ -239,16 +510,9 @@ def main() -> None:
             cost = 1.4
         elif mode in HUNT_COSTS:
             cost = HUNT_COSTS[mode]
-            p_fg = hunt_freegame_prob(groups, cost, base_bar)
-            probs = {
-                "freegame": p_fg,
-                "bar_pay": base_bar if "bar_pay" in groups else 0.0,
-            }
-            probs["basegame"] = max(0.0, 1.0 - probs["freegame"] - probs["bar_pay"])
-            total = sum(probs.values()) or 1.0
-            probs = {name: value / total for name, value in probs.items()}
-            rows = rows_from_probs(groups, probs)
-            rows = nudge_toward(rows, cost)
+            rows, probs = fit_hunt(groups, cost, HUNT_SCATTER_RATE[mode], base_bar)
+            if mode == "hunt_4":
+                hunt4_rate = probs["freegame"]
         elif mode == "peak_spin":
             cost = 1000.0
             dead = groups.get("dead_juicy", [])
@@ -271,12 +535,8 @@ def main() -> None:
             rows = nudge_toward(rows, cost)
             probs = {"run": 1.0}
         else:
-            pays = [book["payoutMultiplier"] / 100.0 for book in books]
-            cost = round(mean(pays) / TARGET, 4)
-            share = max(1, TOTAL // len(books))
-            rows = [(int(book["id"]), share, int(book["payoutMultiplier"])) for book in books]
-            rows = renormalize(rows)
-            probs = {name: len(members) / len(books) for name, members in groups.items()}
+            cost = BUY_COSTS[mode]
+            rows, probs = fit_buy(mode, books, cost)
         prices[mode] = cost
         write_lut(mode, rows)
         summary[mode] = {"cost": cost, "rtp": rtp(rows, cost), "probs": {k: round(v, 6) for k, v in probs.items()}}
