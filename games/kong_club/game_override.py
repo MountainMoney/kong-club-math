@@ -41,7 +41,13 @@ class GameStateOverride(GameExecutables):
         bucket = normalize_bucket(self.betmode, self.criteria)
         pay = float(getattr(self, "final_win", 0) or 0)
         tumbles = int(getattr(self, "tumbles_this_spin", 0) or 0)
-        if self.betmode == "feature_spin" and not feature_bucket_ok(bucket, pay, tumbles):
+        if self.betmode == "feature_spin" and (
+            not feature_bucket_ok(bucket, pay, tumbles)
+            or not getattr(self, "board_activation_fired_this_spin", False)
+            or getattr(self, "triggered_freegame", False)
+        ):
+            self.repeat = True
+        elif self.betmode == "peak_spin" and getattr(self, "triggered_freegame", False):
             self.repeat = True
         elif self.betmode == "peak_spin" and not peak_bucket_ok(
             bucket, pay, tumbles, float(self.config.wincap)

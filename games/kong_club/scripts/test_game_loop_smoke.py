@@ -101,8 +101,8 @@ def run_book(mode: str, criteria: str, seed: int) -> tuple[GameState, object]:
 
 def smoke_feature_spin() -> None:
     multi_tumble = 0
-    for criteria in ("nibble", "run"):
-        for seed in range(20_000, 20_040):
+    for criteria in ("run",):
+        for seed in range(20_000, 20_080):
             gs, book = run_book("feature_spin", criteria, seed)
             types = _types(book)
             label = f"feature_spin {criteria} seed={seed}"
@@ -110,6 +110,11 @@ def smoke_feature_spin() -> None:
             assert "winInfo" in types, f"{label}: missing winInfo"
             assert "tumbleBoard" in types, f"{label}: missing tumbleBoard"
             assert "boardActivation" in types, f"{label}: missing boardActivation"
+            assert "freeSpinTrigger" not in types, f"{label}: Feature Spin must not open a bonus"
+            activation = next(event for event in book.events if event["type"] == "boardActivation")
+            assert activation["coinFeature"]["items"], f"{label}: coin game flipped no tiles"
+            first_fill = next(event for event in book.events if event["type"] == "progressFill")
+            assert first_fill["value"] == first_fill["threshold"] > 0, f"{label}: bar did not open full"
             assert "setTotalWin" in types, f"{label}: missing setTotalWin"
             assert_activation_after_idle(types, label)
             assert_no_leftover_clusters(gs, book, label)
@@ -140,14 +145,14 @@ def smoke_peak_spin() -> None:
     saw_connect = False
     for criteria, seeds in (
         ("dead_juicy", range(1, 16)),
-        ("nibble", range(1, 12)),
-        ("run", range(1, 8)),
+        ("live", range(1, 16)),
     ):
         for seed in seeds:
             gs, book = run_book("peak_spin", criteria, seed)
             types = _types(book)
             label = f"peak_spin {criteria} seed={seed}"
             assert "setTotalWin" in types, f"{label}: missing setTotalWin"
+            assert "freeSpinTrigger" not in types, f"{label}: Trifecta must not open a bonus"
             assert "winInfo" not in types, f"{label}: Peak must not pay clusters"
             if "boardActivation" in types:
                 saw_connect = True
@@ -177,28 +182,25 @@ def smoke_bonus_modes() -> None:
 
 
 def smoke_bonus_pick() -> None:
-    saw_dead = False
-    saw_hear = False
+    """Mystery is a guaranteed bonus: 50% See / 45% Hear / 5% Speak. No dead spin."""
+    saw = set()
     for criteria, seeds in (
-        ("gamble_dead", range(1, 8)),
-        ("gamble_hear", range(1, 6)),
+        ("pick_see", range(1, 3)),
+        ("pick_hear", range(1, 3)),
     ):
         for seed in seeds:
             gs, book = run_book("bonus_pick", criteria, seed)
             types = _types(book)
             label = f"bonus_pick {criteria} seed={seed}"
             assert "setTotalWin" in types, f"{label}: missing setTotalWin"
-            assert_no_leftover_clusters(gs, book, label)
-            if "freeSpinTrigger" in types or any(
+            assert "freeSpinTrigger" in types or any(
                 event.get("type") == "kongClubMode"
                 and str(event.get("state", "")).startswith("start_bonus_")
                 for event in book.events
-            ):
-                saw_hear = True
-            else:
-                saw_dead = True
-    assert saw_dead, "bonus_pick: need a dead book"
-    assert saw_hear, "bonus_pick: need a Hear trigger book"
+            ), f"{label}: Mystery must open a bonus"
+            assert_no_leftover_clusters(gs, book, label)
+            saw.add(criteria)
+    assert saw == {"pick_see", "pick_hear"}
 
 
 def main() -> None:

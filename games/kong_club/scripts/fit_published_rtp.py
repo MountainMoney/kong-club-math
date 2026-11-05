@@ -1,9 +1,10 @@
 """Publish lookup weights for the current 500-book libraries.
 
 Base and Ante keep bonus rates of 1/500 and 1/250. Their coin-bar rate is
-solved inside 1/300–1/600. Hunt prices stay put. Buys, Feature, and Trifecta
-use the prices in mode_prices.json (Feature 75x, Trifecta 1,000x). Trifecta
-keeps a 50% dead rate and a live half averaging 1,926x.
+solved inside 1/300–1/600. Hunt prices and scatter rates stay put unless the
+sample cannot reach 96.3% at those odds. Buys and Trifecta keep their prices
+(Trifecta 1,000x, 50% dead, live half averaging 1,926x). Feature Spin price is
+re-solved into 50–75x from the book mean.
 """
 
 from __future__ import annotations
@@ -21,7 +22,9 @@ TOTAL = 10_000_000_000
 TARGET = 0.963
 LIVE_TARGET = 1926.0  # 0.5 * 1926 / 1000 = 0.963
 HUNT_COSTS = {"hunt_2": 5.0, "hunt_3": 6.0, "hunt_4": 10.0, "hunt_5": 25.0}
-FIXED = {"base": 1.0, "base_ante": 1.4, **HUNT_COSTS, "feature_spin": 75.0, "peak_spin": 1000.0}
+FIXED = {"base": 1.0, "base_ante": 1.4, **HUNT_COSTS, "peak_spin": 1000.0}
+FEATURE_PRICE_MIN = 50.0
+FEATURE_PRICE_MAX = 75.0
 
 
 def read_books(mode: str) -> list[dict]:
@@ -484,6 +487,27 @@ def fit_hunt5(groups, cost: float, hunt4_rate: float, base_bar: float):
     return rows, probs
 
 
+def solve_feature_price(pays: list[float]) -> float:
+    """Half-step price inside 50–75x whose 96.3% target the sample can hit."""
+    natural = mean(pays) / TARGET
+    if natural < FEATURE_PRICE_MIN:
+        cost = FEATURE_PRICE_MIN
+    elif natural > FEATURE_PRICE_MAX:
+        cost = FEATURE_PRICE_MAX
+    else:
+        cost = round(natural * 2.0) / 2.0
+        cost = min(FEATURE_PRICE_MAX, max(FEATURE_PRICE_MIN, cost))
+    if min(pays) < cost * TARGET < max(pays):
+        return cost
+    for edge in (FEATURE_PRICE_MAX, FEATURE_PRICE_MIN):
+        if min(pays) < edge * TARGET < max(pays):
+            return edge
+    raise SystemExit(
+        "feature_spin sample cannot price inside 50–75x "
+        f"(mean {mean(pays):.2f}x, range {min(pays):.2f}–{max(pays):.2f})"
+    )
+
+
 def main() -> None:
     prices = json.loads((GAME / "mode_prices.json").read_text(encoding="utf-8"))
     modes = list(prices)
@@ -527,11 +551,14 @@ def main() -> None:
             rows = nudge_toward(rows, cost, protected={sim_id for sim_id, _pay in dead})
             probs = {"dead_juicy": 0.5, "live": 0.5}
         elif mode == "feature_spin":
-            cost = 75.0
-            pays = [payout / 100.0 for _sid, payout in groups["run"]]
+            members = groups.get("run") or [
+                (int(book["id"]), int(book["payoutMultiplier"])) for book in books
+            ]
+            pays = [payout / 100.0 for _sid, payout in members]
+            cost = solve_feature_price(pays)
             raw = gamma_weights(pays, cost * TARGET)
             weights = integers(raw, TOTAL)
-            rows = [(sim_id, weight, payout) for (sim_id, payout), weight in zip(groups["run"], weights)]
+            rows = [(sim_id, weight, payout) for (sim_id, payout), weight in zip(members, weights)]
             rows = nudge_toward(rows, cost)
             probs = {"run": 1.0}
         else:
@@ -543,6 +570,13 @@ def main() -> None:
         print(f"{mode:14} cost {cost:10.4f}  RTP {summary[mode]['rtp']*100:.4f}%  {summary[mode]['probs']}")
     (GAME / "mode_prices.json").write_text(json.dumps(prices, indent=2) + "\n", encoding="utf-8")
     (GAME / "reports" / "lock_rtp.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    index_path = PUBLISH / "index.json"
+    if index_path.exists():
+        index = json.loads(index_path.read_text(encoding="utf-8"))
+        for mode in index.get("modes", []):
+            if mode.get("name") in prices:
+                mode["cost"] = prices[mode["name"]]
+        index_path.write_text(json.dumps(index, indent=4) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":
