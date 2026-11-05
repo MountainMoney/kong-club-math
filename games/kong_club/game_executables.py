@@ -196,7 +196,28 @@ class GameExecutables(GameCalculations):
             if attempts >= 12 or not self._columns_artifact():
                 break
 
+    def _strip_bonus_triggers(self) -> None:
+        """Feature Spin and Trifecta never land a scatter, so they cannot open a bonus."""
+        if getattr(self, "betmode", None) not in ("feature_spin", "peak_spin"):
+            return
+        scatter = self.config.scatter_symbol
+        for reel in range(self.config.num_reels):
+            for row in range(self.config.num_rows[reel]):
+                if self.board[reel][row].name != scatter:
+                    continue
+                neighbor_names = set()
+                for step_reel, step_row in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    next_reel, next_row = reel + step_reel, row + step_row
+                    if 0 <= next_reel < self.config.num_reels and 0 <= next_row < self.config.num_rows[next_reel]:
+                        neighbor_names.add(self.board[next_reel][next_row].name)
+                replacement = next(
+                    (symbol for symbol in self.config.paying_symbols if symbol not in neighbor_names),
+                    self.config.low_symbols[0],
+                )
+                self.board[reel][row] = self.create_symbol(replacement)
+
     def _finalize_initial_board(self):
+        self._strip_bonus_triggers()
         if self.should_force_initial_scatters():
             self.force_initial_scatters(self.resolve_forced_scatter_count())
             self.apply_scatter_anticipation()
@@ -735,7 +756,7 @@ class GameExecutables(GameCalculations):
         return normalize_bucket(getattr(self, "betmode", ""), getattr(self, "criteria", ""))
 
     def draw_feature_spin_board(self):
-        """Plant the Feature toy (full bar), then a board that matches the bucket."""
+        """A real stop that already connects. Mild strips are short; rich strips bring wilds."""
         if self.outcome_bucket() == "dead_juicy":
             self.draw_dead_juicy_board()
             return

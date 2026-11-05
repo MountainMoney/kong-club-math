@@ -55,21 +55,21 @@ MYSTERY_BUY_COST = 180.0
 RISKY_BUY_COST = 220.0
 GAMBLE_DEAD_BAIT_RATE = 1.0
 
-# Size-5 anchors. Larger clusters grow by CLUSTER_GROWTH each extra symbol (uncapped).
-CLUSTER_SIZE5 = {
-    "T": 0.10,
-    "J": 0.10,
-    "Q": 0.10,
-    "K": 0.10,
-    "A": 0.10,
-    "LE": 0.30,
-    "CO": 0.30,
-    "OR": 0.50,
-    "GR": 0.50,
-    "BA": 1.00,
+# Locked pay table (Ryan screenshot). Multiples of total bet, before tile multipliers.
+# Bands: 5, 6, 7, 8, 9–10, 11–12, 13+. Cluster size is uncapped; 13 and above share one face.
+# Cluster pay = this face × the sum of lit tile multipliers (bronze 2 / silver 5 / gold 10).
+CLUSTER_PAY_BANDS = {
+    "T": (0.1, 0.2, 0.3, 0.5, 1.5, 5.0, 15.0),
+    "J": (0.1, 0.2, 0.3, 0.5, 1.5, 5.0, 15.0),
+    "Q": (0.1, 0.2, 0.3, 0.5, 1.5, 5.0, 15.0),
+    "K": (0.1, 0.2, 0.3, 0.5, 1.5, 5.0, 15.0),
+    "A": (0.1, 0.2, 0.3, 0.5, 1.5, 5.0, 15.0),
+    "LE": (0.3, 0.4, 0.5, 0.7, 2.5, 7.5, 25.0),
+    "CO": (0.3, 0.4, 0.5, 0.7, 2.5, 7.5, 25.0),
+    "OR": (0.5, 0.7, 1.0, 1.5, 5.0, 15.0, 50.0),
+    "GR": (0.5, 0.7, 1.0, 1.5, 5.0, 15.0, 50.0),
+    "BA": (1.0, 1.5, 2.0, 3.0, 10.0, 30.0, 100.0),
 }
-# Two steep curves tried in the bakeoff. Default is replaced by the winner.
-CLUSTER_CURVES = {"steep": 1.58, "steeper": 1.92}
 # Silver-lean keeps gold faces on the 25. Gold-lean lets 100–500 show up.
 COIN_SPREADS = {
     # Silver-lean: mass sits on silver faces; gold almost always pays 25.
@@ -175,11 +175,6 @@ class GameConfig(Config):
         self.tumble_wild_chance = 0.012
         self.tumble_scatter_chance_base = 0.004
         self.tumble_scatter_chance_bonus = 0.018
-        curve_name = os.environ.get("MM_CLUSTER_CURVE", "steep")
-        if curve_name not in CLUSTER_CURVES:
-            curve_name = "steeper"
-        self.cluster_curve_name = curve_name
-        self.cluster_growth = float(os.environ.get("MM_CLUSTER_GROWTH", CLUSTER_CURVES[curve_name]))
         # One coin game per spin. The old Hear cap of 3 is not used.
         self.max_board_activations_hear = 1
         self.coin_game_max_reruns = 10
@@ -263,7 +258,7 @@ class GameConfig(Config):
         # Share of base-game hits that stop at 8/10 on the bar (4 of 5 full).
         # Fraction of ordinary basegame spins that walk the bar to about 8/10.
         self.base_near_miss_share = 0.05
-        # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table — DO NOT dilute.
+        # Locked screenshot faces (× total bet). Scale stays 1.0 — do not dilute the table.
         self.paytable_scale = 1.0
         # Always pay face as labeled (1.0). Do not soft-scale coin values.
         self.coin_tile_scale_by_mode = {
@@ -484,18 +479,36 @@ class GameConfig(Config):
             weights[level] = list(self.coin_value_weights[symbol])
         return weights
 
+    @staticmethod
+    def cluster_pay_band(size: int) -> int:
+        """0=5, 1=6, 2=7, 3=8, 4=9–10, 5=11–12, 6=13+."""
+        size = int(size)
+        if size <= 5:
+            return 0
+        if size == 6:
+            return 1
+        if size == 7:
+            return 2
+        if size == 8:
+            return 3
+        if size <= 10:
+            return 4
+        if size <= 12:
+            return 5
+        return 6
+
     def cluster_pay(self, size: int, symbol: str) -> float:
-        """Steep size-scaled pay. Size 5 is the anchor. Each extra symbol multiplies."""
-        anchor = float(CLUSTER_SIZE5.get(symbol, 0.10))
-        steps = max(0, int(size) - 5)
+        """Locked band face. 13 and every larger cluster share the 13+ face."""
+        bands = CLUSTER_PAY_BANDS.get(symbol)
+        if not bands:
+            return 0.0
         scale = float(getattr(self, "paytable_scale", 1.0))
-        growth = float(getattr(self, "cluster_growth", 1.92))
-        return round(anchor * (growth ** steps) * scale, 6)
+        return round(bands[self.cluster_pay_band(size)] * scale, 6)
 
     def _build_paytable(self) -> dict[tuple[int, str], float]:
-        """Per-size pays from 5 through 30. Larger sizes use cluster_pay directly."""
+        """Per-size pays from 5 through 30 (the full board). 13+ repeats one face."""
         table: dict[tuple[int, str], float] = {}
-        for symbol in CLUSTER_SIZE5:
+        for symbol in CLUSTER_PAY_BANDS:
             for size in range(5, 31):
                 table[(size, symbol)] = self.cluster_pay(size, symbol)
         return table
@@ -669,8 +682,16 @@ class GameConfig(Config):
             "speak_low": (even(MW=0.30, ST=0.2), (76, 20, 4), 711, (82, 16, 2)),
             "speak_mid": (even(BA=10, MW=1.05, ST=0.2), (48, 38, 14), 722, (58, 32, 10)),
             "speak_high": (hot(1.5), (34, 42, 24), 733, (44, 38, 18)),
-            "feature_mild": (even(BA=12, MW=2.2), (28, 42, 30), 811, (36, 40, 24)),
-            "feature_rich": (hot(5.6), (12, 28, 60), 822, (14, 30, 56)),
+            # Feature Spin always connects and always runs the coin game, so the
+            # strips — not the price — keep the spin near 50–75x. Mild is one short
+            # low cluster. Rich is the rare wild chain.
+            "feature_mild": (
+                even(T=22, J=20, Q=16, K=14, A=12, LE=3, CO=2, OR=1, GR=1, BA=0.6, MW=0.15),
+                (70, 24, 6),
+                811,
+                (96, 3, 1),
+            ),
+            "feature_rich": (hot(6.4), (10, 28, 62), 822, (14, 32, 54)),
             "peak_a": (even(MW=1.0), (40, 40, 20), 911, (50, 36, 14)),
             "peak_b": (hot(2.0), (20, 40, 40), 922, (30, 40, 30)),
         }
@@ -679,7 +700,7 @@ class GameConfig(Config):
             "see": {"see_slow": 94, "see_steady": 5, "see_burst": 1},
             "hear": {"hear_slow": 86, "hear_steady": 12, "hear_burst": 2},
             "speak": {"speak_low": 55, "speak_mid": 35, "speak_high": 10},
-            "feature": {"feature_mild": 30, "feature_rich": 70},
+            "feature": {"feature_mild": 78, "feature_rich": 22},
             "peak": {"peak_a": 55, "peak_b": 45},
             "gamble_dead": {"base_quiet": 1},
         }

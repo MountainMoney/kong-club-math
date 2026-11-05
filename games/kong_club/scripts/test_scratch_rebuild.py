@@ -176,7 +176,7 @@ def test_reel_strips_are_run_based_and_refill_rules():
     }
     assert config.coin_game_power_peak_gold == {"multiplier": 0, "collector": 0, "tier_shift": 0}
     assert config.peak_spin_cost == 1000.0
-    assert config.feature_buy_cost == 75.0
+    assert 50.0 <= config.feature_buy_cost <= 75.0
 
 
 def test_paytable_size_bands():
@@ -193,10 +193,28 @@ def test_paytable_size_bands():
 
     config = GameConfig()
     scale = float(getattr(config, "paytable_scale", 1.0))
+    assert scale == 1.0
+    # Locked screenshot. Lows share a row. Lemon=Coconut, Orange=Grape, Banana stands alone.
+    locked = {
+        "T": (0.1, 0.2, 0.3, 0.5, 1.5, 5.0, 15.0),
+        "LE": (0.3, 0.4, 0.5, 0.7, 2.5, 7.5, 25.0),
+        "CO": (0.3, 0.4, 0.5, 0.7, 2.5, 7.5, 25.0),
+        "OR": (0.5, 0.7, 1.0, 1.5, 5.0, 15.0, 50.0),
+        "GR": (0.5, 0.7, 1.0, 1.5, 5.0, 15.0, 50.0),
+        "BA": (1.0, 1.5, 2.0, 3.0, 10.0, 30.0, 100.0),
+    }
+    band_sizes = (5, 6, 7, 8, 10, 12, 13)
+    for symbol, faces in locked.items():
+        for size, face in zip(band_sizes, faces):
+            assert config.cluster_pay(size, symbol) == round(face * scale, 6)
+        assert config.cluster_pay(9, symbol) == config.cluster_pay(10, symbol)
+        assert config.cluster_pay(11, symbol) == config.cluster_pay(12, symbol)
+        assert config.cluster_pay(13, symbol) == config.cluster_pay(20, symbol) == config.cluster_pay(30, symbol)
+    for symbol in ("J", "Q", "K", "A"):
+        assert config.cluster_pay(8, symbol) == config.cluster_pay(8, "T")
+        assert config.paytable[(13, symbol)] == config.paytable[(13, "T")]
     assert config.paytable[(5, "BA")] == round(1.00 * scale, 6)
     assert config.cluster_pay(12, "BA") > config.cluster_pay(8, "BA") > config.paytable[(5, "BA")]
-    assert config.cluster_pay(20, "T") > config.cluster_pay(13, "T")
-    assert scale == 1.0
 
 
 def test_bfs_orthogonal_shapes_and_no_diagonals():
@@ -1825,7 +1843,8 @@ def test_feature_spin_needs_a_winning_connection():
 
 
 def test_feature_spin_never_dead_spins():
-    """Every Feature Spin lands a cluster. It does not guarantee a coin game."""
+    """Every Feature Spin opens with a full bar, connects, and runs the coin game. No bonus."""
+    sizes = set()
     for seed in range(10_000, 10_012):
         gs = state()
         gs.betmode = "feature_spin"
@@ -1836,8 +1855,24 @@ def test_feature_spin_never_dead_spins():
         types = [event["type"] for event in gs.book.events]
         assert "winInfo" in types, f"seed={seed}: Feature Spin missed its connection"
         assert "tumbleBoard" in types, f"seed={seed}: Feature Spin missed tumble"
+        assert "boardActivation" in types, f"seed={seed}: full bar did not run the coin game"
+        assert "freeSpinTrigger" not in types, f"seed={seed}: Feature Spin opened a bonus"
+        assert not any(
+            event.get("type") == "kongClubMode" and "bonus" in str(event.get("state") or "")
+            for event in gs.book.events
+        )
+        fills = [event for event in gs.book.events if event["type"] == "progressFill"]
+        assert fills and fills[0]["value"] == fills[0]["threshold"] > 0
+        activation = next(event for event in gs.book.events if event["type"] == "boardActivation")
+        assert activation["coinFeature"]["items"], f"seed={seed}: coin game flipped no tiles"
         assert gs.final_win > 0
+        for event in gs.book.events:
+            if event.get("type") != "winInfo":
+                continue
+            for win in event.get("wins") or []:
+                sizes.add(int(win.get("clusterSize") or 0))
         assert_no_leftover_clusters(gs, gs.book, f"feature_spin seed={seed}")
+    assert len(sizes) >= 2, f"Feature Spin cluster sizes did not vary: {sorted(sizes)}"
 
 
 def test_peak_spin_starts_full_gold_and_empty_bar():

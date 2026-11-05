@@ -86,13 +86,27 @@ class GameState(GameStateOverride):
         self.evaluate_finalwin()
 
     def run_feature_spin(self):
+        """Full coin bar, one guaranteed cluster, then the coin game. No bonus."""
         self.board_activation_fired_this_spin = False
+        self.tumbles_this_spin = 0
+        self.triggered_freegame = False
         self.gametype = self.config.basegame_type
         self.use_reel_family("feature")
         self.reset_progress()
+        # The bar opens full. A connection (tiny or a wild chain) then runs the coin game.
+        self.progress_value = self.progress_threshold
         progress_fill_event(self)
         self.draw_feature_spin_board()
         self.resolve_cascade_loop()
+        if (
+            not self.board_activation_fired_this_spin
+            and not self.wincap_triggered
+            and int(getattr(self, "tumbles_this_spin", 0) or 0) > 0
+        ):
+            self.progress_value = self.progress_threshold
+            progress_fill_event(self)
+            self.execute_board_activation(refill_after=False)
+        self.triggered_freegame = False
         if self.outcome_bucket() == "cap":
             self.apply_cap_topup()
         self.set_end_tumble_event()
