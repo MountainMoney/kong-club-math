@@ -28,7 +28,7 @@ if __name__ == "__main__":
     import os
 
     smoke = os.environ.get("MM_SMOKE", "").lower() in ("1", "true", "yes")
-    sims_per_mode = int(os.environ.get("MM_SIMS", "20000"))
+    sims_per_mode = int(os.environ.get("MM_SIMS", "500"))
     if smoke:
         sims_per_mode = min(sims_per_mode, 1_000)
     base_sims = int(os.environ.get("MM_BASE_SIMS", str(sims_per_mode)))
@@ -42,11 +42,16 @@ if __name__ == "__main__":
     num_sim_args = {
         "base": int(base_sims),
         "base_ante": int(base_sims),
+        "hunt_2": int(sims_per_mode),
+        "hunt_3": int(sims_per_mode),
+        "hunt_4": int(sims_per_mode),
+        "hunt_5": int(sims_per_mode),
         "feature_spin": int(sims_per_mode),
         "peak_spin": int(sims_per_mode),
         "bonus_see": int(sims_per_mode),
         "bonus_hear": int(sims_per_mode),
         "bonus_pick": int(sims_per_mode),
+        "bonus_risky": int(sims_per_mode),
     }
     modes_filter = os.environ.get("MM_MODES", "").strip()
     if modes_filter:

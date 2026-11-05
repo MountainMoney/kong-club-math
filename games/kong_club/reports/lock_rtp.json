@@ -1,0 +1,107 @@
+{
+  "base": {
+    "cost": 1.0,
+    "rtp": 0.9629999916699999,
+    "probs": {
+      "basegame": 0.994667,
+      "bar_pay": 0.003333,
+      "freegame": 0.002
+    }
+  },
+  "base_ante": {
+    "cost": 1.4,
+    "rtp": 0.9629999693700001,
+    "probs": {
+      "basegame": 0.992667,
+      "bar_pay": 0.003333,
+      "freegame": 0.004
+    }
+  },
+  "hunt_2": {
+    "cost": 5.0,
+    "rtp": 0.9629999991584001,
+    "probs": {
+      "freegame": 0.09,
+      "bar_pay": 0.003333,
+      "basegame": 0.906667
+    }
+  },
+  "hunt_3": {
+    "cost": 6.0,
+    "rtp": 0.9630000008074999,
+    "probs": {
+      "freegame": 0.13,
+      "bar_pay": 0.003333,
+      "basegame": 0.866667
+    }
+  },
+  "hunt_4": {
+    "cost": 10.0,
+    "rtp": 0.9630000004733998,
+    "probs": {
+      "freegame": 0.18,
+      "bar_pay": 0.003333,
+      "basegame": 0.816667
+    }
+  },
+  "hunt_5": {
+    "cost": 25.0,
+    "rtp": 0.96299999924732,
+    "probs": {
+      "freegame": 0.45,
+      "bar_pay": 0.003333,
+      "basegame": 0.546667
+    }
+  },
+  "feature_spin": {
+    "cost": 75.0,
+    "rtp": 0.9630000013370401,
+    "probs": {
+      "run": 1.0
+    }
+  },
+  "peak_spin": {
+    "cost": 1000.0,
+    "rtp": 0.9629999999575,
+    "probs": {
+      "dead_juicy": 0.5,
+      "live": 0.5
+    }
+  },
+  "bonus_see": {
+    "cost": 100.0,
+    "rtp": 0.96299999986574,
+    "probs": {
+      "bonus_see": 1.0,
+      "median": 46.48
+    }
+  },
+  "bonus_hear": {
+    "cost": 300.0,
+    "rtp": 0.9630000001378467,
+    "probs": {
+      "bonus_hear": 1.0,
+      "upgrade_rate": 0.004
+    }
+  },
+  "bonus_pick": {
+    "cost": 330.0,
+    "rtp": 0.9630000000182515,
+    "probs": {
+      "pick_see": 0.5,
+      "pick_hear": 0.45,
+      "upgrade_rate": 0.004,
+      "pick_speak": 0.05
+    }
+  },
+  "bonus_risky": {
+    "cost": 500.0,
+    "rtp": 0.962999999970958,
+    "probs": {
+      "risky_dead": 0.5,
+      "risky_hear": 0.4,
+      "upgrade_rate": 0.004,
+      "risky_speak": 0.1
+    }
+  }
+}

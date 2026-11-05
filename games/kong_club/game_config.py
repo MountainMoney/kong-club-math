@@ -8,55 +8,83 @@ Powers: MULTI + COLLECTOR live (rare; pots rarer than clovers). TIER_SHIFT retir
 
 from __future__ import annotations
 
+import json
+import os
 import random
+from pathlib import Path
 
 from src.config.betmode import BetMode
 from src.config.config import Config
 from src.config.distributions import Distribution
 from game_criteria import (
-    ANTE_CAP_QUOTA,
-    BASE_CAP_QUOTA,
-    FEATURE_CAP_QUOTA,
-    FEATURE_DEAD_QUOTA,
-    GAMBLE_CAP_QUOTA,
-    HEAR_CAP_QUOTA,
-    SEE_CAP_QUOTA,
-    FEATURE_NIBBLE_QUOTA,
     FEATURE_RUN_QUOTA,
-    PEAK_CAP_QUOTA,
-    PEAK_CLIP_QUOTA,
+    HUNT_COSTS,
+    MYSTERY_HEAR_QUOTA,
+    MYSTERY_SEE_QUOTA,
+    MYSTERY_SPEAK_QUOTA,
     PEAK_DEAD_QUOTA,
-    PEAK_NIBBLE_QUOTA,
-    PEAK_RUN_QUOTA,
-    PEAK_TEASE_QUOTA,
+    PEAK_LIVE_QUOTA,
+    RISKY_DEAD_QUOTA,
+    RISKY_HEAR_QUOTA,
+    RISKY_SPEAK_QUOTA,
+    SPEAK_DIRECT_MIN_WIN,
+    hunt_freegame_quota,
 )
 
 
 STAKE_SLUG = "kong-club"
 
-# Organic bonus entry — same pattern as Football Fiesta:
-# quota picks "freegame" criteria → force N scatters from weighted table → no organic land on base strips.
-# See / Hear / Madness given a bonus. Madness stays rare so a 3,000× floor
-# does not blow base or ante RTP. Ante uses the same mix; only the rate doubles.
+# Organic bonus entry. 3 ST = See, 4 = Hear, 5+ = Speak No Evil.
+# Ante is exactly twice the base trigger rate. Scatter faces are not a lever.
 SCATTER_TRIGGERS = {3: 989, 4: 10, 5: 1}
 SCATTER_TRIGGERS_ANTE = {3: 989, 4: 10, 5: 1}
-# Somewhat rarer than the 1/220 · 1/110 pair. Ante stays exactly twice base.
-# Scatter faces stay {3: 989, 4: 10, 5: 1} — not a balancing lever.
-BASE_FREEGAME_QUOTA = 1 / 260
-ANTE_FREEGAME_QUOTA = 1 / 130
+# Certified rates are much rarer; the book file oversamples so 500 books
+# still contain bonuses and bar fills. Lookup weights put the rate back.
+BASE_FREEGAME_QUOTA = 24 / 500
+ANTE_FREEGAME_QUOTA = 48 / 500
+BASE_PAY_BOOK_QUOTA = 8 / 500
+ANTE_PAY_BOOK_QUOTA = 8 / 500
 
-# Gamble — 50% dead / 45% Hear / 5% Madness.
-# Cost = (0.45·E[Hear] + 0.05·E[Madness] + 25000/4500) / 0.965.
-# Raised with the restored coin faces and tile multipliers. Still under the old 1,567×.
-GAMBLE_BUY_COST = 380.0
+# Buy costs are placeholders until books re-solve them onto 96.3%.
+# mode_prices.json overrides these after the solve step.
 SEE_BUY_COST = 115.0
 HEAR_BUY_COST = 250.0
-FEATURE_BUY_COST = 65.0
-GAMBLE_DEAD_QUOTA = 0.50
-GAMBLE_HEAR_QUOTA = 0.45
-GAMBLE_MADNESS_QUOTA = 0.05
-# Dead spins: always plant 2 ST on reels 0–1 and tease the rest (no bonus).
+FEATURE_BUY_COST = 75.0
+PEAK_SPIN_COST = 1000.0
+MYSTERY_BUY_COST = 180.0
+RISKY_BUY_COST = 220.0
 GAMBLE_DEAD_BAIT_RATE = 1.0
+
+# Size-5 anchors. Larger clusters grow by CLUSTER_GROWTH each extra symbol (uncapped).
+CLUSTER_SIZE5 = {
+    "T": 0.10,
+    "J": 0.10,
+    "Q": 0.10,
+    "K": 0.10,
+    "A": 0.10,
+    "LE": 0.30,
+    "CO": 0.30,
+    "OR": 0.50,
+    "GR": 0.50,
+    "BA": 1.00,
+}
+# Two steep curves tried in the bakeoff. Default is replaced by the winner.
+CLUSTER_CURVES = {"steep": 1.58, "steeper": 1.92}
+# Silver-lean keeps gold faces on the 25. Gold-lean lets 100–500 show up.
+COIN_SPREADS = {
+    # Silver-lean: mass sits on silver faces; gold almost always pays 25.
+    "silver": {
+        "CB": [78, 14, 5, 3],
+        "CS": [18, 22, 28, 20, 12],
+        "CG": [960, 28, 8, 2, 2],
+    },
+    # Gold-lean: the rich faces (100 / 250 / 500) show up, still below a full-board cap.
+    "gold": {
+        "CB": [52, 26, 14, 8],
+        "CS": [22, 24, 24, 18, 12],
+        "CG": [46, 24, 16, 9, 5],
+    },
+}
 
 
 class GameConfig(Config):
@@ -75,7 +103,7 @@ class GameConfig(Config):
         self.provider_name = "Trifecta"
         self.provider_number = 0
         self.working_name = "Kong Club"
-        self.rtp = 0.965
+        self.rtp = 0.963
         self.wincap = 25000.0
         self.win_type = "cluster"
         self.construct_paths()
@@ -110,64 +138,131 @@ class GameConfig(Config):
             "CS": [5, 7, 10, 15, 20],
             "CG": [25, 50, 100, 250, 500],
         }
-        self.coin_value_weights = {
-            "CB": [70, 20, 7, 3],
-            "CS": [60, 24, 10, 4, 2],
-            "CG": [82, 12, 4, 1, 1],
-        }
+        spread_name = os.environ.get("MM_COIN_SPREAD", "silver")
+        if spread_name not in COIN_SPREADS:
+            spread_name = "silver"
+        self.coin_spread_name = spread_name
+        self.coin_value_weights = {key: list(values) for key, values in COIN_SPREADS[spread_name].items()}
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
         self.activation_coin_value_pools = self._build_activation_coin_pools()
         self.activation_coin_value_weights = self._build_activation_coin_weights()
 
-        # See / Hear / Madness fill in 5 cluster connections (Cole 2026-09-02).
+        # Base, Ante, Hunt, and Feature fill at 10. Bonuses keep bar 5.
+        # Trifecta fires one coin game on the connecting spin (threshold 1).
         self.progress_thresholds = {
-            "base": 5,
-            "base_ante": 5,
-            "feature_spin": 5,
+            "base": 10,
+            "base_ante": 10,
+            "feature_spin": 10,
             "peak_spin": 1,
             "bonus_see": 5,
             "bonus_hear": 5,
-            "bonus_madness": 5,
+            "bonus_speak": 5,
             "bonus_pick": 5,
+            "bonus_risky": 5,
         }
+        for hunt_name in HUNT_COSTS:
+            self.progress_thresholds[hunt_name] = 10
+        self.base_like_modes = {"base", "base_ante", *HUNT_COSTS}
+        # Within a basegame spin: miss / small cluster bait / bar-fill pay.
+        # Tuned so a basegame spin averages TARGET_BASE_SPIN_EV. Pay spins are
+        # the rare bar fills; small spins move the bar and stop short of 10.
+        # Share of non-pay basegame spins that award a short cluster (the bait).
+        self.base_small_rate = float(os.environ.get("MM_BASE_SMALL", "0.46"))
+        self.base_pay_rate = float(os.environ.get("MM_BASE_PAY", "0.0"))
+        self.base_miss_rate = max(0.0, 1.0 - self.base_small_rate - self.base_pay_rate)
+        self.hear_to_speak_rate = 1 / 500
+        self.speak_direct_min_win = SPEAK_DIRECT_MIN_WIN
+        self.tumble_wild_chance = 0.012
+        self.tumble_scatter_chance_base = 0.004
+        self.tumble_scatter_chance_bonus = 0.018
+        curve_name = os.environ.get("MM_CLUSTER_CURVE", "steep")
+        if curve_name not in CLUSTER_CURVES:
+            curve_name = "steeper"
+        self.cluster_curve_name = curve_name
+        self.cluster_growth = float(os.environ.get("MM_CLUSTER_GROWTH", CLUSTER_CURVES[curve_name]))
         # One coin game per spin. The old Hear cap of 3 is not used.
         self.max_board_activations_hear = 1
         self.coin_game_max_reruns = 10
         # MULTI faces — LOCKED Cole 2026-07-18 (COIN_POWERS_LOCKED.md).
+        # Weights sit on 2x and 3x. The 10x and 20x faces stay legal but almost never
+        # roll, which pays for clovers showing up on small coin games.
         self.coin_game_multi_values = [2, 3, 4, 5, 10, 20]
-        self.coin_game_multi_weights = [35, 28, 18, 12, 5, 2]
+        self.coin_game_multi_weights = [58, 28, 10, 3, 1, 0]
         # Baseline vs power weights when rolling each lit cell's prize kind.
         self.coin_game_coin_weight = 100
-        # Per-tile-tier powers (same table in every priced mode). Coin 100 vs:
-        # bronze 3/0 (~2.9% clover · 0% pot), silver 6/2, gold 8/3.
-        # TIER_SHIFT stays retired.
+        # Bronze clovers are common (a 2x on a short stack). Silver clovers are a bit
+        # more common than before, and the pot rate is trimmed to fund that.
+        # Gold clover rate stays put. TIER_SHIFT stays retired.
         self.coin_game_power_by_tile_level = {
-            1: {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            2: {"multiplier": 6, "collector": 2, "tier_shift": 0},
-            3: {"multiplier": 8, "collector": 3, "tier_shift": 0},
+            1: {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            2: {"multiplier": 10, "collector": 1, "tier_shift": 0},
+            3: {"multiplier": 8, "collector": 2, "tier_shift": 0},
         }
-        # PEAK uses the gold table. Regen cannot spawn pots, so 8/3 stays finite.
-        self.coin_game_power_peak_gold = {"multiplier": 8, "collector": 3, "tier_shift": 0}
-        # Reruns use the same opening rates: coin 100 vs bronze 3/0, silver 6/2, gold 8/3.
+        # Trifecta live boards are composed (several clovers and one pot) rather than
+        # rolled from this table. Reruns are plain 25-coins so the live half stays ~1,926x.
+        self.coin_game_power_peak_gold = {"multiplier": 0, "collector": 0, "tier_shift": 0}
+        self.peak_coin_value_weights = [1, 0, 0, 0, 0]
         self.coin_game_rerun_power_by_tile_level = {
-            1: {"coin": 100, "multiplier": 3, "collector": 0, "tier_shift": 0},
-            2: {"coin": 100, "multiplier": 6, "collector": 2, "tier_shift": 0},
-            3: {"coin": 100, "multiplier": 8, "collector": 3, "tier_shift": 0},
+            1: {"coin": 100, "multiplier": 12, "collector": 0, "tier_shift": 0},
+            2: {"coin": 100, "multiplier": 10, "collector": 1, "tier_shift": 0},
+            3: {"coin": 100, "multiplier": 8, "collector": 2, "tier_shift": 0},
         }
         # Mode fallback matches bronze so Extra Chance / unknown modes do not invent pots.
         self.coin_game_power_weights = {
-            "base": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "base_ante": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "feature_spin": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "peak_spin": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_see": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_hear": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_madness": {"multiplier": 3, "collector": 0, "tier_shift": 0},
-            "bonus_pick": {"multiplier": 3, "collector": 0, "tier_shift": 0},
+            "base": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "base_ante": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "feature_spin": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "peak_spin": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_see": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_hear": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_speak": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_pick": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_risky": {"multiplier": 12, "collector": 0, "tier_shift": 0},
         }
+        for hunt_name in HUNT_COSTS:
+            self.coin_game_power_weights[hunt_name] = {
+                "multiplier": 12,
+                "collector": 0,
+                "tier_shift": 0,
+            }
         # Exact Le Bandit cluster pays in base AND bonus (do not dilute the table).
         # RTP levers: shorter strip runs (fewer tumbles), trigger rarity — not pay scales.
         self.bonus_cluster_pay_scale = 1.0
+        # Priced buys only. Base, Ante, Hunt, Feature, and Trifecta keep their spreads.
+        # These levers pull See toward 100x, Hear toward 300x, and the two Speaks
+        # toward the Mystery (330x) and Risky (500x) mixes.
+        self.buy_cluster_pay_scale = 1.0
+        self.buy_power_scale = 1.0
+        # See only needs a light trim (about 100x). Hear needs the clover/pot tail cut (about 300x).
+        self.see_power_scale = 0.85
+        self.see_cluster_pay_scale = 0.96
+        self.hear_power_scale = 0.62
+        self.hear_cluster_pay_scale = 0.90
+        # Direct Speak (Mystery / Risky) is lifted so it averages with a Hear→Speak
+        # upgrade. Upgrades drop carried gold and silver to bronze, which takes the
+        # other side of that gap. Prices stay put via the lookup weights.
+        self.mystery_speak_power_scale = 0.72
+        self.risky_speak_power_scale = 1.12
+        self.mystery_speak_cluster_scale = 0.98
+        self.risky_speak_cluster_scale = 1.02
+        self.buy_coin_value_weights = {
+            "CB": [84, 10, 4, 2],
+            "CS": [28, 26, 24, 14, 8],
+            "CG": [975, 16, 5, 3, 1],
+        }
+        self.mystery_speak_coin_weights = {
+            "CB": [78, 14, 5, 3],
+            "CS": [22, 26, 26, 16, 10],
+            "CG": [955, 28, 10, 5, 2],
+        }
+        self.risky_speak_coin_weights = {
+            "CB": [74, 16, 6, 4],
+            "CS": [18, 24, 28, 18, 12],
+            "CG": [945, 32, 14, 6, 3],
+        }
+        # Share of base-game hits that stop at 8/10 on the bar (4 of 5 full).
+        # Fraction of ordinary basegame spins that walk the bar to about 8/10.
+        self.base_near_miss_share = 0.05
         # Exact Jul 2 Le Bandit cluster pays (× total bet). Scale 1.0 = screenshot $1 table — DO NOT dilute.
         self.paytable_scale = 1.0
         # Always pay face as labeled (1.0). Do not soft-scale coin values.
@@ -178,9 +273,12 @@ class GameConfig(Config):
             "peak_spin": 1.0,
             "bonus_see": 1.0,
             "bonus_hear": 1.0,
-            "bonus_madness": 1.0,
+            "bonus_speak": 1.0,
             "bonus_pick": 1.0,
+            "bonus_risky": 1.0,
         }
+        for hunt_name in HUNT_COSTS:
+            self.coin_tile_scale_by_mode[hunt_name] = 1.0
         # Every lit tile pays a virtual coin. None = no sample cap.
         self.max_activation_coins_by_mode = {
             "base": None,
@@ -189,17 +287,25 @@ class GameConfig(Config):
             "peak_spin": None,
             "bonus_see": None,
             "bonus_hear": None,
-            "bonus_madness": None,
+            "bonus_speak": None,
             "bonus_pick": None,
+            "bonus_risky": None,
         }
+        for hunt_name in HUNT_COSTS:
+            self.max_activation_coins_by_mode[hunt_name] = None
         # Dead once Hear is uncapped.
         self.hear_coin_cap_boost_chance = 0.0
         # PEAK: light every cell gold (level 3) before the drop. Progress still starts at 0.
         self.peak_spin_seed_gold = True
-        self.peak_spin_cost = 1400.0
-        self.gamble_buy_cost = GAMBLE_BUY_COST
+        prices = self._load_mode_prices()
+        self.peak_spin_cost = float(prices.get("peak_spin", PEAK_SPIN_COST))
+        self.feature_buy_cost = float(prices.get("feature_spin", FEATURE_BUY_COST))
+        self.see_buy_cost = float(prices.get("bonus_see", SEE_BUY_COST))
+        self.hear_buy_cost = float(prices.get("bonus_hear", HEAR_BUY_COST))
+        self.mystery_buy_cost = float(prices.get("bonus_pick", MYSTERY_BUY_COST))
+        self.risky_buy_cost = float(prices.get("bonus_risky", RISKY_BUY_COST))
+        self.gamble_buy_cost = self.mystery_buy_cost
         self.gamble_dead_bait_rate = GAMBLE_DEAD_BAIT_RATE
-        self.see_buy_cost = SEE_BUY_COST
         self.bonus_spins = 10
         self.scatter_pays = {}
         self.freespin_triggers = {
@@ -211,7 +317,8 @@ class GameConfig(Config):
             self.freegame_type: 99,
         }
         self.max_tumbles_per_spin = 100
-        self.max_initial_wilds = 4
+        # No wild cap. Weights keep five-plus wilds rare; the draw does not reject them.
+        self.max_initial_wilds = None
         self.min_feature_cost_win = 0.01
 
         # Organic bonus entry via forced-scatter criteria (scatters are not on base strips).
@@ -219,7 +326,7 @@ class GameConfig(Config):
         self.bonus_hit_rate_ante = ANTE_FREEGAME_QUOTA
         self.scatter_triggers = SCATTER_TRIGGERS
         self.scatter_triggers_ante = SCATTER_TRIGGERS_ANTE
-        self.bonus_variant_map = {3: "see", 4: "hear", 5: "madness", 6: "madness"}
+        self.bonus_variant_map = {3: "see", 4: "hear", 5: "speak", 6: "speak"}
         self.ante_bet_cost = 1.4
 
         self.symbol_weights_initial = {
@@ -276,8 +383,11 @@ class GameConfig(Config):
         self.max_sticky_wilds = 0
         # Free spins and Feature Spin can land CB/CS/CG. Base and TRIFECTA cannot.
         self.symbol_weights_bonus_initial.update(self.physical_coin_weights)
+        # Scatters can land, including on tumbles, and count toward retriggers.
+        self.symbol_weights_bonus_initial["ST"] = 0.55
         self.symbol_weights_bonus_refill = dict(self.symbol_weights_base_refill)
         self.symbol_weights_bonus_refill.update(self.physical_coin_weights)
+        self.symbol_weights_bonus_refill["ST"] = 0.35
         self.symbol_weights_feature_spin_initial = dict(self.symbol_weights_feature_initial)
         self.symbol_weights_feature_spin_initial.update(self.physical_coin_weights)
         self.symbol_weights_feature_spin_refill = dict(self.symbol_weights_feature_refill)
@@ -374,47 +484,34 @@ class GameConfig(Config):
             weights[level] = list(self.coin_value_weights[symbol])
         return weights
 
-    def _build_paytable(self) -> dict[tuple[int, str], float]:
-        """Full Jul 2 Le Bandit paytable — 7 size bands."""
-        payouts = {
-            "T": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
-            "J": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
-            "Q": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
-            "K": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
-            "A": [0.10, 0.20, 0.30, 0.50, 1.50, 5.00, 15.00],
-            "LE": [0.30, 0.40, 0.50, 0.70, 2.50, 7.50, 25.00],
-            "CO": [0.30, 0.40, 0.50, 0.70, 2.50, 7.50, 25.00],
-            "OR": [0.50, 0.70, 1.00, 1.50, 5.00, 15.00, 50.00],
-            "GR": [0.50, 0.70, 1.00, 1.50, 5.00, 15.00, 50.00],
-            "BA": [1.00, 1.50, 2.00, 3.00, 10.00, 30.00, 100.00],
-        }
-        band_to_index = {5: 0, 6: 1, 7: 2, 8: 3, 9: 4, 11: 5, 13: 6}
+    def cluster_pay(self, size: int, symbol: str) -> float:
+        """Steep size-scaled pay. Size 5 is the anchor. Each extra symbol multiplies."""
+        anchor = float(CLUSTER_SIZE5.get(symbol, 0.10))
+        steps = max(0, int(size) - 5)
         scale = float(getattr(self, "paytable_scale", 1.0))
+        growth = float(getattr(self, "cluster_growth", 1.92))
+        return round(anchor * (growth ** steps) * scale, 6)
+
+    def _build_paytable(self) -> dict[tuple[int, str], float]:
+        """Per-size pays from 5 through 30. Larger sizes use cluster_pay directly."""
         table: dict[tuple[int, str], float] = {}
-        for symbol, values in payouts.items():
+        for symbol in CLUSTER_SIZE5:
             for size in range(5, 31):
-                band = self.cluster_pay_tier(size)
-                payout = round(values[band_to_index[band]] * scale, 6)
-                table[(size, symbol)] = payout
-                # Also key by band size used by GameCluster.paytable_size lookups.
-                table[(band, symbol)] = payout
+                table[(size, symbol)] = self.cluster_pay(size, symbol)
         return table
 
     @staticmethod
+    def _load_mode_prices() -> dict:
+        path = Path(__file__).with_name("mode_prices.json")
+        if not path.exists():
+            return {}
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+
+    @staticmethod
     def cluster_pay_tier(size: int) -> int:
-        if size <= 5:
-            return 5
-        if size == 6:
-            return 6
-        if size == 7:
-            return 7
-        if size == 8:
-            return 8
-        if size <= 10:
-            return 9
-        if size <= 12:
-            return 11
-        return 13
+        """Identity size key. Pays are no longer collapsed into bands."""
+        return max(5, int(size))
 
     def build_reel_strips(
         self,
@@ -422,6 +519,8 @@ class GameConfig(Config):
         seed: int,
         strip_len: int = 50,
         run_weights: tuple[int, int, int] = (40, 45, 15),
+        *,
+        organic: bool = False,
     ) -> list[list[str]]:
         """Build six independent run-based strips.
 
@@ -437,13 +536,62 @@ class GameConfig(Config):
             strip: list[str] = []
             while len(strip) < strip_len:
                 symbol = reel_rng.choices(symbols, weights=weight_values, k=1)[0]
+                if organic and strip and symbol == strip[-1]:
+                    for _ in range(5):
+                        symbol = reel_rng.choices(symbols, weights=weight_values, k=1)[0]
+                        if symbol != strip[-1]:
+                            break
+                    if symbol == strip[-1]:
+                        alternatives = [
+                            name
+                            for name, weight in zip(symbols, weight_values)
+                            if weight > 0 and name != strip[-1]
+                        ]
+                        if alternatives:
+                            symbol = alternatives[reel_rng.randrange(len(alternatives))]
                 run_len = reel_rng.choices([1, 2, 3], weights=list(run_weights), k=1)[0]
-                strip.extend([symbol] * run_len)
+                strip.extend([symbol] * min(run_len, 3))
             strip = strip[:strip_len]
             self._light_shuffle_runs(strip, rng=random.Random(seed + reel * 37))
             self._ensure_coin_stop(strip, weights, rng=random.Random(seed + reel * 73))
+            if organic:
+                # A window of 5 cannot be a solid column. Runs of 4 still cascade.
+                self._cap_runs(strip, 4)
             strips.append(strip)
         return strips
+
+    @staticmethod
+    def _cap_runs(strip: list[str], limit: int = 3) -> None:
+        """No reel window of 5 is a solid stack. Runs stay at 3."""
+        pool = list(dict.fromkeys(strip))
+        if len(pool) < 2:
+            return
+        for _ in range(6):
+            run = 1
+            changed = False
+            for index in range(1, len(strip)):
+                if strip[index] == strip[index - 1]:
+                    run += 1
+                    if run > limit:
+                        for alt in pool:
+                            if alt != strip[index] and (index + 1 == len(strip) or alt != strip[index + 1]):
+                                strip[index] = alt
+                                changed = True
+                                run = 1
+                                break
+                else:
+                    run = 1
+            if not changed:
+                break
+        if len(strip) > limit + 1 and strip[0] == strip[-1]:
+            left = 0
+            while left < len(strip) and strip[left] == strip[0]:
+                left += 1
+            right = 0
+            while right < len(strip) and strip[-1 - right] == strip[0]:
+                right += 1
+            if limit < left + right < len(strip):
+                strip[0] = next(symbol for symbol in pool if symbol != strip[1])
 
     @staticmethod
     def _light_shuffle_runs(strip: list[str], rng: random.Random) -> None:
@@ -462,7 +610,7 @@ class GameConfig(Config):
         strip[rng.randrange(0, len(strip))] = rng.choices(coin_symbols, weights=coin_weights, k=1)[0]
 
     def _build_variety_reels(self) -> None:
-        """Weighted strip sets. Base/ante share four. See, Hear, and Madness have three each."""
+        """Weighted strip sets. Base/ante share four. See, Hear, and Speak have three each."""
         pays = self.paying_symbols
 
         def even(**extra: float) -> dict[str, float]:
@@ -491,20 +639,36 @@ class GameConfig(Config):
         specs: dict[str, tuple] = {
             "base_quiet": (even(MW=0.02), (96, 3, 1), 411, (97, 2, 1)),
             "base_normal": (even(OR=8, GR=8, BA=7, MW=0.15), (88, 10, 2), 422, (92, 7, 1)),
+            # Small irregular clusters. Lows dominate so a hit is usually under 1x,
+            # and runs stay short so a column is never painted solid.
+            "base_small": (
+                even(T=16, J=16, Q=14, K=12, A=12, LE=5, CO=4, OR=2, GR=1, BA=1, MW=0.04),
+                (40, 45, 15),
+                466,
+                (70, 24, 6),
+            ),
+            # Busier lows. The refill keeps connecting, so some spins walk the bar
+            # up without a scripted column chain.
+            "base_link": (
+                even(T=18, J=16, Q=14, K=12, A=10, LE=4, CO=3, OR=2, GR=1, BA=1, MW=0.12),
+                (12, 38, 50),
+                477,
+                (10, 34, 56),
+            ),
             "base_hot": (even(Q=12, K=12, BA=9, MW=1.2), (36, 40, 24), 433, (55, 32, 13)),
             "base_teaser": (even(MW=0.2), (80, 18, 2), 444, (85, 12, 3)),
             # Slow spins rarely fill the bar. Steady / burst are the spotlight third.
-            "see_slow": (even(MW=0.16), (84, 13, 3), 511, (88, 10, 2)),
-            "see_steady": (even(BA=10, MW=0.9), (46, 38, 16), 522, (56, 32, 12)),
-            "see_burst": (even(Q=12, K=12, BA=11, MW=1.4), (32, 42, 26), 533, (42, 38, 20)),
-            "hear_slow": (even(MW=0.06), (92, 7, 1), 611, (94, 5, 1)),
-            "hear_steady": (even(OR=12, GR=12, BA=13, MW=2.0), (26, 40, 34), 622, (34, 40, 26)),
-            "hear_burst": (even(Q=14, BA=15, MW=2.8), (16, 38, 46), 633, (22, 40, 38)),
-            # Madness is a coin game every spin. Keep the fill steady so the
-            # 2,000× floor does not select only the 5,000× tail.
-            "madness_low": (even(MW=0.30), (76, 20, 4), 711, (82, 16, 2)),
-            "madness_mid": (even(BA=10, MW=1.05), (48, 38, 14), 722, (58, 32, 10)),
-            "madness_high": (hot(1.5), (34, 42, 24), 733, (44, 38, 18)),
+            "see_slow": (even(MW=0.05, ST=0.28), (96, 3, 1), 511, (97, 2, 1)),
+            "see_steady": (even(BA=10, MW=0.9, ST=0.45), (46, 38, 16), 522, (56, 32, 12)),
+            "see_burst": (even(Q=12, K=12, BA=11, MW=1.4, ST=0.45), (32, 42, 26), 533, (42, 38, 20)),
+            "hear_slow": (even(MW=0.06, ST=0.22), (92, 7, 1), 611, (94, 5, 1)),
+            "hear_steady": (even(OR=12, GR=12, BA=13, MW=2.0, ST=0.22), (26, 40, 34), 622, (34, 40, 26)),
+            "hear_burst": (even(Q=14, BA=15, MW=2.8, ST=0.22), (16, 38, 46), 633, (22, 40, 38)),
+            # Speak No Evil is a coin game every spin. Ranks carry, so later spins
+            # are the rich ones. The 1,000× floor applies only to direct entry.
+            "speak_low": (even(MW=0.30, ST=0.2), (76, 20, 4), 711, (82, 16, 2)),
+            "speak_mid": (even(BA=10, MW=1.05, ST=0.2), (48, 38, 14), 722, (58, 32, 10)),
+            "speak_high": (hot(1.5), (34, 42, 24), 733, (44, 38, 18)),
             "feature_mild": (even(BA=12, MW=2.2), (28, 42, 30), 811, (36, 40, 24)),
             "feature_rich": (hot(5.6), (12, 28, 60), 822, (14, 30, 56)),
             "peak_a": (even(MW=1.0), (40, 40, 20), 911, (50, 36, 14)),
@@ -512,19 +676,19 @@ class GameConfig(Config):
         }
         self.reel_set_weights = {
             "base": {"base_quiet": 52, "base_normal": 16, "base_hot": 26, "base_teaser": 6},
-            "see": {"see_slow": 56, "see_steady": 34, "see_burst": 10},
-            "hear": {"hear_slow": 68, "hear_steady": 26, "hear_burst": 6},
-            "madness": {"madness_low": 88, "madness_mid": 10, "madness_high": 2},
+            "see": {"see_slow": 94, "see_steady": 5, "see_burst": 1},
+            "hear": {"hear_slow": 86, "hear_steady": 12, "hear_burst": 2},
+            "speak": {"speak_low": 55, "speak_mid": 35, "speak_high": 10},
             "feature": {"feature_mild": 30, "feature_rich": 70},
             "peak": {"peak_a": 55, "peak_b": 45},
             "gamble_dead": {"base_quiet": 1},
         }
         self.reel_set_weights_flat = set(specs)
         for name, (weights, runs, seed, refill_runs) in specs.items():
-            self.reels[name] = self.build_reel_strips(weights, seed=seed, run_weights=runs)
+            self.reels[name] = self.build_reel_strips(weights, seed=seed, run_weights=runs, organic=True)
             refill = {symbol: weight for symbol, weight in weights.items() if symbol not in {"MW", "ST"}}
             self.reels[f"{name}_REFILL"] = self.build_reel_strips(
-                refill, seed=seed + 17, run_weights=refill_runs
+                refill, seed=seed + 17, run_weights=refill_runs, organic=True
             )
         # Teaser refills stay quiet so the planted 3–4 clusters do not chain to 5.
         self.reels["base_teaser_REFILL"] = self.reels["base_quiet_REFILL"]
@@ -550,7 +714,7 @@ class GameConfig(Config):
         gametype: str | None = None,
         bonus_variant: str | None = None,
     ) -> str:
-        if betmode in ("base", "base_ante"):
+        if betmode in self.base_like_modes:
             if gametype == self.freegame_type:
                 return "INITIAL_BONUS"
             return "INITIAL_BASE"
@@ -559,14 +723,14 @@ class GameConfig(Config):
         if betmode == "peak_spin":
             # Same Feature strips / run lengths as Feature Spin — gold is chrome + coins only.
             return "FEATURE"
-        if betmode in ("bonus_see", "bonus_hear", "bonus_madness") or bonus_variant in (
+        if betmode in ("bonus_see", "bonus_hear", "bonus_speak") or bonus_variant in (
             "see",
             "hear",
-            "madness",
+            "speak",
         ):
             return "INITIAL_BONUS"
-        if betmode == "bonus_pick":
-            if gametype == self.freegame_type or bonus_variant in ("see", "hear", "madness"):
+        if betmode in ("bonus_pick", "bonus_risky"):
+            if gametype == self.freegame_type or bonus_variant in ("see", "hear", "speak"):
                 return "INITIAL_BONUS"
             return "INITIAL_BASE"
         if gametype == self.freegame_type:
@@ -596,53 +760,51 @@ class GameConfig(Config):
             "scatter_triggers": self.scatter_triggers_ante,
             "force_freegame": True,
         }
-        return [
+        modes = [
             BetMode("base", 1.0, self.rtp, self.wincap, False, True, False, [
-                self._distribution("basegame", 1.0 - bonus_base - BASE_CAP_QUOTA),
+                self._distribution("basegame", 1.0 - bonus_base - BASE_PAY_BOOK_QUOTA),
+                self._distribution("bar_pay", BASE_PAY_BOOK_QUOTA),
                 self._distribution("freegame", bonus_base, **freegame_base),
-                self._distribution("cap", BASE_CAP_QUOTA, force_wincap=True),
             ]),
             BetMode("base_ante", self.ante_bet_cost, self.rtp, self.wincap, False, True, False, [
-                self._distribution("basegame", 1.0 - bonus_ante - ANTE_CAP_QUOTA),
+                self._distribution("basegame", 1.0 - bonus_ante - ANTE_PAY_BOOK_QUOTA),
+                self._distribution("bar_pay", ANTE_PAY_BOOK_QUOTA),
                 self._distribution("freegame", bonus_ante, **freegame_ante),
-                self._distribution("cap", ANTE_CAP_QUOTA, force_wincap=True),
             ]),
-            BetMode("feature_spin", FEATURE_BUY_COST, self.rtp, self.wincap, False, True, False, [
-                self._distribution("dead_juicy", FEATURE_DEAD_QUOTA),
-                self._distribution("nibble", FEATURE_NIBBLE_QUOTA),
+        ]
+        for hunt_name, cost in HUNT_COSTS.items():
+            quota = hunt_freegame_quota(cost)
+            pay_q = min(BASE_PAY_BOOK_QUOTA, max(0.0, 0.9 - quota))
+            modes.append(
+                BetMode(hunt_name, cost, self.rtp, self.wincap, False, True, False, [
+                    self._distribution("basegame", 1.0 - quota - pay_q),
+                    self._distribution("bar_pay", pay_q),
+                    self._distribution("freegame", quota, **freegame_base),
+                ])
+            )
+        modes.extend([
+            BetMode("feature_spin", self.feature_buy_cost, self.rtp, self.wincap, False, True, False, [
                 self._distribution("run", FEATURE_RUN_QUOTA),
-                self._distribution("cap", FEATURE_CAP_QUOTA, force_wincap=True),
             ]),
             BetMode("peak_spin", self.peak_spin_cost, self.rtp, self.wincap, False, True, False, [
                 self._distribution("dead_juicy", PEAK_DEAD_QUOTA),
-                self._distribution("nibble", PEAK_NIBBLE_QUOTA),
-                self._distribution("run", PEAK_RUN_QUOTA),
-                self._distribution("clip", PEAK_CLIP_QUOTA),
-                self._distribution("tease", PEAK_TEASE_QUOTA),
-                self._distribution("cap", PEAK_CAP_QUOTA, force_wincap=True),
+                self._distribution("live", PEAK_LIVE_QUOTA),
             ]),
             BetMode("bonus_see", self.see_buy_cost, self.rtp, self.wincap, False, True, True, [
-                self._distribution("bonus_see", 1.0 - SEE_CAP_QUOTA, bonus_variant="see"),
-                self._distribution("cap", SEE_CAP_QUOTA, force_wincap=True, bonus_variant="see"),
+                self._distribution("bonus_see", 1.0, bonus_variant="see"),
             ]),
-            BetMode("bonus_hear", HEAR_BUY_COST, self.rtp, self.wincap, False, True, True, [
-                self._distribution("bonus_hear", 1.0 - HEAR_CAP_QUOTA, bonus_variant="hear"),
-                self._distribution("cap", HEAR_CAP_QUOTA, force_wincap=True, bonus_variant="hear"),
+            BetMode("bonus_hear", self.hear_buy_cost, self.rtp, self.wincap, False, True, True, [
+                self._distribution("bonus_hear", 1.0, bonus_variant="hear"),
             ]),
-            BetMode("bonus_pick", self.gamble_buy_cost, self.rtp, self.wincap, False, True, False, [
-                self._distribution("gamble_dead", GAMBLE_DEAD_QUOTA - GAMBLE_CAP_QUOTA),
-                self._distribution(
-                    "gamble_hear",
-                    GAMBLE_HEAR_QUOTA,
-                    force_freegame=True,
-                    scatter_triggers={4: 1},
-                ),
-                self._distribution(
-                    "gamble_madness",
-                    GAMBLE_MADNESS_QUOTA,
-                    force_freegame=True,
-                    scatter_triggers={5: 1},
-                ),
-                self._distribution("cap", GAMBLE_CAP_QUOTA, force_wincap=True),
+            BetMode("bonus_pick", self.mystery_buy_cost, self.rtp, self.wincap, False, True, True, [
+                self._distribution("pick_see", MYSTERY_SEE_QUOTA, bonus_variant="see"),
+                self._distribution("pick_hear", MYSTERY_HEAR_QUOTA, bonus_variant="hear"),
+                self._distribution("pick_speak", MYSTERY_SPEAK_QUOTA, bonus_variant="speak"),
             ]),
-        ]
+            BetMode("bonus_risky", self.risky_buy_cost, self.rtp, self.wincap, False, True, True, [
+                self._distribution("risky_dead", RISKY_DEAD_QUOTA),
+                self._distribution("risky_hear", RISKY_HEAR_QUOTA, bonus_variant="hear"),
+                self._distribution("risky_speak", RISKY_SPEAK_QUOTA, bonus_variant="speak"),
+            ]),
+        ])
+        return modes

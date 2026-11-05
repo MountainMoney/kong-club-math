@@ -29,13 +29,11 @@ ADJACENT_8: tuple[tuple[int, int], ...] = (
 
 
 def highlighted_positions(gamestate: "GameExecutables") -> list[tuple[int, int]]:
+    """Every bronze, silver, or gold tile flips. Plain tiles never flip."""
     positions: list[tuple[int, int]] = []
     for reel in range(gamestate.config.num_reels):
         for row in range(gamestate.config.num_rows[reel]):
-            level = gamestate.tile_levels[reel][row]
-            if level <= 0:
-                continue
-            if getattr(gamestate, "bonus_variant", None) == "madness" and level <= 1:
+            if gamestate.tile_levels[reel][row] <= 0:
                 continue
             positions.append((reel, row))
     positions.sort(key=lambda pos: (pos[0], pos[1]))
@@ -73,11 +71,65 @@ def _pick_weighted_coin_value(
 ) -> int:
     pools = getattr(gamestate.config, "activation_coin_value_pools", {}) or {}
     weights_by_level = getattr(gamestate.config, "activation_coin_value_weights", {}) or {}
+    if getattr(gamestate, "betmode", None) == "peak_spin":
+        pool = list((getattr(gamestate.config, "coin_values", {}) or {}).get("CG") or [25, 50, 100, 250, 500])
+        weights = list(getattr(gamestate.config, "peak_coin_value_weights", None) or [])
+        if len(weights) != len(pool):
+            weights = [1] * len(pool)
+        return int(rng.choices(pool, weights=weights, k=1)[0])
+    buy_weights = _buy_coin_weights(gamestate, tile_level)
+    if buy_weights is not None:
+        pool, weights = buy_weights
+        return int(rng.choices(pool, weights=weights, k=1)[0])
     pool = pools.get(tile_level) or pools.get(1) or [1]
     weights = weights_by_level.get(tile_level)
     if not weights or len(weights) != len(pool):
         weights = [1] * len(pool)
     return int(rng.choices(pool, weights=weights, k=1)[0])
+
+
+def _direct_buy(gamestate: "GameExecutables") -> bool:
+    return getattr(gamestate, "betmode", None) in {
+        "bonus_see",
+        "bonus_hear",
+        "bonus_pick",
+        "bonus_risky",
+    }
+
+
+def _buy_power_scale(gamestate: "GameExecutables") -> float:
+    """Clover/pot rate scale for the priced buys only. Base and the other modes stay put."""
+    if not _direct_buy(gamestate):
+        return 1.0
+    variant = getattr(gamestate, "bonus_variant", None)
+    mode = getattr(gamestate, "betmode", None)
+    if variant == "speak" and mode == "bonus_pick":
+        return float(getattr(gamestate.config, "mystery_speak_power_scale", 1.0) or 1.0)
+    if variant == "speak" and mode == "bonus_risky":
+        return float(getattr(gamestate.config, "risky_speak_power_scale", 1.0) or 1.0)
+    if variant == "hear" or mode == "bonus_hear":
+        return float(getattr(gamestate.config, "hear_power_scale", None) or getattr(gamestate.config, "buy_power_scale", 1.0) or 1.0)
+    if variant == "see" or mode == "bonus_see":
+        return float(getattr(gamestate.config, "see_power_scale", None) or getattr(gamestate.config, "buy_power_scale", 1.0) or 1.0)
+    return float(getattr(gamestate.config, "buy_power_scale", 1.0) or 1.0)
+
+
+def _buy_coin_weights(gamestate: "GameExecutables", tile_level: int):
+    if not _direct_buy(gamestate):
+        return None
+    table = getattr(gamestate.config, "buy_coin_value_weights", None) or {}
+    symbol = "CB" if tile_level <= 1 else "CS" if tile_level == 2 else "CG"
+    variant = getattr(gamestate, "bonus_variant", None)
+    mode = getattr(gamestate, "betmode", None)
+    if variant == "speak" and mode == "bonus_pick":
+        table = getattr(gamestate.config, "mystery_speak_coin_weights", None) or table
+    elif variant == "speak" and mode == "bonus_risky":
+        table = getattr(gamestate.config, "risky_speak_coin_weights", None) or table
+    weights = table.get(symbol)
+    pool = list((getattr(gamestate.config, "coin_values", {}) or {}).get(symbol) or [])
+    if not weights or not pool or len(weights) != len(pool):
+        return None
+    return pool, list(weights)
 
 
 def _pick_multi_value(gamestate: "GameExecutables", rng: random.Random) -> int:
@@ -93,8 +145,8 @@ def _mode_power_weights(gamestate: "GameExecutables") -> dict[str, int]:
     freegame = getattr(gamestate.config, "freegame_type", "freegame")
     if getattr(gamestate, "gametype", None) == freegame:
         variant = getattr(gamestate, "bonus_variant", None)
-        if variant in ("hear", "madness"):
-            key = f"bonus_{variant}"
+        if variant in ("hear", "speak", "madness"):
+            key = "bonus_speak" if variant in ("speak", "madness") else f"bonus_{variant}"
             if key in table:
                 return dict(table[key])
     mode = getattr(gamestate, "betmode", "base")
@@ -126,19 +178,26 @@ def _pick_cell_kind(
     *,
     reactivate: bool = False,
 ) -> str:
-    """Roll coin vs MULTI vs COLLECTOR for one lit cell. TIER_SHIFT stays retired.
-
-    Regen never rolls a new pot — unused bags wait, then eat valued ones.
-    """
-    power = _tile_power_weights(gamestate, tile_level)
-    coin_w = int(getattr(gamestate.config, "coin_game_coin_weight", 100) or 100)
+    """Roll coin vs clover vs pot. Reruns may spawn pots (silver and gold)."""
+    # Trifecta reruns are plain coins. The opening board is composed, not rolled.
+    if getattr(gamestate, "betmode", None) == "peak_spin":
+        return "coin"
+    if reactivate:
+        table = getattr(gamestate.config, "coin_game_rerun_power_by_tile_level", None) or {}
+        level = max(1, min(3, int(tile_level or 1)))
+        power = dict(table.get(level) or {"coin": 100, "multiplier": 3, "collector": 0})
+        coin_w = int(power.get("coin", 100) or 100)
+    else:
+        power = _tile_power_weights(gamestate, tile_level)
+        coin_w = int(getattr(gamestate.config, "coin_game_coin_weight", 100) or 100)
     labels = ["coin"]
     weights = [max(coin_w, 0)]
-    multi_w = int(power.get("multiplier", 0) or 0)
+    scale = _buy_power_scale(gamestate)
+    multi_w = int(round(int(power.get("multiplier", 0) or 0) * scale))
     if multi_w > 0:
         labels.append("multiplier")
         weights.append(multi_w)
-    collector_w = 0 if reactivate else int(power.get("collector", 0) or 0)
+    collector_w = int(round(int(power.get("collector", 0) or 0) * scale))
     if collector_w > 0:
         labels.append("collector")
         weights.append(collector_w)
@@ -385,6 +444,89 @@ MAX_COLLECTOR_REGENS = MAX_POWER_ACTIONS
 COIN_FEATURE_WINCAP = 25000
 
 
+# Trifecta live board: clovers sit on corners so each one multiplies its own coins.
+_PEAK_CLOVER_SPOTS = [(1, 0), (1, 4), (4, 0), (4, 4)]
+_PEAK_POT_SPOT = (0, 2)
+
+
+def _peak_show_roll(
+    gamestate: "GameExecutables",
+    rng: random.Random,
+    positions: list[tuple[int, int]],
+    round_index: int,
+) -> tuple[list[dict], list[tuple[int, int, int]], list[tuple[int, int]]]:
+    """Several 2x/3x clovers and one pot, on small gold faces.
+
+    Reruns replace the spent cells with 25-coins, so the resolved total stays
+    near the 1,926x live average instead of running away to the cap.
+    """
+    spot = set(positions)
+    pot = _PEAK_POT_SPOT if _PEAK_POT_SPOT in spot else positions[0]
+    clover_spots = [pos for pos in _PEAK_CLOVER_SPOTS if pos in spot and pos != pot]
+    roll = rng.random()
+    count = 4 if roll < 0.62 else 3 if roll < 0.92 else 2
+    chosen = clover_spots[:count]
+    items: list[dict] = [_build_collector_reveal(pot[0], pot[1], 3, round_index=round_index)]
+    multis: list[tuple[int, int, int]] = []
+    for index, (reel, row) in enumerate(chosen):
+        # Mostly 2x, with a 3x often enough that the board reads as an event.
+        multi = 3 if rng.random() < (0.42 if index == 0 else 0.28) else 2
+        items.append(_build_multi_reveal(reel, row, multi, 3, round_index=round_index))
+        multis.append((reel, row, multi))
+    chosen_set = set(chosen)
+    for reel, row in positions:
+        if (reel, row) == pot or (reel, row) in chosen_set:
+            continue
+        value = 50 if rng.random() < 0.06 else 25
+        items.append(_build_coin_reveal(reel, row, "CG", 3, value, round_index=round_index))
+    return items, multis, [pot]
+
+
+def _ensure_small_game_clover(
+    gamestate: "GameExecutables", rng: random.Random, working: list[dict]
+) -> list[dict]:
+    """A small stack of coins shows a 2x or 3x even when the roll missed.
+
+    The clover replaces the smallest coin that actually touches another coin,
+    so the extra multiplier is a couple of small faces, not a gold chain.
+    """
+    if getattr(gamestate, "betmode", None) == "peak_spin":
+        return working
+    # Tests park every tier at 0 clovers when they want a coin-only resolve.
+    table = getattr(gamestate.config, "coin_game_power_by_tile_level", {}) or {}
+    if table and all(int((profile or {}).get("multiplier", 0) or 0) <= 0 for profile in table.values()):
+        return working
+    if any(item.get("kind") == "multiplier" for item in working):
+        return working
+    coins = [item for item in working if item.get("kind") == "coin"]
+    if len(coins) < 2:
+        return working
+    opening = sum(int(item.get("value") or 0) for item in coins)
+    if opening >= 60:
+        return working
+
+    def neighbors(item: dict) -> int:
+        reel, row = _item_pos(item)
+        return sum(
+            1
+            for other in coins
+            if other is not item and _is_adjacent_8(reel, row, *_item_pos(other))
+        )
+
+    coins.sort(key=lambda item: (-neighbors(item), int(item.get("value") or 0), _item_pos(item)))
+    victim = coins[0]
+    multi = 2 if rng.random() < 0.68 else 3
+    replacement = _build_multi_reveal(
+        int(victim["reel"]),
+        int(victim["row"]),
+        multi,
+        int(victim.get("tileLevel") or 1),
+        round_index=int(victim.get("round") or 1),
+    )
+    victim_pos = _item_pos(victim)
+    return [replacement if _item_pos(item) == victim_pos else item for item in working]
+
+
 def _roll_prizes(
     gamestate: "GameExecutables",
     rng: random.Random,
@@ -393,6 +535,8 @@ def _roll_prizes(
     *,
     reactivate: bool = False,
 ) -> tuple[list[dict], list[tuple[int, int, int]], list[tuple[int, int]]]:
+    if getattr(gamestate, "betmode", None) == "peak_spin" and not reactivate:
+        return _peak_show_roll(gamestate, rng, positions, round_index)
     round_items: list[dict] = []
     multis: list[tuple[int, int, int]] = []
     collectors: list[tuple[int, int]] = []
@@ -642,8 +786,9 @@ def _mode_coin_scale(gamestate: "GameExecutables") -> float:
     freegame = getattr(gamestate.config, "freegame_type", "freegame")
     if getattr(gamestate, "gametype", None) == freegame:
         variant = getattr(gamestate, "bonus_variant", None)
-        if variant in ("hear", "madness"):
-            return float(scales.get(f"bonus_{variant}", 1.0))
+        if variant in ("hear", "speak", "madness"):
+            key = "speak" if variant == "madness" else variant
+            return float(scales.get(f"bonus_{key}", scales.get(f"bonus_{variant}", 1.0)))
     mode = getattr(gamestate, "betmode", "base")
     return float(scales.get(mode, 1.0))
 
@@ -654,8 +799,9 @@ def _mode_coin_cap(gamestate: "GameExecutables") -> int | None:
     freegame = getattr(gamestate.config, "freegame_type", "freegame")
     if getattr(gamestate, "gametype", None) == freegame:
         variant = getattr(gamestate, "bonus_variant", None)
-        if variant in ("hear", "madness"):
-            return caps.get(f"bonus_{variant}")
+        if variant in ("hear", "speak", "madness"):
+            key = "speak" if variant == "madness" else variant
+            return caps.get(f"bonus_{key}", caps.get(f"bonus_{variant}"))
     mode = getattr(gamestate, "betmode", "base")
     return caps.get(mode)
 
@@ -683,7 +829,8 @@ def _physical_coin_payout(
     stored = (getattr(gamestate, "board_coin_values", None) or {}).get((reel, row))
     if stored is None:
         return None
-    return str(symbol), float(stored)
+    multiplier = max(1, int(gamestate.level_to_multiplier(tile_level) or 1))
+    return str(symbol), float(stored) * multiplier
 
 
 def _use_virtual_coins(gamestate: "GameExecutables") -> bool:
@@ -697,175 +844,205 @@ def _coin_game_rng(gamestate: "GameExecutables") -> random.Random:
     if seed_base is None:
         seed_base = getattr(gamestate, "sim", 0) or 0
     activation = int(getattr(gamestate, "progress_activation_count", 0) or 0)
-    return random.Random(int(seed_base) * 1_000_003 + activation * 9973 + 17)
+    # repeat_count changes the stream when a book is rejected (cap or Speak floor).
+    repeat = int(getattr(gamestate, "repeat_count", 0) or 0)
+    return random.Random(int(seed_base) * 1_000_003 + activation * 9973 + repeat * 104729 + 17)
 
 
 def resolve_coin_game(gamestate: "GameExecutables") -> tuple[float, list[dict], int]:
-    """Flip lit tiles, resolve clovers then pots, and rerun until the board goes quiet."""
-    return _resolve_rerun_coin_game(gamestate, _coin_game_rng(gamestate))
+    """Flip every lit tile. Clovers, then the leftmost pot, then reruns.
 
-
-def _neighbors(reel: int, row: int) -> list[tuple[int, int]]:
-    return [(reel + dr, row + dc) for dr, dc in ADJACENT_8]
-
-
-def _flip_cell(gamestate, level: int, rng: random.Random, *, rerun: bool = False) -> dict:
-    if rerun:
-        table = getattr(gamestate.config, "coin_game_rerun_power_by_tile_level", None) or {}
-        weights = dict(table.get(max(1, min(3, int(level))), {"multiplier": 3, "collector": 0, "coin": 100}))
-        coin_w = int(weights.get("coin", 100) or 100)
-    else:
-        weights = _tile_power_weights(gamestate, level)
-        coin_w = int(getattr(gamestate.config, "coin_game_coin_weight", 100) or 100)
-    clover_w = int(weights.get("multiplier", 0) or 0)
-    pot_w = int(weights.get("collector", 0) or 0)
-    kind = rng.choices(
-        ["coin", "clover", "pot"],
-        weights=[max(coin_w, 1), max(clover_w, 0), max(pot_w, 0)],
-        k=1,
-    )[0]
-    if kind == "clover" and clover_w <= 0:
-        kind = "coin"
-    if kind == "pot" and pot_w <= 0:
-        kind = "coin"
-    if kind == "clover":
-        return {"kind": "clover", "value": float(_pick_multi_value(gamestate, rng)), "used": False}
-    if kind == "pot":
-        return {"kind": "pot", "value": 0.0, "valued": False, "spent": False}
-    return {"kind": "coin", "value": float(_pick_weighted_coin_value(gamestate, level, rng))}
-
-
-def _lit_positions(gamestate) -> list[tuple[int, int]]:
-    positions = []
-    for reel in range(gamestate.config.num_reels):
-        for row in range(gamestate.config.num_rows[reel]):
-            if gamestate.tile_levels[reel][row] > 0:
-                positions.append((reel, row))
-    positions.sort()
-    return positions
-
-
-def _resolve_rerun_coin_game(gamestate, rng: random.Random) -> tuple[float, list[dict], int]:
-    """One coin game. The 10-rerun cap pays the mode max win and must not occur in real books."""
-    cap = int(getattr(gamestate.config, "coin_game_max_reruns", 10) or 10)
+    Events use the frontend kinds: coin, multiplier (clover), collector (pot).
+    A rerun past the cap flags the book so it is thrown out, never shipped.
+    """
     gamestate.coin_game_cap_hit = False
-    cells: dict[tuple[int, int], dict] = {}
-    items: list[dict] = []
-    clover_values: list[int] = []
-    pending = _lit_positions(gamestate)
-    reruns_done = 0
+    return _resolve_virtual_coins(gamestate, _coin_game_rng(gamestate))
+
+
+def _resolve_virtual_coins(
+    gamestate: "GameExecutables", rng: random.Random
+) -> tuple[float, list[dict], int]:
+    """Roll prizes; clovers one at a time, then the leftmost pot.
+
+    Collected coins, used clovers, and spent pots flip again. The loop stops
+    when a rerun shows no new clover and no new pot. Pot weight on a rerun
+    follows the tile tier, so pots can come back. Ten reruns is the cap.
+    """
+    positions = highlighted_positions(gamestate)
+    if not positions:
+        gamestate.coin_game_stats = {"reruns": 0, "capHit": False, "clovers": 0, "pots": 0}
+        return 0.0, [], 0
+
+    cap = int(getattr(gamestate.config, "coin_game_max_reruns", 10) or 10)
+    all_items: list[dict] = []
+    counted_pots = 0.0
+    counted_cells: set[tuple[int, int]] = set()
+    spent_cells: set[tuple[int, int]] = set()
+    round_index = 1
+    pot_hit_by: set[tuple[tuple[int, int], tuple[int, int]]] = set()
+    pending_count: tuple[int, int] | None = None
+    need_cycle_regen = False
+    reruns = 0
+
+    working, _new_multis, _collectors = _roll_prizes(
+        gamestate, rng, positions, round_index, reactivate=False
+    )
+    if not working:
+        return 0.0, [], 0
+    working = _ensure_small_game_clover(gamestate, rng, working)
+    working = _stamp_round(working, round_index, "spawn")
+    all_items.extend(working)
 
     def _stats(cap_hit: bool) -> dict:
         return {
-            "reruns": reruns_done,
+            "reruns": reruns,
             "capHit": cap_hit,
-            "clovers": sum(1 for item in items if item["kind"] == "clover"),
-            "pots": sum(1 for item in items if item["kind"] == "pot"),
-            "cloverValues": list(clover_values),
+            "clovers": sum(1 for item in all_items if item.get("kind") == "multiplier" and item.get("action") == "spawn"),
+            "pots": sum(1 for item in all_items if item.get("kind") == "collector" and item.get("action") == "spawn"),
         }
 
-    if not pending:
-        gamestate.coin_game_stats = _stats(False)
-        return 0.0, [], 0
-
-    while pending:
-        new_clovers = 0
-        new_pots = 0
-        round_no = reruns_done + 1
-        for reel, row in pending:
-            level = max(1, int(gamestate.tile_levels[reel][row] or 1))
-            cell = _flip_cell(gamestate, level, rng, rerun=reruns_done > 0)
-            cell["level"] = level
-            cells[(reel, row)] = cell
-            items.append(
-                {
-                    "reel": reel,
-                    "row": row,
-                    "kind": cell["kind"],
-                    "value": cell["value"],
-                    "round": round_no,
-                    "level": level,
-                }
-            )
-            if cell["kind"] == "clover":
-                new_clovers += 1
-                clover_values.append(int(cell["value"]))
-            elif cell["kind"] == "pot":
-                new_pots += 1
-        if new_clovers == 0 and new_pots == 0:
-            break
-
-        for pos in sorted(cells, key=lambda spot: (spot[0], spot[1])):
-            cell = cells[pos]
-            if cell.get("kind") != "clover" or cell.get("used"):
-                continue
-            mult = float(cell["value"])
-            for neighbor in _neighbors(*pos):
-                other = cells.get(neighbor)
-                if not other:
-                    continue
-                if other.get("kind") == "coin" or (other.get("kind") == "pot" and other.get("valued")):
-                    other["value"] = float(other["value"]) * mult
-            cell["used"] = True
-
-        fresh_pots = [
-            pos
-            for pos, cell in cells.items()
-            if cell.get("kind") == "pot" and not cell.get("valued") and not cell.get("spent")
-        ]
-        if fresh_pots:
-            chain = sorted(
-                (
-                    pos
-                    for pos, cell in cells.items()
-                    if cell.get("kind") == "pot" and not cell.get("spent")
-                ),
-                key=lambda spot: (spot[0], spot[1]),
-            )
-            coin_positions = [pos for pos, cell in cells.items() if cell.get("kind") == "coin"]
-            running = sum(float(cells[pos]["value"]) for pos in coin_positions)
-            for index, pos in enumerate(chain):
-                running += float(cells[pos].get("value") or 0.0)
-                if index < len(chain) - 1:
-                    cells[pos]["spent"] = True
-                    cells[pos]["valued"] = False
-                    cells[pos]["value"] = 0.0
-                else:
-                    cells[pos]["valued"] = True
-                    cells[pos]["spent"] = False
-                    cells[pos]["value"] = running
-            collected = coin_positions
-            spent = [pos for pos in chain[:-1]]
-        else:
-            collected = []
-            spent = []
-
-        used = [pos for pos, cell in cells.items() if cell.get("kind") == "clover" and cell.get("used")]
-        pending = []
-        for pos in collected + used + spent:
-            if pos not in pending:
-                pending.append(pos)
-        for pos in pending:
-            cells.pop(pos, None)
-        if not pending:
-            break
-        if reruns_done >= cap:
+    def _rerun(working_now, round_now, replace_now):
+        nonlocal reruns
+        if not replace_now:
+            return working_now, round_now, False
+        reruns += 1
+        if reruns > cap:
             gamestate.coin_game_cap_hit = True
             gamestate.coin_game_stats = _stats(True)
-            return float(gamestate.config.wincap), items, reruns_done
-        reruns_done += 1
+            return working_now, round_now, True
+        updated, round_out = _replace_slots(
+            gamestate, rng, working_now, replace_now, round_now, all_items
+        )
+        return updated, round_out, False
 
-    total = 0.0
-    for cell in cells.values():
-        if cell.get("kind") == "coin":
-            total += float(cell["value"])
-        elif cell.get("kind") == "pot" and cell.get("valued") and not cell.get("spent"):
-            total += float(cell["value"])
+    def _sitting_at_wincap() -> bool:
+        leftover = _leftover_coin_sum(working)
+        pot_max = 0
+        for item in working:
+            if item.get("kind") == "collector" and not _is_collected(item):
+                pot_max = max(pot_max, _collector_face(item))
+        if leftover + pot_max >= COIN_FEATURE_WINCAP and pot_max > 0:
+            return True
+        if leftover >= COIN_FEATURE_WINCAP:
+            return _leftmost_collector(working, spent_cells) is None
+        return False
+
+    actions = 0
+    while actions < MAX_POWER_ACTIONS:
+        if gamestate.coin_game_cap_hit:
+            break
+        if _sitting_at_wincap():
+            break
+        acting_multi = _leftmost_multi(working)
+        if acting_multi is not None:
+            at_reel, at_row = _item_pos(acting_multi)
+            multi = int(acting_multi.get("value") or 1)
+            round_index += 1
+            applied = _apply_multi(
+                working,
+                at_reel,
+                at_row,
+                multi,
+                kinds=("coin", "collector"),
+                pot_hits=pot_hit_by,
+            )
+            applied = _mark_acting_multi(applied, at_reel, at_row)
+            working = _stamp_round(applied, round_index, "multi")
+            all_items.extend(working)
+            actions += 1
+            continue
+
+        if pending_count is not None:
+            at_reel, at_row = pending_count
+            acting_now = next(
+                (
+                    item
+                    for item in working
+                    if item.get("kind") == "collector"
+                    and _item_pos(item) == pending_count
+                    and not _is_collected(item)
+                ),
+                None,
+            )
+            if acting_now is not None:
+                counted_pots += float(acting_now.get("payout") or 0)
+                counted_cells.add((at_reel, at_row))
+            pending_count = None
+            actions += 1
+            continue
+
+        if need_cycle_regen:
+            replace_now = [
+                _item_pos(item)
+                for item in working
+                if _is_collected(item) or item.get("kind") == "multiplier"
+            ]
+            working, round_index, capped = _rerun(working, round_index, replace_now)
+            if capped:
+                break
+            need_cycle_regen = False
+            actions += 1
+            continue
+
+        acting = _leftmost_collector(working, spent_cells)
+        if acting is None:
+            break
+        at_reel, at_row = _item_pos(acting)
+        acting_pos = (at_reel, at_row)
+        round_index += 1
+        working = _stamp_round(
+            _apply_collector(working, at_reel, at_row, counted_cells),
+            round_index,
+            "collect",
+        )
+        all_items.extend(working)
+        spent_cells.add(acting_pos)
+        acting_now = next((item for item in working if _item_pos(item) == acting_pos), None)
+        if acting_now is not None and _board_at_wincap(working):
+            pending_count = acting_pos
+            actions += 1
+            continue
+        other_collector = any(
+            item.get("kind") == "collector"
+            and not _is_collected(item)
+            and _item_pos(item) != acting_pos
+            and _item_pos(item) not in spent_cells
+            for item in working
+        )
+        if other_collector:
+            need_cycle_regen = True
+            pending_count = None
+        else:
+            pending_count = acting_pos
+            replace_now = [
+                _item_pos(item)
+                for item in working
+                if (_is_collected(item) or item.get("kind") == "multiplier")
+                and _item_pos(item) != acting_pos
+            ]
+            working, round_index, capped = _rerun(working, round_index, replace_now)
+            if capped:
+                break
+        actions += 1
+
+    if gamestate.coin_game_cap_hit:
+        return float(gamestate.config.wincap), all_items, reruns
+
+    leftover = 0.0
+    for item in working:
+        if _is_collected(item):
+            continue
+        kind = item.get("kind")
+        pos = _item_pos(item)
+        if kind == "coin":
+            leftover += float(item.get("payout") or 0)
+        elif kind == "collector" and pos not in counted_cells:
+            leftover += float(item.get("payout") or 0)
+    total = min(float(COIN_FEATURE_WINCAP), counted_pots + leftover)
     total = min(total, float(gamestate.config.wincap))
+    max_round = max((int(item.get("round") or 1) for item in all_items), default=1)
     gamestate.coin_game_stats = _stats(False)
-    return round(total, 4), items, reruns_done
+    return round(total, 4), all_items, max_round
 
 
 resolve_board_activation = resolve_coin_game
-
-

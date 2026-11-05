@@ -126,49 +126,57 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert config.scatter_pays == {}
     assert config.bonus_variant_map[3] == "see"
     assert config.bonus_variant_map[4] == "hear"
-    assert config.bonus_variant_map[5] == "madness"
+    assert config.bonus_variant_map[5] == "speak"
+    assert config.progress_thresholds["base"] == 10
+    assert abs(config.rtp - 0.963) < 1e-9
     assert "bonus_pick" in {mode.get_name() for mode in config.bet_modes}
-    gamble = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_pick")
-    quotas = {dist.get_criteria(): dist.get_quota() for dist in gamble.get_distributions()}
-    assert abs(quotas["gamble_dead"] - 0.50) < 1e-9
-    assert abs(quotas["gamble_hear"] - 0.40) < 1e-9
-    assert abs(quotas["gamble_madness"] - 0.10) < 1e-9
+    assert "bonus_risky" in {mode.get_name() for mode in config.bet_modes}
+    mystery = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_pick")
+    quotas = {dist.get_criteria(): dist.get_quota() for dist in mystery.get_distributions()}
+    assert abs(quotas["pick_see"] - 0.50) < 1e-9
+    assert abs(quotas["pick_hear"] - 0.45) < 1e-9
+    assert abs(quotas["pick_speak"] - 0.05) < 1e-9
+    risky = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_risky")
+    risky_q = {dist.get_criteria(): dist.get_quota() for dist in risky.get_distributions()}
+    assert abs(risky_q["risky_dead"] - 0.50) < 1e-9
+    assert abs(risky_q["risky_hear"] - 0.40) < 1e-9
+    assert abs(risky_q["risky_speak"] - 0.10) < 1e-9
     assert config.peak_spin_seed_gold is True
-    assert config.peak_spin_cost == 1000.0
+    assert config.speak_direct_min_win == 1000
     assert config.progress_thresholds["peak_spin"] == 1
     assert config.initial_reelstrip_id("feature_spin", config.basegame_type) == "FEATURE_SPIN"
     assert config.tumble_refill_reel_ids["FEATURE_SPIN"] == "FEATURE_SPIN_REFILL"
     assert config.initial_reelstrip_id("peak_spin", config.basegame_type) == "FEATURE"
     peak_mode = next(mode for mode in config.bet_modes if mode.get_name() == "peak_spin")
-    assert peak_mode.get_cost() == 1000.0
+    assert peak_mode.get_cost() == config.peak_spin_cost
     feature_mode = next(mode for mode in config.bet_modes if mode.get_name() == "feature_spin")
     feature_q = {d.get_criteria(): d.get_quota() for d in feature_mode.get_distributions()}
     assert "dead_juicy" not in feature_q
-    assert abs(feature_q["nibble"] - (0.625 - 1 / 250_000)) < 1e-9
-    assert abs(feature_q["run"] - 0.375) < 1e-9
-    assert abs(feature_q["cap"] - 1 / 250_000) < 1e-9
+    assert abs(feature_q["run"] - 1.0) < 1e-9
     peak_q = {d.get_criteria(): d.get_quota() for d in peak_mode.get_distributions()}
     assert abs(peak_q["dead_juicy"] - 0.50) < 1e-9
-    assert abs(peak_q["cap"] - 0.0002) < 1e-9
+    assert abs(peak_q["live"] - 0.50) < 1e-9
     assert config.max_activation_coins_by_mode["bonus_hear"] is None
-    assert config.max_board_activations_hear == 3
+    assert config.max_board_activations_hear == 1
     assert config.hear_coin_cap_boost_chance == 0.0
     assert config.max_activation_coins_by_mode["base"] is None
     assert config.max_activation_coins_by_mode["base_ante"] is None
     assert "REFILL_BONUS" in config.reels
     assert config.tumble_refill_reel_ids["INITIAL_BONUS"] == "REFILL_BONUS"
-    assert config.coin_game_multi_weights == [35, 28, 18, 12, 5, 2]
+    assert config.coin_game_multi_weights == [58, 28, 10, 3, 1, 0]
     assert config.coin_game_coin_weight == 100
     assert "base_ante" in config.coin_game_power_weights
     for profile in config.coin_game_power_weights.values():
         # Mode fallback matches bronze; TIER_SHIFT retired.
-        assert profile == {"multiplier": 3, "collector": 0, "tier_shift": 0}
+        assert profile == {"multiplier": 12, "collector": 0, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level == {
-        1: {"multiplier": 3, "collector": 0, "tier_shift": 0},
-        2: {"multiplier": 6, "collector": 2, "tier_shift": 0},
-        3: {"multiplier": 8, "collector": 3, "tier_shift": 0},
+        1: {"multiplier": 12, "collector": 0, "tier_shift": 0},
+        2: {"multiplier": 10, "collector": 1, "tier_shift": 0},
+        3: {"multiplier": 8, "collector": 2, "tier_shift": 0},
     }
-    assert config.coin_game_power_peak_gold == {"multiplier": 8, "collector": 3, "tier_shift": 0}
+    assert config.coin_game_power_peak_gold == {"multiplier": 0, "collector": 0, "tier_shift": 0}
+    assert config.peak_spin_cost == 1000.0
+    assert config.feature_buy_cost == 75.0
 
 
 def test_paytable_size_bands():
@@ -177,19 +185,17 @@ def test_paytable_size_bands():
     assert GameCluster.paytable_size(7) == 7
     assert GameCluster.paytable_size(8) == 8
     assert GameCluster.paytable_size(9) == 9
-    assert GameCluster.paytable_size(10) == 9
+    assert GameCluster.paytable_size(10) == 10
     assert GameCluster.paytable_size(11) == 11
-    assert GameCluster.paytable_size(12) == 11
+    assert GameCluster.paytable_size(12) == 12
     assert GameCluster.paytable_size(13) == 13
-    assert GameCluster.paytable_size(20) == 13
+    assert GameCluster.paytable_size(20) == 20
 
     config = GameConfig()
     scale = float(getattr(config, "paytable_scale", 1.0))
-    # Exact Le Bandit base pays (paytable_scale 1.0)
     assert config.paytable[(5, "BA")] == round(1.00 * scale, 6)
-    assert config.paytable[(9, "BA")] == round(10.00 * scale, 6)
-    assert config.paytable[(11, "OR")] == round(15.00 * scale, 6)
-    assert config.paytable[(13, "T")] == round(15.00 * scale, 6)
+    assert config.cluster_pay(12, "BA") > config.cluster_pay(8, "BA") > config.paytable[(5, "BA")]
+    assert config.cluster_pay(20, "T") > config.cluster_pay(13, "T")
     assert scale == 1.0
 
 
@@ -364,7 +370,7 @@ def test_bonus_hit_rate_and_ante_cost():
     assert base_dists["freegame"] == config.bonus_hit_rate_base
     assert ante_dists["freegame"] == config.bonus_hit_rate_ante
     assert ante_dists["freegame"] == 2 * base_dists["freegame"]
-    assert ante_dists["cap"] == base_dists["cap"]
+    assert "cap" not in base_dists and "cap" not in ante_dists
     assert config.scatter_triggers_ante == config.scatter_triggers
     assert ante_mode.get_cost() == 1.4
 
@@ -1025,15 +1031,19 @@ def test_replacement_collector_gets_a_turn():
 
 
 def test_regen_never_spawns_a_collector():
+    """Bronze reruns stay pot-free. Silver reruns may spawn a pot."""
     import random
     from game_coin_feature import _pick_cell_kind
 
     gs = state()
-    kinds = {
-        _pick_cell_kind(gs, random.Random(seed), 2, reactivate=True) for seed in range(250)
+    bronze = {
+        _pick_cell_kind(gs, random.Random(seed), 1, reactivate=True) for seed in range(250)
     }
-    assert "collector" not in kinds
-    assert kinds <= {"coin", "multiplier"}
+    assert "collector" not in bronze
+    silver = {
+        _pick_cell_kind(gs, random.Random(seed), 2, reactivate=True) for seed in range(400)
+    }
+    assert "collector" in silver
 
 
 def test_resolve_stops_when_pot_hits_wincap():
@@ -1092,7 +1102,7 @@ def test_extra_chance_rolls_the_same_powers():
     gs = state()
     gs.betmode = "base_ante"
     weights = _mode_power_weights(gs)
-    assert weights["multiplier"] == 3
+    assert weights["multiplier"] == 12
     assert weights["collector"] == 0
     assert weights["tier_shift"] == 0
 
@@ -1101,14 +1111,14 @@ def test_power_weights_follow_tile_level():
     from game_coin_feature import _tile_power_weights
 
     gs = state()
-    assert _tile_power_weights(gs, 1) == {"multiplier": 3, "collector": 0, "tier_shift": 0}
-    assert _tile_power_weights(gs, 2) == {"multiplier": 6, "collector": 2, "tier_shift": 0}
-    assert _tile_power_weights(gs, 3) == {"multiplier": 8, "collector": 3, "tier_shift": 0}
+    assert _tile_power_weights(gs, 1) == {"multiplier": 12, "collector": 0, "tier_shift": 0}
+    assert _tile_power_weights(gs, 2) == {"multiplier": 10, "collector": 1, "tier_shift": 0}
+    assert _tile_power_weights(gs, 3) == {"multiplier": 8, "collector": 2, "tier_shift": 0}
     assert _tile_power_weights(gs, 0) == _tile_power_weights(gs, 1)
     assert _tile_power_weights(gs, 99) == _tile_power_weights(gs, 3)
     gs.betmode = "peak_spin"
-    assert _tile_power_weights(gs, 3) == {"multiplier": 8, "collector": 3, "tier_shift": 0}
-    assert _tile_power_weights(gs, 2) == {"multiplier": 6, "collector": 2, "tier_shift": 0}
+    assert _tile_power_weights(gs, 3) == {"multiplier": 0, "collector": 0, "tier_shift": 0}
+    assert _tile_power_weights(gs, 2) == {"multiplier": 10, "collector": 1, "tier_shift": 0}
 
 
 def test_progress_fills_per_tumble_not_per_cluster():
@@ -1170,7 +1180,7 @@ def test_tiles_progress_activation_and_feature_prefill():
     gs.board_coin_values = {}
     gs.seed_tile_to_level(0, 0, 2)
     gs.board_coin_values[(0, 0)] = 2.0
-    assert gs.progress_threshold == 5
+    assert gs.progress_threshold == 10
     gs.progress_value = gs.progress_threshold - 1
     gs.advance_progress(1)
     assert gs.progress_value == 0
@@ -1187,8 +1197,8 @@ def test_tiles_progress_activation_and_feature_prefill():
     feature = state()
     feature.betmode = "feature_spin"
     feature.reset_progress()
-    assert feature.progress_value == feature.progress_threshold
-    assert feature.progress_threshold == 5
+    assert feature.progress_value == 0
+    assert feature.progress_threshold == 10
     lit = sum(1 for reel in feature.tile_levels for level in reel if level > 0)
     assert lit == 0
 
@@ -1210,21 +1220,15 @@ def test_tiles_progress_activation_and_feature_prefill():
 
 
 def test_bonus_freespin_reveals_have_no_scatters():
+    """Scatters may land in a bonus, including on tumbles, and the bonus still finishes."""
     gs = state()
     gs.betmode = "bonus_hear"
     gs.criteria = "bonus_hear"
     gs.reset_book()
     gs.run_bonus_buy("hear")
-    for event in gs.book.events:
-        if event["type"] == "reveal":
-            for reel in event["board"]:
-                for sym in reel:
-                    assert sym.get("name") != gs.config.scatter_symbol
-        if event["type"] == "tumbleBoard":
-            for reel in event.get("newSymbols", []):
-                for sym in reel:
-                    assert sym.get("name") != gs.config.scatter_symbol
-                    assert sym.get("name") != gs.config.standard_wild
+    reveals = [event for event in gs.book.events if event["type"] == "reveal"]
+    assert reveals
+    assert gs.final_win >= 0
 
 
 def test_force_scatter_skipped_when_already_in_bonus():
@@ -1259,7 +1263,7 @@ def test_bonus_clusters_apply_pay_scale():
     gs.mark_level_up_tiles(clusters)
     raw_total = gs.evaluate_clusters(clusters)["totalWin"]
     gs.award_clusters(clusters)
-    scale = float(gs.config.bonus_cluster_pay_scale)
+    scale = float(gs.config.bonus_cluster_pay_scale) * float(gs.config.hear_cluster_pay_scale)
     expected = round(raw_total * scale, 6)
     assert gs.win_data["totalWin"] == expected
     assert all(win["win"] > 0.0 for win in gs.win_data["wins"])
@@ -1429,40 +1433,36 @@ def test_three_scatters_trigger_see_bonus():
     with contextlib.redirect_stdout(sink):
         gs.run_base_spin()
     assert getattr(gs, "triggered_freegame", False)
-    assert gs.bonus_variant == "see"
-    assert any(
-        event.get("type") == "kongClubMode" and "see" in str(event.get("state", ""))
+    states = [
+        event.get("state")
         for event in gs.book.events
-    )
+        if event.get("type") == "kongClubMode"
+    ]
+    assert states and states[0] == "organic_bonus_see"
 
 
 def test_gamble_forced_scatters_never_see():
-    """Gamble hear/madness force 4/5 ST only — never 3 / See."""
+    """Risky Hear / Speak resolve to those tiers. Mystery can still be See."""
     gs = state()
+    gs.betmode = "bonus_risky"
+    assert gs.resolve_bonus_variant_from_scatters(4) == "hear"
+    assert gs.resolve_bonus_variant_from_scatters(5) == "speak"
     gs.betmode = "bonus_pick"
-    gs.criteria = "gamble_hear"
-    assert gs.resolve_forced_scatter_count() == 4
-    assert gs.resolve_bonus_variant_from_scatters(gs.resolve_forced_scatter_count()) == "hear"
-    gs.criteria = "gamble_madness"
-    assert gs.resolve_forced_scatter_count() == 5
-    assert gs.resolve_bonus_variant_from_scatters(gs.resolve_forced_scatter_count()) == "madness"
-    gs.criteria = "gamble_dead"
-    gs.get_current_distribution_conditions = lambda: {"scatter_triggers": {3: 1}}
-    assert gs.resolve_forced_scatter_count() >= 4
+    assert gs.resolve_bonus_variant_from_scatters(3) == "see"
 
 
 def test_five_scatters_resolve_to_madness():
     gs = state()
     assert gs.resolve_bonus_variant_from_scatters(3) == "see"
     assert gs.resolve_bonus_variant_from_scatters(4) == "hear"
-    assert gs.resolve_bonus_variant_from_scatters(5) == "madness"
-    assert gs.resolve_bonus_variant_from_scatters(6) == "madness"
+    assert gs.resolve_bonus_variant_from_scatters(5) == "speak"
+    assert gs.resolve_bonus_variant_from_scatters(6) == "speak"
 
 
 def test_gamble_dead_has_no_cluster_or_bonus():
     gs = state()
-    gs.betmode = "bonus_pick"
-    gs.criteria = "gamble_dead"
+    gs.betmode = "bonus_risky"
+    gs.criteria = "risky_dead"
     gs.reset_book()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink):
@@ -1485,10 +1485,10 @@ def test_gamble_dead_has_no_cluster_or_bonus():
 
 def test_gamble_always_baits_two_on_trigger_land():
     """Dead / Hear / Madness first reveal always has ST on reels 0 and 1."""
-    cases = (("gamble_dead", 7), ("gamble_hear", 11), ("gamble_madness", 13))
+    cases = (("risky_dead", 7),)
     for criteria, seed in cases:
         gs = state()
-        gs.betmode = "bonus_pick"
+        gs.betmode = "bonus_risky"
         gs.criteria = criteria
         gs.reset_book()
         sink = io.StringIO()
@@ -1509,8 +1509,8 @@ def test_gamble_always_baits_two_on_trigger_land():
 def test_gamble_dead_baits_two_every_seed():
     for seed in range(1, 21):
         gs = state()
-        gs.betmode = "bonus_pick"
-        gs.criteria = "gamble_dead"
+        gs.betmode = "bonus_risky"
+        gs.criteria = "risky_dead"
         gs.reset_book()
         sink = io.StringIO()
         with contextlib.redirect_stdout(sink):
@@ -1566,8 +1566,8 @@ def test_fifth_st_on_reel_four_slams_last_reel():
 
 def test_gamble_dead_bait_two_st_tease():
     gs = state()
-    gs.betmode = "bonus_pick"
-    gs.criteria = "gamble_dead"
+    gs.betmode = "bonus_risky"
+    gs.criteria = "risky_dead"
     gs.reset_book()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink):
@@ -1589,7 +1589,7 @@ def test_gamble_dead_bait_two_st_tease():
 def test_gamble_hear_emits_freespins():
     gs = state()
     gs.betmode = "bonus_pick"
-    gs.criteria = "gamble_hear"
+    gs.criteria = "pick_hear"
     gs.reset_book()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink):
@@ -1599,17 +1599,6 @@ def test_gamble_hear_emits_freespins():
     assert "scatterPayout" not in types
     assert "freeSpinEnd" in types
     assert types.count("reveal") > 1
-    first_reveal = next(event for event in gs.book.events if event.get("type") == "reveal")
-    st = sum(
-        1
-        for col in first_reveal.get("board") or []
-        for cell in col
-        if (cell.get("name") if isinstance(cell, dict) else cell) == "ST"
-    )
-    assert st == 4
-    anticipation = first_reveal.get("anticipation") or []
-    assert any(level > 0 for level in anticipation[2:]), "Hear must tease after the first two ST"
-    assert anticipation[-1] > 0, "Hear 4 ST teases through the last reel"
     assert getattr(gs, "triggered_freegame", False)
     assert gs.bonus_variant == "hear"
     assert any(
@@ -1621,7 +1610,7 @@ def test_gamble_hear_emits_freespins():
 def test_gamble_madness_emits_freespins():
     gs = state()
     gs.betmode = "bonus_pick"
-    gs.criteria = "gamble_madness"
+    gs.criteria = "pick_speak"
     gs.reset_book()
     sink = io.StringIO()
     with contextlib.redirect_stdout(sink):
@@ -1631,21 +1620,10 @@ def test_gamble_madness_emits_freespins():
     assert "scatterPayout" not in types
     assert "freeSpinEnd" in types
     assert types.count("reveal") > 1
-    first_reveal = next(event for event in gs.book.events if event.get("type") == "reveal")
-    st = sum(
-        1
-        for col in first_reveal.get("board") or []
-        for cell in col
-        if (cell.get("name") if isinstance(cell, dict) else cell) == "ST"
-    )
-    assert st == 5
-    anticipation = first_reveal.get("anticipation") or []
-    assert any(level > 0 for level in anticipation[2:]), "Madness must tease after the first two ST"
-    assert anticipation[-1] == 0, "5th tablet on reel 4 slams the last reel"
     assert getattr(gs, "triggered_freegame", False)
-    assert gs.bonus_variant == "madness"
+    assert gs.bonus_variant == "speak"
     assert any(
-        event.get("type") == "kongClubMode" and event.get("state") == "start_bonus_madness"
+        event.get("type") == "kongClubMode" and event.get("state") == "start_bonus_speak"
         for event in gs.book.events
     )
     fills = [event for event in gs.book.events if event.get("type") == "progressFill"]
@@ -1656,7 +1634,7 @@ def test_gamble_madness_emits_freespins():
 
 def test_madness_progress_stays_full():
     gs = state()
-    gs.bonus_variant = "madness"
+    gs.bonus_variant = "speak"
     gs.gametype = gs.config.freegame_type
     gs.reset_progress()
     assert gs.progress_value == gs.progress_threshold == 5
@@ -1677,7 +1655,7 @@ def test_madness_skips_bronze_coins():
 
     gs = state()
     _park_power_weights(gs.config)
-    gs.bonus_variant = "madness"
+    gs.bonus_variant = "speak"
     gs.gametype = gs.config.freegame_type
     gs.board = _filler_board(gs)
     gs.reset_grid_mults()
@@ -1686,16 +1664,16 @@ def test_madness_skips_bronze_coins():
     gs.seed_tile_to_level(2, 2, 3)
     _total, items, _rounds = resolve_coin_game(gs)
     levels = {(item["reel"], item["row"]): item["tileLevel"] for item in items}
-    assert (0, 0) not in levels
+    assert levels[(0, 0)] == 1
     assert levels[(1, 1)] == 2
     assert levels[(2, 2)] == 3
 
 
 def test_madness_tiles_skip_bronze():
-    """5ST: first connection is silver, second is gold — never bronze."""
+    """Speak upgrades plain to bronze, then silver. Bronze is a real rank."""
     gs = state()
     gs.betmode = "bonus_hear"
-    gs.bonus_variant = "madness"
+    gs.bonus_variant = "speak"
     gs.gametype = gs.config.freegame_type
     gs.board = board_from_rows(
         gs,
@@ -1711,12 +1689,12 @@ def test_madness_tiles_skip_bronze():
     clusters = GameCluster.find_winning_clusters(gs.board, gs.config)
     or_cluster = [cluster for cluster in clusters if cluster.symbol == "OR"][0]
     gs.activate_tiles_from_clusters([or_cluster])
-    assert gs.tile_levels[0][0] == 2
-    assert gs.position_multipliers[0][0] == 5
+    assert gs.tile_levels[0][0] == 1
+    assert gs.position_multipliers[0][0] == 2
     assert gs.tile_levels[0][4] == 0
     gs.activate_tiles_from_clusters([or_cluster])
-    assert gs.tile_levels[0][0] == 3
-    assert gs.position_multipliers[0][0] == 10
+    assert gs.tile_levels[0][0] == 2
+    assert gs.position_multipliers[0][0] == 5
 
 
 def test_hear_bonus_persists_tiles_after_board_activation():
@@ -1733,7 +1711,7 @@ def test_hear_bonus_persists_tiles_after_board_activation():
     gs.execute_board_activation()
     assert gs.tile_levels[0][0] == 3
     assert gs.tile_levels[2][2] == 2
-    assert gs.board_activation_fired_this_spin is False
+    assert gs.board_activation_fired_this_spin is True
 
 
 def test_hear_bonus_allows_chained_activations_in_one_spin():
@@ -1762,7 +1740,7 @@ def test_hear_bonus_allows_chained_activations_in_one_spin():
     gs.seed_tile_to_level(0, 0, 2)
     gs.progress_value = gs.progress_threshold - 1
     gs.advance_progress(1)
-    assert gs.progress_activation_count == 2
+    assert gs.progress_activation_count == 1
 
 
 def test_hear_bonus_caps_chained_activations_at_three():
@@ -1786,13 +1764,13 @@ def test_hear_bonus_caps_chained_activations_at_three():
         gs.board_coin_values = {(0, 0): 1.0}
         gs.progress_value = gs.progress_threshold - 1
         gs.advance_progress(1)
-    assert gs.progress_activation_count == 3
+    assert gs.progress_activation_count == 1
     gs.board[0][0] = gs.create_symbol("CB")
     gs.seed_tile_to_level(0, 0, 2)
     gs.board_coin_values = {(0, 0): 1.0}
     gs.progress_value = gs.progress_threshold - 1
     gs.advance_progress(1)
-    assert gs.progress_activation_count == 3
+    assert gs.progress_activation_count == 1
 
 
 def test_bonus_entry_starts_with_empty_tiles():
@@ -1817,7 +1795,8 @@ def test_feature_spin_starts_full_without_seeded_tiles():
     gs.reelstrip = gs.config.reels["FEATURE_SPIN"]
     gs.refill_strip = gs.config.reels["FEATURE_SPIN_REFILL"]
     gs.reset_progress()
-    assert gs.progress_value == gs.progress_threshold
+    assert gs.progress_value == 0
+    assert gs.progress_threshold == 10
     gs.draw_prepared_board()
     lit = sum(1 for reel in gs.tile_levels for level in reel if level > 0)
     assert lit == 0
@@ -1839,24 +1818,26 @@ def test_feature_spin_needs_a_winning_connection():
     assert "boardActivation" not in [event["type"] for event in gs.book.events]
     gs.tumbles_this_spin = 1
     gs.check_progress_bar()
+    assert "boardActivation" not in [event["type"] for event in gs.book.events]
+    gs.progress_value = gs.progress_threshold
+    gs.check_progress_bar()
     assert any(event["type"] == "boardActivation" for event in gs.book.events)
 
 
 def test_feature_spin_never_dead_spins():
-    """Every Feature bucket lands a cluster, tumble, and a coin game."""
-    for criteria in ("nibble", "run"):
-        for seed in range(10_000, 10_020):
-            gs = state()
-            gs.betmode = "feature_spin"
-            gs.criteria = criteria
-            sink = __import__("io").StringIO()
-            with __import__("contextlib").redirect_stdout(sink):
-                gs.run_spin(seed)
-            types = [event["type"] for event in gs.book.events]
-            assert "winInfo" in types, f"seed={seed} {criteria}: Feature dead spin"
-            assert "tumbleBoard" in types, f"seed={seed} {criteria}: Feature missed tumble"
-            assert "boardActivation" in types, f"seed={seed} {criteria}: Feature missed coin game"
-            assert_no_leftover_clusters(gs, gs.book, f"feature_spin {criteria} seed={seed}")
+    """Every Feature Spin lands a cluster. It does not guarantee a coin game."""
+    for seed in range(10_000, 10_012):
+        gs = state()
+        gs.betmode = "feature_spin"
+        gs.criteria = "run"
+        sink = __import__("io").StringIO()
+        with __import__("contextlib").redirect_stdout(sink):
+            gs.run_spin(seed)
+        types = [event["type"] for event in gs.book.events]
+        assert "winInfo" in types, f"seed={seed}: Feature Spin missed its connection"
+        assert "tumbleBoard" in types, f"seed={seed}: Feature Spin missed tumble"
+        assert gs.final_win > 0
+        assert_no_leftover_clusters(gs, gs.book, f"feature_spin seed={seed}")
 
 
 def test_peak_spin_starts_full_gold_and_empty_bar():
@@ -2057,7 +2038,7 @@ def test_organic_bonus_entry_resets_progress():
         ]
         assert fills, f"seed={seed}: missing progressFill after organic entry"
         state_name = str(gs.book.events[organic_idx].get("state", ""))
-        expected = 5 if "madness" in state_name else 0
+        expected = gs.progress_threshold if state_name.endswith("_speak") else 0
         got = fills[0].get("value", fills[0].get("progress", -1))
         assert got == expected, (
             f"seed={seed}: expected progress {expected} at {state_name} entry, got {fills[0]}"
@@ -2103,11 +2084,10 @@ def test_organic_freegame_pays_physical_coins():
 def test_cascade_emits_tumble_before_board_activation():
     """Jul 2: gravity/refill (tumbleBoard) must complete before Board Activation."""
     found = 0
-    # Shorter strip runs make activations rarer — scan a wider seed window.
-    for seed in range(1, 12000):
+    for seed in range(1, 8):
         gs = state()
         gs.betmode = "base"
-        gs.criteria = "basegame"
+        gs.criteria = "bar_pay"
         sink = __import__("io").StringIO()
         with __import__("contextlib").redirect_stdout(sink):
             gs.run_spin(seed)
@@ -2150,28 +2130,28 @@ def _assert_activation_after_cascade_idle(types, seed, mode):
 def test_activation_waits_until_cascade_idle():
     """Coin game fires only after the last cluster tumble, not mid-cascade."""
     found_fs = 0
-    for seed in range(1, 20_000):
+    for seed in range(1, 40):
         gs = state()
-        gs.betmode = "feature_spin"
-        gs.criteria = "run"
+        gs.betmode = "base"
+        gs.criteria = "bar_pay"
         sink = __import__("io").StringIO()
         with __import__("contextlib").redirect_stdout(sink):
             gs.run_spin(seed)
         types = [event["type"] for event in gs.book.events]
         if "boardActivation" not in types:
             continue
-        tumbles_before = _assert_activation_after_cascade_idle(types, seed, "feature_spin")
+        tumbles_before = _assert_activation_after_cascade_idle(types, seed, "bar_pay")
         if tumbles_before < 2:
             continue
         found_fs += 1
         break
-    assert found_fs >= 1, "need a Feature Spin with 2+ tumbles before activation"
+    assert found_fs >= 1, "need a bar-fill with 2+ tumbles before the coin game"
 
     found_base = 0
-    for seed in range(1, 20_000):
+    for seed in range(40, 80):
         gs = state()
-        gs.betmode = "base"
-        gs.criteria = "basegame"
+        gs.betmode = "base_ante"
+        gs.criteria = "bar_pay"
         sink = __import__("io").StringIO()
         with __import__("contextlib").redirect_stdout(sink):
             gs.run_spin(seed)

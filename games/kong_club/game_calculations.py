@@ -12,6 +12,8 @@ class GameCalculations(Executables):
     """Pay each cluster base × sum of lit tile multipliers × monkey mult."""
 
     def cluster_base_payout(self, cluster) -> float:
+        if hasattr(self.config, "cluster_pay"):
+            return self.config.cluster_pay(cluster.size, cluster.symbol)
         size = GameCluster.paytable_size(cluster.size)
         return self.config.paytable[(size, cluster.symbol)]
 
@@ -43,7 +45,13 @@ class GameCalculations(Executables):
             base_payout = self.cluster_base_payout(cluster)
             monkey_mult = self.cluster_monkey_multiplier(cluster)
             tile_sum = self.cluster_tile_multiplier_sum(cluster)
-            payout = base_payout * tile_sum * monkey_mult
+            # Base, Ante, and Hunt: a first connection on plain tiles pays the size
+            # face (often under 1x). Later hits pay face × the sum of ranked tiles.
+            face_on_plain = getattr(self, "betmode", "") in getattr(self.config, "base_like_modes", set())
+            if tile_sum <= 0 and face_on_plain:
+                payout = base_payout * monkey_mult
+            else:
+                payout = base_payout * tile_sum * monkey_mult
             return_data["totalWin"] += payout
 
             positions = [{"reel": reel, "row": row} for reel, row in cluster.positions]

@@ -109,20 +109,8 @@ class GameCluster:
 
     @staticmethod
     def paytable_size(size: int) -> int:
-        """Map cluster size to Jul 2 paytable band key."""
-        if size <= 5:
-            return 5
-        if size == 6:
-            return 6
-        if size == 7:
-            return 7
-        if size == 8:
-            return 8
-        if size <= 10:
-            return 9
-        if size <= 12:
-            return 11
-        return 13
+        """Cluster pays are per size, minimum 5, with no top band."""
+        return max(5, int(size))
 
     @staticmethod
     def format_cluster_log(cluster: ClusterConnection) -> str:

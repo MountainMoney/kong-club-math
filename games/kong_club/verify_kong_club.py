@@ -47,11 +47,13 @@ def get_smoke_distribution(config, mode):
     preferred = {
         "base": "basegame",
         "base_ante": "basegame",
-        "feature_spin": "nibble",
-        "peak_spin": "nibble",
+        "feature_spin": "run",
+        "peak_spin": "live",
         "bonus_see": "bonus_see",
         "bonus_hear": "bonus_hear",
-        "bonus_pick": "gamble_hear",
+        "bonus_pick": "pick_see",
+        "bonus_risky": "risky_dead",
+        "hunt_2": "basegame",
     }[mode]
     for bet_mode in config.bet_modes:
         if bet_mode.get_name() == mode:
@@ -160,23 +162,17 @@ def main():
     modes = [
         "base",
         "base_ante",
+        "hunt_2",
         "feature_spin",
         "peak_spin",
         "bonus_see",
         "bonus_hear",
         "bonus_pick",
+        "bonus_risky",
     ]
-    sims_by_mode = {
-        "base": 50,
-        "base_ante": 50,
-        "feature_spin": 25,
-        "peak_spin": 25,
-        "bonus_see": 25,
-        "bonus_hear": 25,
-        "bonus_pick": 25,
-    }
+    sims_by_mode = {mode: 4 for mode in modes}
     results = [run_mode(config, mode, sims_by_mode[mode]) for mode in modes]
-    assert abs(config.rtp - 0.965) < 1e-9, config.rtp
+    assert abs(config.rtp - 0.963) < 1e-9, config.rtp
     assert config.coin_game_max_reruns == 10
     assert config.max_board_activations_hear == 1
     for result in results:

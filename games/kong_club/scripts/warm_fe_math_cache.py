@@ -35,21 +35,31 @@ from gamestate import GameState
 MODE_SPINS = {
     "base": 400,
     "base_ante": 400,
+    "hunt_2": 80,
+    "hunt_3": 80,
+    "hunt_4": 80,
+    "hunt_5": 80,
     "feature_spin": 80,
     "peak_spin": 80,
     "bonus_see": 50,
     "bonus_hear": 50,
     "bonus_pick": 80,
+    "bonus_risky": 80,
 }
 
 MODE_CRITERIA = {
     "base": "basegame",
     "base_ante": "basegame",
+    "hunt_2": "basegame",
+    "hunt_3": "basegame",
+    "hunt_4": "basegame",
+    "hunt_5": "basegame",
     "feature_spin": "run",
-    "peak_spin": "nibble",
+    "peak_spin": "live",
     "bonus_see": "bonus_see",
     "bonus_hear": "bonus_hear",
-    "bonus_pick": "gamble_dead",
+    "bonus_pick": "pick_see",
+    "bonus_risky": "risky_dead",
 }
 
 
@@ -126,38 +136,34 @@ def generate_mode(mode: str, n: int) -> tuple[list[dict], list[dict]]:
     quota = _freegame_quota(config, mode)
 
     if mode == "feature_spin":
-        n_nibble = int(round(n * 0.625))
-        n_run = max(0, n - n_nibble)
-        criteria_list = ["nibble"] * n_nibble + ["run"] * n_run
+        criteria_list = ["run"] * n
         rng = random.Random(303)
         rng.shuffle(criteria_list)
         n_fg = 0
         n_bg = n
     elif mode == "peak_spin":
         n_dead = int(round(n * 0.50))
-        n_nibble = int(round(n * 0.28))
-        n_run = int(round(n * 0.16))
-        n_clip = max(1, int(round(n * 0.055)))
-        n_tease = max(0, n - n_dead - n_nibble - n_run - n_clip)
-        criteria_list = (
-            ["dead_juicy"] * n_dead
-            + ["nibble"] * n_nibble
-            + ["run"] * n_run
-            + ["clip"] * n_clip
-            + ["tease"] * n_tease
-        )
+        n_live = n - n_dead
+        criteria_list = ["dead_juicy"] * n_dead + ["live"] * n_live
         rng = random.Random(505)
         rng.shuffle(criteria_list)
         n_fg = 0
         n_bg = n
     elif mode == "bonus_pick":
+        n_see = int(round(n * 0.50))
+        n_hear = int(round(n * 0.45))
+        n_speak = max(0, n - n_see - n_hear)
+        criteria_list = ["pick_see"] * n_see + ["pick_hear"] * n_hear + ["pick_speak"] * n_speak
+        rng = random.Random(404)
+        rng.shuffle(criteria_list)
+        n_fg = 0
+        n_bg = n
+    elif mode == "bonus_risky":
         n_dead = int(round(n * 0.50))
         n_hear = int(round(n * 0.40))
-        n_madness = max(0, n - n_dead - n_hear)
-        criteria_list = (
-            ["gamble_dead"] * n_dead + ["gamble_hear"] * n_hear + ["gamble_madness"] * n_madness
-        )
-        rng = random.Random(404)
+        n_speak = max(0, n - n_dead - n_hear)
+        criteria_list = ["risky_dead"] * n_dead + ["risky_hear"] * n_hear + ["risky_speak"] * n_speak
+        rng = random.Random(414)
         rng.shuffle(criteria_list)
         n_fg = 0
         n_bg = n

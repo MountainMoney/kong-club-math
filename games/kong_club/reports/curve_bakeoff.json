@@ -1,0 +1,10 @@
+{
+  "note": "Base-game bakeoff for the locked spec. Small spins are a 2-step low-symbol chain. Pay spins are a 10-connection chain plus one coin game. Fill rate is the bar-fill probability that puts 0.30 RTP into those pay spins, so a bigger pay means a rarer fill. Winner is gold-lean + steep (growth 1.58): the pay is about 3x the silver-lean pay, so the fill is about 3x rarer, and the steep curve keeps bonus cluster pays from running away as fast as growth 1.92.",
+  "winner": {"curve": "steep", "growth": 1.58, "coin_spread": "gold"},
+  "results": [
+    {"curve": "steep", "growth": 1.58, "spread": "silver", "small_ev": 3.34, "pay_ev": 275.0, "see_ev_n8": 149.5, "peak_live_ev_n4": 18375, "fill_rate_for_0.30_rtp": 0.00109},
+    {"curve": "steep", "growth": 1.58, "spread": "gold", "small_ev": 3.34, "pay_ev": 938.6, "see_ev_n8": 193.7, "peak_live_ev_n4": 21725, "fill_rate_for_0.30_rtp": 0.00032},
+    {"curve": "steeper", "growth": 1.92, "spread": "silver", "small_ev": 3.34, "pay_ev": 277.3, "see_ev_n8": 160.2, "peak_live_ev_n4": 18375, "fill_rate_for_0.30_rtp": 0.00108},
+    {"curve": "steeper", "growth": 1.92, "spread": "gold", "small_ev": 3.34, "pay_ev": 940.9, "see_ev_n8": 204.4, "peak_live_ev_n4": 21725, "fill_rate_for_0.30_rtp": 0.00032}
+  ]
+}

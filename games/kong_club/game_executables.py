@@ -50,6 +50,23 @@ class GameExecutables(GameCalculations):
             for reel in self.tile_levels
         ]
 
+    def ease_upgrade_ranks(self) -> None:
+        """Hear → Speak keeps the tiles, one rank lower.
+
+        Gold becomes silver and silver becomes bronze. The upgrade still carries
+        a lit board, without the gold-every-spin payout that used to dwarf a
+        direct Speak.
+        """
+        for reel in range(self.config.num_reels):
+            for row in range(self.config.num_rows[reel]):
+                level = int(self.tile_levels[reel][row])
+                if level >= 3:
+                    self.tile_levels[reel][row] = 2
+                elif level == 2:
+                    self.tile_levels[reel][row] = 1
+        self.sync_position_multipliers()
+        update_tile_event(self)
+
     def level_to_multiplier(self, level: int) -> int:
         if level <= 0:
             return 0
@@ -61,14 +78,16 @@ class GameExecutables(GameCalculations):
         variant = getattr(self, "bonus_variant", None)
         if variant == "hear":
             key = "bonus_hear"
-        elif variant == "madness":
-            key = "bonus_madness"
+        elif variant in ("speak", "madness"):
+            key = "bonus_speak"
+        elif variant == "see":
+            key = "bonus_see"
         else:
             key = mode
-        self.progress_threshold = self.config.progress_thresholds.get(key, 5)
-        self.progress_value = (
-            self.progress_threshold if mode == "feature_spin" or variant == "madness" else 0
-        )
+        default_bar = 10 if mode in getattr(self.config, "base_like_modes", set()) or mode == "feature_spin" else 5
+        self.progress_threshold = self.config.progress_thresholds.get(key, default_bar)
+        # Speak No Evil refills the bar at the start of every spin.
+        self.progress_value = self.progress_threshold if variant in ("speak", "madness") else 0
         self.progress_activation_count = 0
 
     def reset_spin_state(self, keep_tiles=False):
@@ -78,6 +97,7 @@ class GameExecutables(GameCalculations):
         self.board_activation_fired_this_spin = False
         self.board_activations_this_spin = 0
         self.progress_cap_override = None
+        self.force_bar_fill = False
         self.board_coin_values: dict[tuple[int, int], float] = {}
         self.sticky_wild_positions = []
         betmode = getattr(self, "betmode", "base")
@@ -109,14 +129,17 @@ class GameExecutables(GameCalculations):
         return self.gametype == self.config.freegame_type or self.betmode in (
             "bonus_see",
             "bonus_hear",
-            "bonus_madness",
+            "bonus_speak",
         )
 
     def is_hear_bonus(self) -> bool:
         return self.is_bonus_mode() and getattr(self, "bonus_variant", None) == "hear"
 
+    def is_speak_bonus(self) -> bool:
+        return self.is_bonus_mode() and getattr(self, "bonus_variant", None) in ("speak", "madness")
+
     def is_madness_bonus(self) -> bool:
-        return self.is_bonus_mode() and getattr(self, "bonus_variant", None) == "madness"
+        return self.is_speak_bonus()
 
     def is_see_bonus(self) -> bool:
         return self.is_bonus_mode() and getattr(self, "bonus_variant", None) == "see"
@@ -140,7 +163,7 @@ class GameExecutables(GameCalculations):
                 count = 4
             else:
                 count = int(get_random_outcome(triggers))
-        floor = 4 if getattr(self, "betmode", None) == "bonus_pick" else 3
+        floor = 3
         return min(max(count, floor), self.config.num_reels)
 
     def _fill_initial_board(self):
@@ -166,10 +189,11 @@ class GameExecutables(GameCalculations):
                     self.create_symbol(strip[(start + self.config.num_rows[reel]) % len(strip)])
                 )
                 board.append(column)
-            if wild_count <= self.config.max_initial_wilds or attempts >= 20:
-                self.board = board
-                self.top_symbols = top_symbols
-                self.bottom_symbols = bottom_symbols
+            # Wilds are uncapped. More than four can land; the strip weights keep that rare.
+            self.board = board
+            self.top_symbols = top_symbols
+            self.bottom_symbols = bottom_symbols
+            if attempts >= 12 or not self._columns_artifact():
                 break
 
     def _finalize_initial_board(self):
@@ -181,6 +205,9 @@ class GameExecutables(GameCalculations):
         # Phase A: sticky HEAR disabled — never apply / refresh / level stickies.
         self.sticky_wild_positions = []
 
+        need = int(getattr(self, "_plant_scatters_on_reveal", 0) or 0)
+        if need and self.betmode not in ("feature_spin", "peak_spin"):
+            self._ensure_min_scatters(need)
         self.get_special_symbols_on_board()
         self.prepare_landed_specials(initial_fill=True)
         reveal_event(self)
@@ -209,40 +236,245 @@ class GameExecutables(GameCalculations):
         if third == window:
             hot = f"{variant}_burst"
             mid = f"{variant}_steady"
-            hot_p = 0.24 if variant == "hear" else 0.08
+            hot_p = 0.12 if variant == "hear" else 0.03
             return hot if random.random() < hot_p else mid
         return f"{variant}_slow" if random.random() < 0.88 else f"{variant}_steady"
 
-    def draw_prepared_board(self):
-        """Initial fill: choose a random start per column and read 5 symbols downward."""
-        if getattr(self, "reel_set_name", "") == "base_teaser":
-            self._plant_dead_teaser()
-            self._finalize_initial_board()
+    def _uses_base_mix(self) -> bool:
+        mode = getattr(self, "betmode", "")
+        if mode not in getattr(self.config, "base_like_modes", set()):
+            return False
+        if getattr(self, "gametype", None) == self.config.freegame_type:
+            return False
+        if self.outcome_bucket() == "cap":
+            return False
+        return True
+
+    def _column_names(self) -> list[tuple[str, ...]]:
+        return [
+            tuple(self.board[reel][row].name for row in range(self.config.num_rows[reel]))
+            for reel in range(self.config.num_reels)
+        ]
+
+    def _columns_artifact(self) -> bool:
+        """Solid paying column, or two columns showing the same five symbols."""
+        cols = self._column_names()
+        if any(len(set(col)) == 1 and col[0] not in {self.config.standard_wild, self.config.scatter_symbol} for col in cols):
+            return True
+        return any(cols[i] == cols[j] for i in range(len(cols)) for j in range(i + 1, len(cols)))
+
+    def _repair_live_columns(self) -> None:
+        pool = list(self.config.paying_symbols)
+        for _ in range(16):
+            if not self._columns_artifact():
+                return
+            cols = self._column_names()
+            for reel, col in enumerate(cols):
+                if len(set(col)) == 1 and col[0] not in {self.config.standard_wild, self.config.scatter_symbol}:
+                    row = random.randrange(len(col))
+                    self.board[reel][row] = self.create_symbol(next(symbol for symbol in pool if symbol != col[0]))
+            cols = self._column_names()
+            for left in range(len(cols)):
+                for right in range(left + 1, len(cols)):
+                    if cols[left] == cols[right]:
+                        row = random.randrange(len(cols[right]))
+                        current = cols[right][row]
+                        self.board[right][row] = self.create_symbol(next(symbol for symbol in pool if symbol != current))
+
+    def _random_blob(self, blocked: set[tuple[int, int]], size: int) -> list[tuple[int, int]]:
+        """Connected orthogonal shape. Never a full column."""
+        free = [
+            (reel, row)
+            for reel in range(self.config.num_reels)
+            for row in range(self.config.num_rows[reel])
+            if (reel, row) not in blocked
+        ]
+        if len(free) < 5:
+            return []
+        start = random.choice(free)
+        blob = [start]
+        per_reel: dict[int, int] = {start[0]: 1}
+        guard = 0
+        while len(blob) < size and guard < 50:
+            guard += 1
+            random.shuffle(blob)
+            placed = False
+            for reel, row in blob:
+                neighbors = []
+                for step_reel, step_row in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nxt = (reel + step_reel, row + step_row)
+                    if nxt in blocked or nxt in blob:
+                        continue
+                    if not (0 <= nxt[0] < self.config.num_reels and 0 <= nxt[1] < self.config.num_rows[nxt[0]]):
+                        continue
+                    if per_reel.get(nxt[0], 0) >= 4:
+                        continue
+                    neighbors.append(nxt)
+                if neighbors:
+                    pick = random.choice(neighbors)
+                    blob.append(pick)
+                    per_reel[pick[0]] = per_reel.get(pick[0], 0) + 1
+                    placed = True
+                    break
+            if not placed:
+                break
+        return blob if len(blob) >= 5 else []
+
+    def _overlay_irregular_wins(self, count: int) -> None:
+        """Stamp a few low-symbol blobs onto a real strip stop. The rest of the board stays."""
+        lows = list(self.config.low_symbols)
+        random.shuffle(lows)
+        blocked: set[tuple[int, int]] = set()
+        for index in range(count):
+            blob = self._random_blob(blocked, random.choice((5, 5, 6, 6, 7)))
+            if not blob:
+                break
+            symbol = lows[index % len(lows)]
+            for reel, row in blob:
+                self.board[reel][row] = self.create_symbol(symbol)
+                blocked.add((reel, row))
+        self._repair_live_columns()
+
+    def _arm_followup_refill(self, explode: set[tuple[int, int]]) -> None:
+        """Second wave: irregular lows in the cells that just exploded, then a quiet strip."""
+        gaps = {
+            reel: sum(1 for row in range(self.config.num_rows[reel]) if (reel, row) in explode)
+            for reel in range(self.config.num_reels)
+        }
+        post = [[None for _ in range(self.config.num_rows[reel])] for reel in range(self.config.num_reels)]
+        for reel in range(self.config.num_reels):
+            survivors = [
+                self.board[reel][row].name
+                for row in range(self.config.num_rows[reel])
+                if (reel, row) not in explode
+            ]
+            for offset, name in enumerate(survivors):
+                post[reel][gaps[reel] + offset] = name
+        gap_cells = [(reel, row) for reel in range(self.config.num_reels) for row in range(gaps[reel])]
+        used: set[tuple[int, int]] = set()
+        lows = list(self.config.low_symbols)
+        random.shuffle(lows)
+        for index, symbol in enumerate(lows):
+            if index >= 3:
+                break
+            cells = []
+            # Walk only through gap cells so the new symbols are the ones that fall in.
+            pool = [cell for cell in gap_cells if cell not in used]
+            if len(pool) < 5:
+                break
+            start = random.choice(pool)
+            cells = [start]
+            per_reel = {start[0]: 1}
+            guard = 0
+            while len(cells) < 5 and guard < 40:
+                guard += 1
+                extended = False
+                for reel, row in list(cells):
+                    neighbors = []
+                    for step_reel, step_row in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        nxt = (reel + step_reel, row + step_row)
+                        if nxt not in pool or nxt in cells:
+                            continue
+                        if per_reel.get(nxt[0], 0) >= 3:
+                            continue
+                        neighbors.append(nxt)
+                    if neighbors:
+                        pick = random.choice(neighbors)
+                        cells.append(pick)
+                        per_reel[pick[0]] = per_reel.get(pick[0], 0) + 1
+                        extended = True
+                        break
+                if not extended:
+                    break
+            if len(cells) < 5:
+                continue
+            for reel, row in cells:
+                post[reel][row] = symbol
+                used.add((reel, row))
+        quiet = list(self.config.paying_symbols)
+        for reel, row in gap_cells:
+            if post[reel][row] is None:
+                post[reel][row] = quiet[(reel * 2 + row) % len(quiet)]
+        # Break a solid column in the landed board by editing a gap cell.
+        for reel in range(self.config.num_reels):
+            names = [post[reel][row] for row in range(self.config.num_rows[reel])]
+            if len(set(names)) == 1 and gaps[reel]:
+                post[reel][0] = quiet[(reel + 3) % len(quiet)]
+        self.refill_strip = []
+        tail_pool = list(self.config.paying_symbols)
+        for reel in range(self.config.num_reels):
+            wave = [post[reel][row] for row in range(gaps[reel])]
+            tail = tail_pool[:]
+            random.shuffle(tail)
+            while len(tail) < 24:
+                extra = tail_pool[:]
+                random.shuffle(extra)
+                tail.extend(extra)
+            self.refill_strip.append((wave + tail)[:40])
+            self.reel_positions[reel] = 0
+
+    def _draw_base_mix_board(self) -> None:
+        """Strip stops only. Hits, misses, and near-misses are windows of those strips."""
+        bucket = self.outcome_bucket()
+        self.progress_cap_override = None
+        self.force_bar_fill = False
+        if getattr(self, "force_tiny_hit", False) and bucket == "basegame":
+            self.use_reel_family("base", "base_small")
+            self.progress_cap_override = 2
+            self._fill_initial_board()
             return
-        if getattr(self, "reel_set_name", "") in ("base_quiet", "base_normal") and getattr(self, "gametype", None) != self.config.freegame_type:
-            # Natural stops were collapsing onto one size-5 symbol. These sets miss on purpose,
-            # except a rare 8-tumble chain that stays in the body of the pay table.
-            if random.random() < (1 / 320):
-                self.progress_cap_override = 2
-                # Two low tumbles: about 1× then 2.5× once tiles multiply. Stays in the body.
-                self._plant_short_chain(steps=2, vary_size=False, pool=list(self.config.low_symbols))
-            else:
-                self._plant_quiet_miss()
-            self._finalize_initial_board()
+        if self.should_force_initial_scatters() or bucket == "freegame":
+            self.use_reel_family("base", "base_quiet")
+            self._fill_initial_board()
             return
-        if getattr(self, "reel_set_name", "") == "base_hot":
-            # Tile multipliers are back, so hot spins stay on low faces and short chains.
-            # Most are one tumble (~1–4×). A minority cascade into the kicker band.
+        if bucket == "bar_pay":
+            self.use_reel_family("base", "base_small")
+            self.force_bar_fill = True
+            for _ in range(30):
+                self._fill_initial_board()
+                clusters = GameCluster.find_winning_clusters(self.board, self.config)
+                if clusters:
+                    explode = {pos for cluster in clusters for pos in cluster.positions}
+                    self._arm_followup_refill(explode)
+                    break
+            return
+        near_p = float(getattr(self.config, "base_near_miss_share", 0.05))
+        small_p = float(getattr(self.config, "base_small_rate", 0.46))
+        kind = getattr(self, "_locked_base_kind", None)
+        if kind not in {"near", "small", "quiet"}:
             roll = random.random()
-            lows = list(self.config.low_symbols)
-            if roll < 0.70:
-                self._plant_single_column(lows, vary_size=roll >= 0.48)
-            elif roll < 0.90:
-                self.progress_cap_override = 2
-                self._plant_short_chain(steps=2, vary_size=False, pool=lows)
+            if roll < near_p:
+                kind = "near"
+            elif roll < near_p + small_p:
+                kind = "small"
             else:
-                self.progress_cap_override = 3
-                self._plant_short_chain(steps=3, vary_size=False, pool=lows)
+                kind = "quiet"
+            self._locked_base_kind = kind
+        if kind == "near":
+            # A real stop, plus a few irregular low blobs, then one short follow-up.
+            # Progress stops at 8/10 so the coin game does not start.
+            self.use_reel_family("base", "base_quiet")
+            self.progress_cap_override = 8
+            self.want_near_miss = True
+            self._fill_initial_board()
+            self._overlay_irregular_wins(5)
+            clusters = GameCluster.find_winning_clusters(self.board, self.config)
+            explode = {pos for cluster in clusters for pos in cluster.positions}
+            if explode:
+                self._arm_followup_refill(explode)
+            return
+        if kind == "small":
+            self.use_reel_family("base", "base_small")
+            self.progress_cap_override = max(1, self.progress_threshold - 1)
+            self._fill_initial_board()
+            return
+        self.use_reel_family("base", "base_quiet")
+        self._fill_initial_board()
+
+    def draw_prepared_board(self):
+        """Initial fill: a random stop per column, read straight off that reel strip."""
+        if self._uses_base_mix():
+            self._draw_base_mix_board()
             self._finalize_initial_board()
             return
         self._fill_initial_board()
@@ -300,6 +532,92 @@ class GameExecutables(GameCalculations):
         paint(reel_a, reel_b, left)
         paint(reel_b, reel_a, right)
         self._install_planted_grid(grid, fillers[0], fillers[-1])
+
+    def _plant_two_fresh_columns(self, pool: list[str]) -> None:
+        """Two separated size-5 clusters. One tumble, two bronze ranks, no chain."""
+        symbols = list(pool)
+        random.shuffle(symbols)
+        left, right = symbols[0], symbols[1 % len(symbols)]
+        fillers = [symbol for symbol in symbols if symbol not in (left, right)]
+        if len(fillers) < 2:
+            fillers = [symbol for symbol in self.config.paying_symbols if symbol not in (left, right)]
+        reels = list(range(self.config.num_reels))
+        random.shuffle(reels)
+        reel_a, reel_b = 0, 3
+        for a, b in ((reels[i], reels[j]) for i in range(6) for j in range(i + 1, 6)):
+            if abs(a - b) >= 2:
+                reel_a, reel_b = a, b
+                break
+        grid = [[fillers[(reel + row) % len(fillers)] for row in range(5)] for reel in range(6)]
+        for row in range(5):
+            grid[reel_a][row] = left
+            grid[reel_b][row] = right
+        self._install_planted_grid(grid, fillers[0], fillers[-1])
+        self.refill_strip = [list(column) for column in self.config.reels["base_quiet_REFILL"]]
+
+    def _plant_bar_near_miss(self) -> None:
+        """Six fresh columns, then two of them win once more. Bar stops at 8/10.
+
+        The first pass pays the plain face. The second pass pays bronze on two
+        columns and then the refill goes quiet, so the coin game does not start.
+        """
+        self.progress_cap_override = 8
+        lows = list(self.config.low_symbols)
+        random.shuffle(lows)
+        assignment = {
+            0: lows[0],
+            3: lows[0],
+            1: lows[1],
+            2: lows[2],
+            4: lows[3],
+            5: lows[4],
+        }
+        grid = [[assignment[reel] for _ in range(5)] for reel in range(6)]
+        self._install_planted_grid(grid, "LE", "CO")
+        follow = [1, 5] if random.random() < 0.5 else [2, 4]
+        follow_syms = [lows[1], lows[2]]
+        random.shuffle(follow_syms)
+        banned = set(follow_syms)
+        quiet_pool = [symbol for symbol in ["LE", "CO", "OR", "GR", "BA", *lows] if symbol not in banned]
+        self.refill_strip = []
+        for reel in range(6):
+            if reel in follow:
+                sym = follow_syms[follow.index(reel) % len(follow_syms)]
+                tail = [quiet_pool[(index + reel) % len(quiet_pool)] for index in range(40)]
+                self.refill_strip.append(([sym] * 5 + tail)[:50])
+            else:
+                self.refill_strip.append(
+                    [quiet_pool[(index + reel * 2) % len(quiet_pool)] for index in range(50)]
+                )
+
+    def _plant_tiny_hit(self) -> None:
+        """One cluster worth about 0.2x–0.5x. Used to break a long dead run."""
+        self.progress_cap_override = 1
+        kind = random.choice(("le", "prem", "low7", "low8"))
+        if kind == "le":
+            symbol, extra = random.choice(("LE", "CO")), 0
+        elif kind == "prem":
+            symbol, extra = random.choice(("OR", "GR")), 0
+        elif kind == "low7":
+            symbol, extra = random.choice(self.config.low_symbols), 2
+        else:
+            symbol, extra = random.choice(self.config.low_symbols), 3
+        win_reel = random.randrange(self.config.num_reels)
+        others = [name for name in self.config.paying_symbols if name != symbol]
+        random.shuffle(others)
+        grid = [[others[(reel + row) % len(others)] for row in range(5)] for reel in range(6)]
+        for row in range(5):
+            grid[win_reel][row] = symbol
+        if extra:
+            side = win_reel + 1 if win_reel < 5 else win_reel - 1
+            for row in range(extra):
+                grid[side][row] = symbol
+        self._install_planted_grid(grid, others[0], others[1])
+        self.refill_strip = []
+        for reel in range(6):
+            self.refill_strip.append(
+                [others[(index + reel) % len(others)] for index in range(50)]
+            )
 
     def _plant_single_column(self, pool: list[str], vary_size: bool = False) -> None:
         """One winning column, then a quiet refill so the cascade does not continue."""
@@ -527,7 +845,7 @@ class GameExecutables(GameCalculations):
 
     def apply_gamble_two_bait(self):
         """Every gamble trigger land: ST on reels 0 and 1, then tease. No rate."""
-        if getattr(self, "betmode", None) != "bonus_pick":
+        if getattr(self, "betmode", None) != "bonus_risky":
             return
         if getattr(self, "gametype", None) == self.config.freegame_type:
             return
@@ -540,10 +858,13 @@ class GameExecutables(GameCalculations):
         self.apply_scatter_anticipation()
 
     def _force_feature_spin_connection(self):
-        """Guarantee a 5-wide orthogonal cluster on the top row."""
-        symbol = self.config.low_symbols[0]
-        for reel in range(5):
-            self.board[reel][0] = self.create_symbol(symbol)
+        """Last resort: one irregular 5-cluster, not a painted column or a straight rank."""
+        self._overlay_irregular_wins(1)
+        if not GameCluster.find_winning_clusters(self.board, self.config):
+            symbol = self.config.low_symbols[0]
+            for reel, row in ((0, 0), (1, 0), (1, 1), (2, 1), (2, 2)):
+                self.board[reel][row] = self.create_symbol(symbol)
+            self._repair_live_columns()
 
     def force_initial_scatters(self, count: int):
         """Place exactly `count` scatters on distinct reels (max one per reel)."""
@@ -568,12 +889,12 @@ class GameExecutables(GameCalculations):
         self.anticipation = anticipation
 
     def resolve_bonus_variant_from_scatters(self, scatter_count: int) -> str:
-        """3 ST = See. 4 ST = Hear. 5+ ST = Monkey Madness."""
-        variant_map = getattr(self.config, "bonus_variant_map", {3: "see", 4: "hear", 5: "madness", 6: "madness"})
+        """3 ST = See. 4 ST = Hear. 5+ ST = Speak No Evil."""
+        variant_map = getattr(self.config, "bonus_variant_map", {3: "see", 4: "hear", 5: "speak", 6: "speak"})
         if scatter_count in variant_map:
             return variant_map[scatter_count]
         if scatter_count >= 5:
-            return "madness"
+            return "speak"
         if scatter_count >= 4:
             return "hear"
         if scatter_count >= 3:
@@ -632,11 +953,8 @@ class GameExecutables(GameCalculations):
 
     def increment_tile(self, reel: int, row: int):
         current = max(self.tile_levels[reel][row], 0)
-        # 5ST / Monkey Madness: no bronze — first connection is silver, then gold.
-        if self.is_madness_bonus() and current < 2:
-            next_level = 2
-        else:
-            next_level = current + 1
+        # plain -> bronze -> silver -> gold. Gold does not upgrade further.
+        next_level = current + 1
         self.tile_levels[reel][row] = min(next_level, self.config.max_tile_level)
         self.position_multipliers[reel][row] = self.level_to_multiplier(self.tile_levels[reel][row])
 
@@ -723,6 +1041,23 @@ class GameExecutables(GameCalculations):
         # Sticky FS boards light most cells — downscale cluster pays in bonus only.
         if self.is_bonus_mode():
             bonus_scale = float(getattr(self.config, "bonus_cluster_pay_scale", 1.0))
+            if getattr(self, "betmode", None) in {
+                "bonus_see",
+                "bonus_hear",
+                "bonus_pick",
+                "bonus_risky",
+            }:
+                variant = getattr(self, "bonus_variant", None)
+                if variant == "hear" or self.betmode == "bonus_hear":
+                    bonus_scale *= float(getattr(self.config, "hear_cluster_pay_scale", None) or getattr(self.config, "buy_cluster_pay_scale", 1.0) or 1.0)
+                elif variant == "see" or self.betmode == "bonus_see":
+                    bonus_scale *= float(getattr(self.config, "see_cluster_pay_scale", None) or getattr(self.config, "buy_cluster_pay_scale", 1.0) or 1.0)
+                else:
+                    bonus_scale *= float(getattr(self.config, "buy_cluster_pay_scale", 1.0) or 1.0)
+                if variant == "speak" and self.betmode == "bonus_pick":
+                    bonus_scale *= float(getattr(self.config, "mystery_speak_cluster_scale", 1.0) or 1.0)
+                elif variant == "speak" and self.betmode == "bonus_risky":
+                    bonus_scale *= float(getattr(self.config, "risky_speak_cluster_scale", 1.0) or 1.0)
             if bonus_scale != 1.0:
                 amount = round(amount * bonus_scale, 6)
                 for win in self.win_data["wins"]:
@@ -740,6 +1075,39 @@ class GameExecutables(GameCalculations):
         if self.win_manager.running_bet_win >= self.config.wincap:
             self.wincap_triggered = True
             wincap_event(self)
+
+    def _maybe_tumble_special(self, sym):
+        """Wilds can land in a tumble. Scatters that tumble in count."""
+        name = getattr(sym, "name", None)
+        if name in {self.config.standard_wild, self.config.scatter_symbol, *self.config.coin_symbols}:
+            return sym
+        if self.betmode in ("feature_spin", "peak_spin"):
+            scatter_p = 0.0
+        elif self.is_bonus_mode():
+            scatter_p = float(getattr(self.config, "tumble_scatter_chance_bonus", 0.0))
+        else:
+            scatter_p = float(getattr(self.config, "tumble_scatter_chance_base", 0.0))
+        wild_p = float(getattr(self.config, "tumble_wild_chance", 0.0))
+        roll = random.random()
+        if roll < wild_p:
+            return self.create_symbol(self.config.standard_wild)
+        if roll < wild_p + scatter_p:
+            return self.create_symbol(self.config.scatter_symbol)
+        return sym
+
+    def _ensure_min_scatters(self, count: int) -> None:
+        """Place scatters until the board shows at least `count` of them."""
+        scatter = self.config.scatter_symbol
+        have = self.count_special_symbols("scatter")
+        guard = 0
+        while have < count and guard < 40:
+            guard += 1
+            reel = random.randrange(self.config.num_reels)
+            row = random.randrange(self.config.num_rows[reel])
+            if self.board[reel][row].name == scatter:
+                continue
+            self.board[reel][row] = self.create_symbol(scatter)
+            have += 1
 
     def gravity_and_refill(self, emit_event=True):
         self.board_before_tumble = copy(self.board)
@@ -759,6 +1127,7 @@ class GameExecutables(GameCalculations):
             new_column = [None] * gap_count + survivors
             for slot in range(gap_count):
                 sym = self._draw_from_strip(reel, self.refill_strip)
+                sym = self._maybe_tumble_special(sym)
                 sym.explode = False
                 new_column[slot] = sym
                 self.new_symbols_from_tumble[reel].append(sym)
@@ -846,14 +1215,14 @@ class GameExecutables(GameCalculations):
             update_tumble_win_event(self)
 
         removed = remove_coins_from_board(self)
-        # See clears ranks after a coin game. Hear and Madness keep them.
+        # See clears ranks after a coin game. Hear and Speak keep them.
         # One coin game per spin — the bar does not arm a second one.
         if self.is_see_bonus():
             self.reset_grid_mults()
             update_tile_event(self)
         self.progress_value = 0
         progress_fill_event(self)
-        if self.is_madness_bonus():
+        if self.is_speak_bonus():
             self.progress_value = self.progress_threshold
             progress_fill_event(self)
         if refill_after and removed:
@@ -892,9 +1261,19 @@ class GameExecutables(GameCalculations):
                     mode_state_event(self, "max_tumble_safety_stop")
                     break
                 winning_types = {cluster.symbol for cluster in clusters}
-                # Light the connected cells, then pay base × sum of those tile multipliers.
-                self.mark_level_up_tiles(clusters)
-                self.award_clusters(clusters)
+                # Base, Ante, and Hunt pay the plain face first, then rank the tiles up,
+                # so a small cluster is often under 1x and still leaves bronze or silver.
+                # Bonuses light first and pay face × the new multiplier sum.
+                rank_after_pay = (
+                    getattr(self, "betmode", "") in getattr(self.config, "base_like_modes", set())
+                    and getattr(self, "gametype", None) != self.config.freegame_type
+                )
+                if rank_after_pay:
+                    self.award_clusters(clusters)
+                    self.mark_level_up_tiles(clusters)
+                else:
+                    self.mark_level_up_tiles(clusters)
+                    self.award_clusters(clusters)
                 self.mark_removed_symbols(winning_types, clusters)
                 win_info_event(self)
                 update_tumble_win_event(self)
@@ -905,8 +1284,26 @@ class GameExecutables(GameCalculations):
                     if self.progress_value >= self.progress_threshold:
                         break
                     self.advance_progress(1, activate=False)
+                # Bar-pay books finish the bar on the second tumble, before the drop,
+                # so the coin game starts only once the cascade is idle.
+                if (
+                    getattr(self, "force_bar_fill", False)
+                    and step >= 2
+                    and self.progress_value < self.progress_threshold
+                ):
+                    guard = 0
+                    while self.progress_value < self.progress_threshold and guard < self.progress_threshold + 2:
+                        before = self.progress_value
+                        self.advance_progress(1, activate=False)
+                        guard += 1
+                        if self.progress_value == before:
+                            self.progress_value = self.progress_threshold
+                            progress_fill_event(self)
+                            break
                 self.gravity_and_refill(emit_event=True)
-            if self.wincap_triggered:
+                if getattr(self, "force_bar_fill", False) and self.progress_value >= self.progress_threshold:
+                    break
+            if self.wincap_triggered or step > self.config.max_tumbles_per_spin:
                 break
             # Bar full (or Feature prefilled) — coin game only after all cluster tumbles stop.
             self.check_progress_bar()
@@ -916,6 +1313,15 @@ class GameExecutables(GameCalculations):
             if self.detect_clusters() and not self.wincap_triggered:
                 continue
             break
+        if (
+            getattr(self, "force_bar_fill", False)
+            and not self.board_activation_fired_this_spin
+            and not self.wincap_triggered
+        ):
+            self.progress_value = self.progress_threshold
+            progress_fill_event(self)
+            self.tumbles_this_spin = max(int(getattr(self, "tumbles_this_spin", 0) or 0), 1)
+            self.execute_board_activation(refill_after=False)
 
     def award_scatter_payout(self):
         if not self.config.scatter_pays:
