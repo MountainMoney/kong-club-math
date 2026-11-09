@@ -38,7 +38,7 @@
         },
         {
             "name": "feature_spin",
-            "cost": 40.5,
+            "cost": 40.0,
             "events": "books_feature_spin.jsonl.zst",
             "weights": "lookUpTable_feature_spin_0.csv"
         },

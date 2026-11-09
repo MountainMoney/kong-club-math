@@ -15,7 +15,7 @@ Design (levers, in order of preference already applied in game_config):
   * Hunt: base odds x boosts, bar rate as base. Option (a), Ryan 2026-11-09: L4 See 9.0
     and Hear/Speak boosts tuned per level (game_criteria.HUNT_LEVELS) so each stop lands
     on 96.3%; `hunt_hear_speak_for_96_3` in the report gives the boosts that would.
-  * Buys / Feature / Trifecta: price = class EV / 0.963 (rounded), then calibrated.
+  * Buys / Feature / Trifecta: price = class EV / 0.963 rounded to a whole number, then calibrated.
 Usage: fit_rebalance.py [--write]   (without --write: report only)
 """
 
@@ -237,7 +237,7 @@ def main(write: bool) -> None:
             own = {k: mean([p / 100 for _s, p in cls[k]]) for k in cls}
             base_t = {k: (E[f"buy_{k}"] if f"buy_{k}" in E else own[k]) for k in probs}
             ev = sum(probs[k] * base_t[k] for k in probs)
-            step = 0.5 if ev / TARGET < 100 else 1.0
+            step = 1.0  # whole-number prices (Ryan 2026-11-09)
             cost = round(ev / TARGET / step) * step
             f = cost * TARGET / ev
             targets = {k: base_t[k] * f for k in probs}
