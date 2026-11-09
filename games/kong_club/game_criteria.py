@@ -47,17 +47,20 @@ RISKY_SPEAK_QUOTA = 0.10
 # Hunt slider (locked spec l.38; mode_spec 2026-11-03 "Hunt L1-4 locked"). Each stop
 # is written "Nx a/b/c": the spin costs N x bet, and the See / Hear / Speak trigger
 # odds are a / b / c times the base game's. Hunt boosts scatters only, not the coin
-# game. The four stops map 1:1 onto hunt_2..hunt_5. (L5 ~25x in the spec is a
-# separate planning-only level with no slider stop; it would need a fifth mode.)
+# game. The five stops map 1:1 onto hunt_2..hunt_6 (hunt_6 = L5).
 # L1 follows the locked spec (3/5/10); mode_spec 2026-11-03 wrote 3/3/5.
-# Option (a), Ryan 2026-11-09: See boosts kept 3/5/7 and L4 raised 8.5 -> 9.0; Hear/Speak
-# tuned per stop (smallest relative change) so each lands on 96.3% at its locked price.
-# Proposed Hear/Speak were 5/10, 6/10, 10/18, 15/30.
+# Option (a), Ryan 2026-11-09, with the integer rule (10:02): See boosts 3/5/7/9 (the 8.5 was
+# the 5x stop's See, raised to 9); Hear/Speak are the whole-number roundings of the smallest
+# change that lands each stop on 96.3% (proposed 5/10, 6/10, 10/18, 15/30). The last few
+# hundredths of a point are closed by each stop's bar-fill pace in scripts/fit_rebalance.py.
+# hunt_6 = Hunt L5 (added 2026-11-09): spec boosts See 32 / Hear 210 / Speak 420 kept,
+# price solved to a whole 18x (17x would need a negative bar pace).
 HUNT_LEVELS = {
-    "hunt_2": {"cost": 2.0, "boost": {"see": 3.0, "hear": 3.65, "speak": 6.95}},
-    "hunt_3": {"cost": 3.0, "boost": {"see": 5.0, "hear": 9.77, "speak": 13.08}},
-    "hunt_4": {"cost": 4.0, "boost": {"see": 7.0, "hear": 10.09, "speak": 18.11}},
-    "hunt_5": {"cost": 5.0, "boost": {"see": 9.0, "hear": 15.18, "speak": 30.41}},
+    "hunt_2": {"cost": 2.0, "boost": {"see": 3, "hear": 4, "speak": 7}},
+    "hunt_3": {"cost": 3.0, "boost": {"see": 5, "hear": 10, "speak": 13}},
+    "hunt_4": {"cost": 4.0, "boost": {"see": 7, "hear": 10, "speak": 18}},
+    "hunt_5": {"cost": 5.0, "boost": {"see": 9, "hear": 15, "speak": 30}},
+    "hunt_6": {"cost": 18.0, "boost": {"see": 32, "hear": 210, "speak": 420}},
 }
 HUNT_COSTS = {name: level["cost"] for name, level in HUNT_LEVELS.items()}
 SCATTER_COUNT_VARIANT = {3: "see", 4: "hear", 5: "speak"}

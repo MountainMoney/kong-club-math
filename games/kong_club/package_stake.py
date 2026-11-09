@@ -23,7 +23,7 @@ PACKAGE_NAME = f"kong_club_math_{VERSION}"
 PACKAGE_DIR = OUT_ROOT / PACKAGE_NAME
 ZIP_PATH = OUT_ROOT / f"{PACKAGE_NAME}.zip"
 
-# The 12 published modes, in index.json order.
+# The 13 published modes, in index.json order.
 REQUIRED_MODES = [
     "base",
     "base_ante",
@@ -31,6 +31,7 @@ REQUIRED_MODES = [
     "hunt_3",
     "hunt_4",
     "hunt_5",
+    "hunt_6",
     "feature_spin",
     "peak_spin",
     "bonus_see",

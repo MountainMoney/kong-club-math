@@ -37,6 +37,12 @@
             "weights": "lookUpTable_hunt_5_0.csv"
         },
         {
+            "name": "hunt_6",
+            "cost": 18.0,
+            "events": "books_hunt_6.jsonl.zst",
+            "weights": "lookUpTable_hunt_6_0.csv"
+        },
+        {
             "name": "feature_spin",
             "cost": 40.0,
             "events": "books_feature_spin.jsonl.zst",

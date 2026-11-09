@@ -20,6 +20,7 @@ class GameState(GameStateOverride):
         "hunt_3": 3_000_000,
         "hunt_4": 4_000_000,
         "hunt_5": 5_000_000,
+        "hunt_6": 6_000_000,
     }
 
     def run_spin(self, sim, simulation_seed=None):

@@ -12,9 +12,9 @@ Design (levers, in order of preference already applied in game_config):
     boosts 3/5/10, 5/6/10, 7/10/18, 8.5/15/30) lands as close to 96.3% as it can.
   * Base bar-fill rate: solved so base returns 96.3% (plain cluster pay is locked).
   * Ante (1.4x): one odds multiplier on all bonus types, solved to 96.3%.
-  * Hunt: base odds x boosts, bar rate as base. Option (a), Ryan 2026-11-09: L4 See 9.0
-    and Hear/Speak boosts tuned per level (game_criteria.HUNT_LEVELS) so each stop lands
-    on 96.3%; `hunt_hear_speak_for_96_3` in the report gives the boosts that would.
+  * Hunt: base odds x whole-number boosts (game_criteria.HUNT_LEVELS); each stop's bar-fill
+    pace is solved so the stop lands on 96.3% (option (a) + integer rule, 2026-11-09).
+    hunt_6 = L5 (spec boosts 32/210/420, whole price 18x).
   * Buys / Feature / Trifecta: price = class EV / 0.963 rounded to a whole number, then calibrated.
 Usage: fit_rebalance.py [--write]   (without --write: report only)
 """
@@ -40,6 +40,10 @@ MAX_TILT = 0.5
 WINCAP = 25000.0
 ANTE_COST = 1.4
 BASE_LIKE = ["base", "base_ante", *HUNT_LEVELS]
+# Class means are pooled over the modes the design was fitted on. hunt_6 (L5, added
+# 2026-11-09) is calibrated to the same means but not pooled, so adding it moves no
+# other mode's lookup table.
+POOL_MODES = {"base", "base_ante", "hunt_2", "hunt_3", "hunt_4", "hunt_5"}
 # Search box for organic Hear / Speak odds in base (1 in N spins).
 HEAR_ONE_IN = (20_000, 100_000)
 SPEAK_ONE_IN = (200_000, 2_000_000)
@@ -197,7 +201,7 @@ def main(write: bool) -> None:
         for b in books[m]:
             cls = book_class(m, b)
             classes[m][cls].append((int(b["id"]), int(b["payoutMultiplier"])))
-            if cls in ("see", "hear", "speak", "bar", "plain"):
+            if cls in ("see", "hear", "speak", "bar", "plain") and (m in POOL_MODES or m not in BASE_LIKE):
                 # Organic bonuses (base-like modes, trigger spin included) and bought
                 # bonuses are pooled apart: they are not the same payout distribution.
                 key = cls if (m in BASE_LIKE or cls not in ("see", "hear", "speak")) else f"buy_{cls}"
@@ -214,7 +218,7 @@ def main(write: bool) -> None:
     prices = json.loads((GAME / "mode_prices.json").read_text())
     old_prices = dict(prices)
     out = {}
-    hunt_solved = {}
+    hunt_bar = {}
     for m in modes:
         cls = classes[m]
         if m in BASE_LIKE:
@@ -261,16 +265,21 @@ def main(write: bool) -> None:
             design["bar_one_in"] = 1 / p_bar
             design["ante_odds_multiplier"] = ante_m
         if m in HUNT_LEVELS:
-            # Hear/Speak boosts that put this stop on 96.3% with its See boost and price
-            # kept: smallest relative change (min sum of (db/b)^2), using the achieved
-            # class means of this LUT. Information for game_criteria.HUNT_LEVELS.
+            # Whole-number boosts can't land a stop on 96.3% by themselves; the stop's
+            # bar-fill pace (a lookup-weight lever, books unchanged) closes the rest.
+            # Reported: the stop's bar pace and how far it is from base.
             A = {k: v["achieved"] for k, v in notes.items()}
             b0 = HUNT_LEVELS[m]["boost"]
-            ev = stats(rows, cost)["rtp"] * cost
-            delta = TARGET * cost - ev
-            a = {v: q[v] * (A[v] - A["plain"]) for v in ("hear", "speak")}
-            lam = delta / sum(a[v] ** 2 * b0[v] ** 2 for v in a)
-            hunt_solved[m] = {v: b0[v] + lam * a[v] * b0[v] ** 2 for v in a}
+            bonus_odds = {v: q[v] * b0[v] for v in q}
+            bonus_ev = sum(bonus_odds[v] * (A[v] - A["plain"]) for v in q)
+            p_bar_h = (TARGET * cost - A["plain"] - bonus_ev) / (A["bar"] - A["plain"])
+            hunt_bar[m] = {"bar_one_in": (1 / p_bar_h) if p_bar_h > 0 else None,
+                           "vs_base": p_bar_h / p_bar, "rtp_at_base_bar": stats(rows, cost)["rtp"]}
+            if p_bar_h > 0:
+                probs = dict(bonus_odds)
+                probs["bar"] = p_bar_h
+                probs["plain"] = 1 - sum(probs.values())
+                rows, notes, clean = build_rows(cls, probs, targets)
         st = stats(rows, cost)
         # Clean = exactly on target with every class inside the tilt limit. A class that
         # could not reach its pooled mean is listed in "classes" (ok=False).
@@ -291,7 +300,6 @@ def main(write: bool) -> None:
     # mode; its solving cost is information only.
     hunt = {}
     levels = dict(HUNT_LEVELS)
-    levels["L5_info_only"] = {"cost": 25.0, "boost": {"see": 32.0, "hear": 210.0, "speak": 420.0}}
     for name, lvl in levels.items():
         b = lvl["boost"]
         odds = {v: q[v] * b[v] for v in q}
@@ -309,7 +317,7 @@ def main(write: bool) -> None:
             entry["lut_cost_for_96_3"] = out[name]["rtp"] * lvl["cost"] / TARGET
         hunt[name] = entry
     design["hunt"] = hunt
-    design["hunt_hear_speak_for_96_3"] = hunt_solved
+    design["hunt_bar_pace"] = hunt_bar
     report = {"design": design, "modes": out}
     (GAME / "reports").mkdir(exist_ok=True)
     print(json.dumps(design, indent=1))

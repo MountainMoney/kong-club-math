@@ -46,6 +46,7 @@ if __name__ == "__main__":
         "hunt_3": int(sims_per_mode),
         "hunt_4": int(sims_per_mode),
         "hunt_5": int(sims_per_mode),
+        "hunt_6": int(sims_per_mode),
         "feature_spin": int(sims_per_mode),
         "peak_spin": int(sims_per_mode),
         "bonus_see": int(sims_per_mode),

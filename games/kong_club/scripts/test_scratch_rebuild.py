@@ -2425,21 +2425,23 @@ def test_capped_cluster_wins_are_whole_cents():
 
 def test_hunt_stops_follow_locked_price_grid():
     """Locked spec l.38: stop Nx costs N x bet; See/Hear/Speak odds x a/b/c of base.
-    Option (a), Ryan 2026-11-09: See boosts 3/5/7/9 (L4 8.5 -> 9.0), Hear/Speak tuned so
-    each stop lands on 96.3% (scripts/fit_rebalance.py)."""
+    Option (a) + integer rule, Ryan 2026-11-09: whole-number boosts, See 3/5/7/9, L5
+    (hunt_6) keeps the spec boosts 32/210/420 at a solved whole price."""
     from game_criteria import HUNT_LEVELS
 
     config = GameConfig()
     grid = {
-        "hunt_2": (2.0, (3.0, 3.65, 6.95)),
-        "hunt_3": (3.0, (5.0, 9.77, 13.08)),
-        "hunt_4": (4.0, (7.0, 10.09, 18.11)),
-        "hunt_5": (5.0, (9.0, 15.18, 30.41)),
+        "hunt_2": (2.0, (3, 4, 7)),
+        "hunt_3": (3.0, (5, 10, 13)),
+        "hunt_4": (4.0, (7, 10, 18)),
+        "hunt_5": (5.0, (9, 15, 30)),
+        "hunt_6": (18.0, (32, 210, 420)),
     }
     modes = {mode.get_name(): mode for mode in config.bet_modes}
     for name, (cost, (see, hear, speak)) in grid.items():
         assert modes[name].get_cost() == cost, (name, modes[name].get_cost())
         assert HUNT_LEVELS[name]["boost"] == {"see": see, "hear": hear, "speak": speak}, name
+        assert all(isinstance(v, int) for v in HUNT_LEVELS[name]["boost"].values()), name
 
 def test_max_win_counts_in_whole_cents():
     """A float total a hair under 25,000x is the max win; the bonus must stop."""
