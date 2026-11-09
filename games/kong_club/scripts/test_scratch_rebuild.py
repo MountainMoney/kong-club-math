@@ -172,11 +172,11 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert "base_ante" in config.coin_game_power_weights
     for profile in config.coin_game_power_weights.values():
         # Mode fallback matches bronze; TIER_SHIFT retired.
-        assert profile == {"multiplier": 12, "collector": 0, "tier_shift": 0}
+        assert profile == {"multiplier": 8, "collector": 0, "tier_shift": 0}
     assert config.coin_game_power_by_tile_level == {
-        1: {"multiplier": 12, "collector": 0, "tier_shift": 0},
+        1: {"multiplier": 8, "collector": 0, "tier_shift": 0},
         2: {"multiplier": 10, "collector": 1, "tier_shift": 0},
-        3: {"multiplier": 8, "collector": 2, "tier_shift": 0},
+        3: {"multiplier": 12, "collector": 2, "tier_shift": 0},
     }
     assert config.coin_game_power_peak_gold == {"multiplier": 0, "collector": 0, "tier_shift": 0}
     assert config.peak_spin_cost == 1000.0
@@ -1068,7 +1068,8 @@ def test_extra_chance_rolls_the_same_powers():
     gs = state()
     gs.betmode = "base_ante"
     weights = _mode_power_weights(gs)
-    assert weights["multiplier"] == 12
+    # Mode fallback matches the bronze row.
+    assert weights["multiplier"] == gs.config.coin_game_power_by_tile_level[1]["multiplier"] == 8
     assert weights["collector"] == 0
     assert weights["tier_shift"] == 0
 
@@ -1077,9 +1078,9 @@ def test_power_weights_follow_tile_level():
     from game_coin_feature import _tile_power_weights
 
     gs = state()
-    assert _tile_power_weights(gs, 1) == {"multiplier": 12, "collector": 0, "tier_shift": 0}
+    assert _tile_power_weights(gs, 1) == {"multiplier": 8, "collector": 0, "tier_shift": 0}
     assert _tile_power_weights(gs, 2) == {"multiplier": 10, "collector": 1, "tier_shift": 0}
-    assert _tile_power_weights(gs, 3) == {"multiplier": 8, "collector": 2, "tier_shift": 0}
+    assert _tile_power_weights(gs, 3) == {"multiplier": 12, "collector": 2, "tier_shift": 0}
     assert _tile_power_weights(gs, 0) == _tile_power_weights(gs, 1)
     assert _tile_power_weights(gs, 99) == _tile_power_weights(gs, 3)
     gs.betmode = "peak_spin"
@@ -2335,7 +2336,19 @@ def test_reaching_tenth_rerun_is_a_cap_hit():
     assert gs.coin_game_cap_hit is False
 
 
+def test_better_tiers_spawn_clovers_and_pots_no_less_often():
+    """Spec l.17: clover and pot rates never drop from bronze to silver to gold."""
+    config = state().config
+    for table in (config.coin_game_power_by_tile_level, config.coin_game_rerun_power_by_tile_level):
+        for kind in ("multiplier", "collector"):
+            rates = [float(table[level][kind]) for level in (1, 2, 3)]
+            assert rates == sorted(rates), (kind, rates)
+    first = config.coin_game_power_by_tile_level
+    assert sum(first[level]["multiplier"] for level in (1, 2, 3)) == 30
+
+
 def main():
+    test_better_tiers_spawn_clovers_and_pots_no_less_often()
     test_reaching_tenth_rerun_is_a_cap_hit()
     test_pots_can_appear_on_every_rerun_tier()
     test_hear_to_speak_upgrade_keeps_tile_ranks()
