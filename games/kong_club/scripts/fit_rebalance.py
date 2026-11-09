@@ -9,12 +9,13 @@ to the pooled class mean measured over all modes, so every mode prices the same 
 
 Design (levers, in order of preference already applied in game_config):
   * Base See / Hear / Speak trigger odds: chosen so the locked Hunt grid (costs 2/3/4/5,
-    boosts 3/5/10, 5/6/10, 7/10/18, 8.5/15/30) lands as close to 96.3% as it can.
+    design boosts 3/5/10, 5/6/10, 7/10/18, 8.5/15/30, frozen in DESIGN_GRID) lands as close to 96.3% as it can.
   * Base bar-fill rate: solved so base returns 96.3% (plain cluster pay is locked).
-  * Ante (1.4x): one odds multiplier on all bonus types, solved to 96.3%.
+  * Ante (1.4x): odds multiplier locked at 1.8108; Ante's own bar-fill pace lands it on 96.3%.
   * Hunt: base odds x whole-number boosts (game_criteria.HUNT_LEVELS); each stop's bar-fill
     pace is solved so the stop lands on 96.3% (option (a) + integer rule, 2026-11-09).
-    hunt_6 = L5 (spec boosts 32/210/420, whole price 18x).
+    hunt_6 = L5: 18x at the base bar pace; its whole-number boosts are raised above the
+    spec 32/210/420 (most even raise that lands exactly) - Ryan 2026-11-09.
   * Buys / Feature / Trifecta: price = class EV / 0.963 rounded to a whole number, then calibrated.
 Usage: fit_rebalance.py [--write]   (without --write: report only)
 """
@@ -39,6 +40,13 @@ TOTAL = 10**12
 MAX_TILT = 0.5
 WINCAP = 25000.0
 ANTE_COST = 1.4
+# Ante's bonus-odds multiplier is locked (Ryan 2026-11-09); Ante lands on 96.3% with
+# its own bar-fill pace instead.
+ANTE_ODDS_MULTIPLIER = 1.8107745069496515
+# L5 (hunt_6) keeps the base bar pace; it reaches 96.3% only by raising its whole-number
+# boosts above the spec values (Ryan 2026-11-09 12:47).
+L5_SPEC_BOOST = {"see": 32, "hear": 210, "speak": 420}
+BAR_PACE_LEVER = {"hunt_2", "hunt_3", "hunt_4", "hunt_5"}
 BASE_LIKE = ["base", "base_ante", *HUNT_LEVELS]
 # Class means are pooled over the modes the design was fitted on. hunt_6 (L5, added
 # 2026-11-09) is calibrated to the same means but not pooled, so adding it moves no
@@ -212,7 +220,7 @@ def main(write: bool) -> None:
     Q = sum(q.values())
     bon = sum(q[v] * E[v] for v in q)
     p_bar = (TARGET - bon - (1 - Q) * E["plain"]) / (E["bar"] - E["plain"])
-    ante_m = (ANTE_COST * TARGET - p_bar * E["bar"] - (1 - p_bar) * E["plain"]) / (bon - Q * E["plain"])
+    ante_m = ANTE_ODDS_MULTIPLIER
     design = {"E": E, "pooled_n": {k: len(v) for k, v in pooled.items()}, "base_odds_one_in": {k: 1 / v for k, v in q.items()},
               "bar_one_in": 1 / p_bar if p_bar > 0 else None, "ante_odds_multiplier": ante_m}
     prices = json.loads((GAME / "mode_prices.json").read_text())
@@ -249,20 +257,22 @@ def main(write: bool) -> None:
         if m in ("base", "base_ante"):
             # Classes whose sample could not reach the pooled mean within MAX_TILT keep
             # their achieved mean; the mode's free lever absorbs the difference
-            # (base: bar-fill rate, Ante: bonus-odds multiplier).
+            # (base: bar-fill rate; Ante: its own bar-fill rate, multiplier locked).
             A = {k: v["achieved"] for k, v in notes.items()}
             if m == "base":
                 bon_a = sum(q[v] * A[v] for v in q)
                 p_bar = (TARGET - bon_a - (1 - Q) * A["plain"]) / (A["bar"] - A["plain"])
                 probs = {v: q[v] for v in q}
+                probs["bar"] = p_bar
+                design["bar_one_in"] = 1 / p_bar
             else:
-                bon_a = sum(q[v] * A[v] for v in q)
-                ante_m = (ANTE_COST * TARGET - p_bar * A["bar"] - (1 - p_bar) * A["plain"]) / (bon_a - Q * A["plain"])
                 probs = {v: q[v] * ante_m for v in q}
-            probs["bar"] = p_bar
+                bon_a = sum(probs[v] * (A[v] - A["plain"]) for v in q)
+                p_bar_ante = (ANTE_COST * TARGET - A["plain"] - bon_a) / (A["bar"] - A["plain"])
+                probs["bar"] = p_bar_ante
+                design["ante_bar_one_in"] = 1 / p_bar_ante if p_bar_ante > 0 else None
             probs["plain"] = 1 - sum(probs.values())
             rows, notes, clean = build_rows(cls, probs, targets)
-            design["bar_one_in"] = 1 / p_bar
             design["ante_odds_multiplier"] = ante_m
         if m in HUNT_LEVELS:
             # Whole-number boosts can't land a stop on 96.3% by themselves; the stop's
@@ -275,7 +285,36 @@ def main(write: bool) -> None:
             p_bar_h = (TARGET * cost - A["plain"] - bonus_ev) / (A["bar"] - A["plain"])
             hunt_bar[m] = {"bar_one_in": (1 / p_bar_h) if p_bar_h > 0 else None,
                            "vs_base": p_bar_h / p_bar, "rtp_at_base_bar": stats(rows, cost)["rtp"]}
-            if p_bar_h > 0:
+            if m == "hunt_6":
+                # No bar lever: search whole-number boosts >= spec closest to 96.3%,
+                # ties broken by the most even relative increase across the three.
+                a = {v: q[v] * (A[v] - A["plain"]) for v in q}
+                base_ev = A["plain"] + p_bar * (A["bar"] - A["plain"])
+                need = TARGET * cost - base_ev
+                best = None
+                for see in range(L5_SPEC_BOOST["see"], L5_SPEC_BOOST["see"] + 12):
+                    for hear in range(L5_SPEC_BOOST["hear"], L5_SPEC_BOOST["hear"] * 4):
+                        rest = need - see * a["see"] - hear * a["hear"]
+                        sp0 = rest / a["speak"]
+                        for speak in (int(sp0), int(sp0) + 1):
+                            if speak < L5_SPEC_BOOST["speak"]:
+                                continue
+                            gap = (see * a["see"] + hear * a["hear"] + speak * a["speak"] - need) / cost
+                            rel = [b / L5_SPEC_BOOST[v] - 1 for v, b in (("see", see), ("hear", hear), ("speak", speak))]
+                            spread = max(rel) - min(rel)
+                            key = (abs(gap) >= 5e-6, spread, abs(gap))
+                            if best is None or key < best[0]:
+                                best = (key, {"see": see, "hear": hear, "speak": speak}, gap)
+                hunt_bar[m]["l5_boost_search"] = (
+                    {"boost": best[1], "rtp_gap": best[2], "current": b0,
+                     "rtp_per_unit": {v: a[v] / cost for v in q}, "rtp_needed": need / cost}
+                    if best else {"infeasible": True}
+                )
+                probs = dict(bonus_odds)
+                probs["bar"] = p_bar
+                probs["plain"] = 1 - sum(probs.values())
+                rows, notes, clean = build_rows(cls, probs, targets)
+            elif p_bar_h > 0:
                 probs = dict(bonus_odds)
                 probs["bar"] = p_bar_h
                 probs["plain"] = 1 - sum(probs.values())

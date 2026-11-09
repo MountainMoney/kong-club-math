@@ -68,10 +68,9 @@ def _coin_metal_for_face(face: int, current_level: int = 1) -> tuple[str, int]:
     return _virtual_coin_symbol(level), level
 
 
-def _face(value: float) -> float | int:
-    """Two-decimal coin/pot face. Whole faces stay ints (1, 25); 0.2 and 0.5 stay exact."""
-    rounded = round(float(value or 0), 2)
-    return int(rounded) if float(rounded).is_integer() else rounded
+def _face(value: float) -> int:
+    """Coin/pot face as a whole number (every coin value and clover is whole)."""
+    return int(round(float(value or 0)))
 
 
 def _pick_weighted_coin_value(
@@ -233,7 +232,7 @@ def _build_coin_reveal(
     round_index: int = 1,
     power_resolved: bool = False,
 ) -> dict:
-    # Hard faces — label == pay (no soft scale). 0.2 / 0.5 keep their decimals.
+    # Hard whole-number faces — label == pay (no soft scale).
     display_value = _face(value)
     paid = float(display_value)
     item = {
@@ -881,7 +880,7 @@ def resolve_coin_game(gamestate: "GameExecutables") -> tuple[float, list[dict], 
 
 
 def _item_pay(item: dict) -> float:
-    """Current face of a coin or pot (float-safe: coin faces can be 0.2 / 0.5)."""
+    """Current face of a coin or pot (whole number)."""
     for key in ("payout", "displayValue", "resolvedValue", "value"):
         raw = item.get(key)
         if raw is not None:
@@ -934,7 +933,8 @@ def _clip_board_to_headroom(items: list[dict], headroom: float) -> list[dict]:
     """Max win reached: trim the final board so it pays exactly the headroom left.
 
     The holding pot (leftmost uncollected pot) absorbs the whole trim. With no pot,
-    the largest coins are trimmed first. Faces keep 2 decimals.
+    the largest coins are trimmed first. Spawned faces are whole numbers; only this
+    max-win clip may leave cents, because the headroom left after cluster pays can.
     """
     live = [
         item for item in items
@@ -960,7 +960,8 @@ def _clip_board_to_headroom(items: list[dict], headroom: float) -> list[dict]:
         cloned = dict(item)
         pos = _item_pos(cloned)
         if pos in trims and not _is_collected(cloned) and cloned.get("kind") in ("coin", "collector"):
-            face = _face(trims[pos])
+            face = round(trims[pos], 2)
+            face = int(face) if float(face).is_integer() else face
             cloned["value"] = face
             cloned["displayValue"] = face
             cloned["resolvedValue"] = float(face)

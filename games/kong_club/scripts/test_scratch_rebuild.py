@@ -112,13 +112,15 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert config.multiplier_table == [2, 5, 10]
     assert config.max_tile_level == 3
     assert config.coin_seed_levels == {"CB": 1, "CS": 2, "CG": 3}
-    # Locked spec l.17: the rich 0.2-1000 set (kong-club-math 3639716 / web coinFacePools.ts).
+    # Locked spec l.17 rich set, whole numbers only (2026-11-09: bronze drops 0.2 / 0.5).
     assert config.coin_values == {
-        "CB": [0.2, 0.5, 1, 2, 3, 4],
+        "CB": [1, 2, 3, 4],
         "CS": [5, 10, 15, 20],
         "CG": [25, 50, 100, 250, 500, 1000],
     }
-    assert {k: len(v) for k, v in config.coin_value_weights.items()} == {"CB": 6, "CS": 4, "CG": 6}
+    assert {k: len(v) for k, v in config.coin_value_weights.items()} == {"CB": 4, "CS": 4, "CG": 6}
+    assert config.coin_value_weights["CB"] == [10, 6, 3, 1]
+    assert all(isinstance(v, int) for vals in config.coin_values.values() for v in vals)
     assert config.coin_value_weights["CB"][0] > config.coin_value_weights["CB"][-1]
     assert config.coin_value_weights["CG"][-1] < min(config.coin_value_weights["CG"][:-1])
     # Clover values do not change.
@@ -599,7 +601,7 @@ def test_multi_power_resolves_adjacent_coins():
         if pos not in apply_coins:
             continue
         assert apply_coins[pos] >= face1
-        ratio = apply_coins[pos] / face1  # faces can be 0.2 / 0.5, so no float modulo
+        ratio = apply_coins[pos] / face1
         assert abs(ratio - round(ratio)) < 1e-6, (face1, apply_coins[pos])
     leftover = _leftover_coin_payout(items)
     assert abs(total - leftover) < 1e-6
@@ -2426,7 +2428,7 @@ def test_capped_cluster_wins_are_whole_cents():
 def test_hunt_stops_follow_locked_price_grid():
     """Locked spec l.38: stop Nx costs N x bet; See/Hear/Speak odds x a/b/c of base.
     Option (a) + integer rule, Ryan 2026-11-09: whole-number boosts, See 3/5/7/9, L5
-    (hunt_6) keeps the spec boosts 32/210/420 at a solved whole price."""
+    (hunt_6) costs 18x at base bar pace with whole boosts raised from 32/210/420 to 33/221/420."""
     from game_criteria import HUNT_LEVELS
 
     config = GameConfig()
@@ -2435,7 +2437,7 @@ def test_hunt_stops_follow_locked_price_grid():
         "hunt_3": (3.0, (5, 10, 13)),
         "hunt_4": (4.0, (7, 10, 18)),
         "hunt_5": (5.0, (9, 15, 30)),
-        "hunt_6": (18.0, (32, 210, 420)),
+        "hunt_6": (18.0, (33, 221, 420)),
     }
     modes = {mode.get_name(): mode for mode in config.bet_modes}
     for name, (cost, (see, hear, speak)) in grid.items():

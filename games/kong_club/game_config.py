@@ -74,11 +74,13 @@ CLUSTER_PAY_BANDS = {
 # Coin-face spawn weights, aligned with GameConfig.coin_values. "nov3" is the exact
 # table from kong-club-math 3639716 (Nov 3 2026, "Pay the new coin faces in every mode
 # with no base shrink", branch cursor/natural-base-tumbles-7d73), the commit that set
-# the rich 0.2-1000 faces the frontend still ships (web coinFacePools.ts, 9d2cc25).
+# the rich 0.2-1000 faces (web coinFacePools.ts, 9d2cc25; bronze now 1-4, see below).
 # The old "silver"/"gold" spreads were sized for the 4/5/5-face set and are gone.
+# Whole-number rule (Ryan via Dale 2026-11-09 12:48): bronze drops 0.2 / 0.5 and keeps
+# 1/2/3/4 with their nov3 weights 10/6/3/1; silver, gold and clovers unchanged.
 COIN_SPREADS = {
     "nov3": {
-        "CB": [58, 22, 10, 6, 3, 1],
+        "CB": [10, 6, 3, 1],
         "CS": [70, 18, 8, 4],
         "CG": [410, 60, 20, 6, 3, 1],
     },
@@ -137,11 +139,11 @@ class GameConfig(Config):
         self.tile_level_multipliers = self.multiplier_table
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}
-        # Locked spec l.17: the current rich coin set, 0.2-1000 (frontend hard faces,
-        # web coinFacePools.ts COIN_FACE_VALUES). Source: kong-club-math 3639716.
-        # Books may only reveal these values. Clover values are unchanged.
+        # Locked spec l.17 rich coin set (kong-club-math 3639716), whole numbers only
+        # since 2026-11-09: bronze 1-4, silver 5-20, gold 25-1000. Books may only reveal
+        # these values. Clover values are unchanged.
         self.coin_values = {
-            "CB": [0.2, 0.5, 1, 2, 3, 4],
+            "CB": [1, 2, 3, 4],
             "CS": [5, 10, 15, 20],
             "CG": [25, 50, 100, 250, 500, 1000],
         }

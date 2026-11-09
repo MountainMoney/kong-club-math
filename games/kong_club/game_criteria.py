@@ -53,14 +53,16 @@ RISKY_SPEAK_QUOTA = 0.10
 # the 5x stop's See, raised to 9); Hear/Speak are the whole-number roundings of the smallest
 # change that lands each stop on 96.3% (proposed 5/10, 6/10, 10/18, 15/30). The last few
 # hundredths of a point are closed by each stop's bar-fill pace in scripts/fit_rebalance.py.
-# hunt_6 = Hunt L5 (added 2026-11-09): spec boosts See 32 / Hear 210 / Speak 420 kept,
-# price solved to a whole 18x (17x would need a negative bar pace).
+# hunt_6 = Hunt L5 (added 2026-11-09), price 18x. Ryan 2026-11-09 12:47: L5 runs at the
+# base bar pace and reaches 96.3% only by raising its whole-number boosts above the spec
+# 32/210/420. 33/221/420 is the most even raise that lands exactly on 96.300% (strict
+# proportional rounding 33/217/433 would give ~96.318%); see scripts/fit_rebalance.py.
 HUNT_LEVELS = {
     "hunt_2": {"cost": 2.0, "boost": {"see": 3, "hear": 4, "speak": 7}},
     "hunt_3": {"cost": 3.0, "boost": {"see": 5, "hear": 10, "speak": 13}},
     "hunt_4": {"cost": 4.0, "boost": {"see": 7, "hear": 10, "speak": 18}},
     "hunt_5": {"cost": 5.0, "boost": {"see": 9, "hear": 15, "speak": 30}},
-    "hunt_6": {"cost": 18.0, "boost": {"see": 32, "hear": 210, "speak": 420}},
+    "hunt_6": {"cost": 18.0, "boost": {"see": 33, "hear": 221, "speak": 420}},
 }
 HUNT_COSTS = {name: level["cost"] for name, level in HUNT_LEVELS.items()}
 SCATTER_COUNT_VARIANT = {3: "see", 4: "hear", 5: "speak"}

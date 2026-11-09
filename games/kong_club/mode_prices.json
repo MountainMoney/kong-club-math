@@ -5,11 +5,11 @@
   "hunt_3": 3.0,
   "hunt_4": 4.0,
   "hunt_5": 5.0,
-  "feature_spin": 40.0,
+  "feature_spin": 60.0,
   "peak_spin": 1083.0,
-  "bonus_see": 120.0,
-  "bonus_hear": 328.0,
-  "bonus_mystery": 395.0,
-  "bonus_risky": 506.0,
+  "bonus_see": 127.0,
+  "bonus_hear": 347.0,
+  "bonus_mystery": 399.0,
+  "bonus_risky": 498.0,
   "hunt_6": 18.0
 }

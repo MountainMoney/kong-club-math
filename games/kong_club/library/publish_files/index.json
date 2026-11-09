@@ -44,7 +44,7 @@
         },
         {
             "name": "feature_spin",
-            "cost": 40.0,
+            "cost": 60.0,
             "events": "books_feature_spin.jsonl.zst",
             "weights": "lookUpTable_feature_spin_0.csv"
         },
@@ -56,25 +56,25 @@
         },
         {
             "name": "bonus_see",
-            "cost": 120.0,
+            "cost": 127.0,
             "events": "books_bonus_see.jsonl.zst",
             "weights": "lookUpTable_bonus_see_0.csv"
         },
         {
             "name": "bonus_hear",
-            "cost": 328.0,
+            "cost": 347.0,
             "events": "books_bonus_hear.jsonl.zst",
             "weights": "lookUpTable_bonus_hear_0.csv"
         },
         {
             "name": "bonus_mystery",
-            "cost": 395.0,
+            "cost": 399.0,
             "events": "books_bonus_mystery.jsonl.zst",
             "weights": "lookUpTable_bonus_mystery_0.csv"
         },
         {
             "name": "bonus_risky",
-            "cost": 506.0,
+            "cost": 498.0,
             "events": "books_bonus_risky.jsonl.zst",
             "weights": "lookUpTable_bonus_risky_0.csv"
         }
