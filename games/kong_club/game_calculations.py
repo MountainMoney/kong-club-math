@@ -9,7 +9,12 @@ from game_cluster import GameCluster
 
 
 class GameCalculations(Executables):
-    """Pay each cluster base × sum of lit tile multipliers × monkey mult."""
+    """Pay each cluster its plain size-scaled paytable face (Ryan, Nov 8: no tile multipliers).
+
+    Tiles still rank up and still drive coin-game flips; they no longer scale cluster pay.
+    Wilds carry no multiplier. To restore the PR #7 formula (face × sum of lit tile
+    multipliers 2/5/10), set `GameConfig.cluster_pay_uses_tile_multipliers = True`.
+    """
 
     def cluster_base_payout(self, cluster) -> float:
         if hasattr(self.config, "cluster_pay"):
@@ -44,14 +49,20 @@ class GameCalculations(Executables):
         for cluster in winning_clusters:
             base_payout = self.cluster_base_payout(cluster)
             monkey_mult = self.cluster_monkey_multiplier(cluster)
-            tile_sum = self.cluster_tile_multiplier_sum(cluster)
-            # Base, Ante, and Hunt: a first connection on plain tiles pays the size
-            # face (often under 1x). Later hits pay face × the sum of ranked tiles.
-            face_on_plain = getattr(self, "betmode", "") in getattr(self.config, "base_like_modes", set())
-            if tile_sum <= 0 and face_on_plain:
+            if not getattr(self.config, "cluster_pay_uses_tile_multipliers", False):
+                # Plain pay: size-scaled face only. No tile or wild multiplier.
+                tile_sum = 1
                 payout = base_payout * monkey_mult
             else:
-                payout = base_payout * tile_sum * monkey_mult
+                # Legacy PR #7 formula, kept for an easy restore.
+                tile_sum = self.cluster_tile_multiplier_sum(cluster)
+                # Base, Ante, and Hunt: a first connection on plain tiles pays the size
+                # face (often under 1x). Later hits pay face × the sum of ranked tiles.
+                face_on_plain = getattr(self, "betmode", "") in getattr(self.config, "base_like_modes", set())
+                if tile_sum <= 0 and face_on_plain:
+                    payout = base_payout * monkey_mult
+                else:
+                    payout = base_payout * tile_sum * monkey_mult
             return_data["totalWin"] += payout
 
             positions = [{"reel": reel, "row": row} for reel, row in cluster.positions]

@@ -128,6 +128,10 @@ class GameConfig(Config):
 
         # Classic MM ranks: 0=none, 1=bronze, 2=silver, 3=gold.
         self.multiplier_table = [2, 5, 10]
+        # Cluster pay is the plain size-scaled face (Ryan, Nov 8 2026: "there are no
+        # tile multipliers"). Tiles still rank up and drive coin-game flips.
+        # True restores the PR #7 formula: face × sum of lit tile multipliers.
+        self.cluster_pay_uses_tile_multipliers = False
         self.tile_level_multipliers = self.multiplier_table
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}

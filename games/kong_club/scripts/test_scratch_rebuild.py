@@ -1306,11 +1306,11 @@ def test_base_clusters_still_pay():
     assert gs.win_data["totalWin"] > 0.0
     assert gs.win_manager.spin_win > 0.0
     scale = float(getattr(gs.config, "paytable_scale", 1.0))
-    # Size-5 BA lights five bronze tiles: base × (2+2+2+2+2).
-    assert gs.win_data["totalWin"] == round(1.0 * scale * 10.0, 6)
+    # Plain pay (no tile multipliers): size-5 BA pays its face even after ranking up.
+    assert gs.win_data["totalWin"] == round(1.0 * scale, 6)
 
 
-def test_cluster_payout_uses_tile_sum():
+def test_cluster_payout_ignores_tile_levels():
     gs = state()
     gs.board = board_from_rows(
         gs,
@@ -1328,10 +1328,18 @@ def test_cluster_payout_uses_tile_sum():
     ba = [c for c in clusters if c.symbol == "BA"][0]
     assert ba.size == 5
     win_data = gs.evaluate_clusters([ba])
-    # One lit bronze tile: base × 2. Unlit cells add nothing.
+    # Plain pay: a lit bronze tile does not change the face. clusterMult stays 1.
     scale = float(getattr(gs.config, "paytable_scale", 1.0))
-    assert abs(win_data["totalWin"] - round(1.0 * scale * 2.0, 6)) < 1e-9
-    assert win_data["wins"][0]["meta"]["clusterMult"] == 2.0
+    assert abs(win_data["totalWin"] - round(1.0 * scale, 6)) < 1e-9
+    assert win_data["wins"][0]["meta"]["clusterMult"] == 1
+    # Legacy formula is one flag away: face × sum of lit tile multipliers.
+    gs.config.cluster_pay_uses_tile_multipliers = True
+    try:
+        legacy = gs.evaluate_clusters([ba])
+        assert abs(legacy["totalWin"] - round(1.0 * scale * 2.0, 6)) < 1e-9
+        assert legacy["wins"][0]["meta"]["clusterMult"] == 2.0
+    finally:
+        gs.config.cluster_pay_uses_tile_multipliers = False
 
 
 def test_scatter_bonus_and_hard_cap_smoke():
@@ -1908,8 +1916,8 @@ def test_peak_spin_needs_a_winning_tumble_to_activate():
     assert any(event["type"] == "boardActivation" for event in gs.book.events)
 
 
-def test_feature_spin_cluster_pays_tile_levels_like_base():
-    """Feature Spin has no bronze seed — cluster pay uses real tile levels."""
+def test_feature_spin_cluster_pays_plain_face_like_base():
+    """Feature Spin ranks tiles like base; cluster pay is the plain face."""
     gs = state()
     gs.betmode = "feature_spin"
     gs.reset_grid_mults()
@@ -1928,12 +1936,16 @@ def test_feature_spin_cluster_pays_tile_levels_like_base():
     gs.award_clusters(clusters)
     scale = float(getattr(gs.config, "paytable_scale", 1.0))
     assert all(gs.tile_levels[reel][row] == 1 for reel, row in clusters[0].positions)
-    # Five bronze tiles: base × (2×5).
-    assert gs.win_data["totalWin"] == round(1.0 * scale * 10.0, 6)
+    # Plain pay: five bronze tiles do not multiply the face.
+    assert gs.win_data["totalWin"] == round(1.0 * scale, 6)
 
 
 def test_peak_cluster_pays_from_connections_not_gold_seed():
-    """PEAK gold is chrome/coins. A connection pays base × sum of the new bronze multipliers."""
+    """PEAK gold is chrome/coins. Live Trifecta never awards cluster pay (resolve_cascade_loop).
+
+    Under the legacy tile-multiplier formula a connection would pay base × sum of the
+    new bronze multipliers; that path is checked with the flag on.
+    """
     gs = state()
     gs.betmode = "peak_spin"
     gs.reset_grid_mults()
@@ -1950,6 +1962,7 @@ def test_peak_cluster_pays_from_connections_not_gold_seed():
         ],
     )
     clusters = GameCluster.find_winning_clusters(gs.board, gs.config)
+    gs.config.cluster_pay_uses_tile_multipliers = True
     gs.award_clusters(clusters)
     scale = float(getattr(gs.config, "paytable_scale", 1.0))
     # Gold seed is not a cluster multiplier. No connection yet → sum of lit ranks is 0.
@@ -1961,6 +1974,7 @@ def test_peak_cluster_pays_from_connections_not_gold_seed():
     win_data = gs.evaluate_clusters(clusters)
     # Five connection-bronze cells: base × (2×5).
     assert abs(win_data["totalWin"] - round(1.0 * scale * 10.0, 6)) < 1e-9
+    gs.config.cluster_pay_uses_tile_multipliers = False
 
 
 def test_peak_spin_can_miss_connections():
@@ -2234,7 +2248,7 @@ def main():
     test_feature_spin_starts_full_without_seeded_tiles()
     test_feature_spin_needs_a_winning_connection()
     test_feature_spin_never_dead_spins()
-    test_feature_spin_cluster_pays_tile_levels_like_base()
+    test_feature_spin_cluster_pays_plain_face_like_base()
     test_peak_spin_starts_full_gold_and_empty_bar()
     test_peak_spin_needs_a_winning_tumble_to_activate()
     test_peak_cluster_pays_from_connections_not_gold_seed()
@@ -2249,7 +2263,7 @@ def main():
     test_force_scatter_skipped_when_already_in_bonus()
     test_bonus_clusters_apply_pay_scale()
     test_base_clusters_still_pay()
-    test_cluster_payout_uses_tile_sum()
+    test_cluster_payout_ignores_tile_levels()
     test_scatter_bonus_and_hard_cap_smoke()
     test_sticky_hear_disabled()
     test_hear_threshold_is_five()

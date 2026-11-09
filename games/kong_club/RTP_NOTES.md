@@ -2,6 +2,8 @@
 
 Target RTP is **96.3%** on every mode. Each mode has **500 books** until ship. Max win stays 25,000x.
 
+> **Superseded Nov 8, 2026 (Ryan: "there are no tile multipliers").** Code now pays the plain locked face; `GameConfig.cluster_pay_uses_tile_multipliers = True` restores the formula below. The published books and RTP table here are still from the old formula until an approved rerun is fitted to 96.3%.
+
 Cluster pay = locked face × the sum of lit tile multipliers (bronze 2× / silver 5× / gold 10×). Faces are multiples of total bet. Size is uncapped; **13+ shares one face**.
 
 | Symbols | 5 | 6 | 7 | 8 | 9–10 | 11–12 | 13+ |
