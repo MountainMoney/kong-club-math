@@ -832,7 +832,7 @@ def _physical_coins_land(gamestate: "GameExecutables") -> bool:
 def _physical_coin_payout(
     gamestate: "GameExecutables", reel: int, row: int, tile_level: int
 ) -> tuple[str, float] | None:
-    """Landed coin pays its face × the tile multiplier (2 / 5 / 10)."""
+    """Landed coin pays its own face. Legacy switch: face × tile multiplier (2 / 5 / 10)."""
     if not _physical_coins_land(gamestate):
         return None
     board = getattr(gamestate, "board", None) or []
@@ -844,6 +844,8 @@ def _physical_coin_payout(
     stored = (getattr(gamestate, "board_coin_values", None) or {}).get((reel, row))
     if stored is None:
         return None
+    if not getattr(gamestate.config, "coin_pay_uses_tile_multipliers", False):
+        return str(symbol), float(stored)
     multiplier = max(1, int(gamestate.level_to_multiplier(tile_level) or 1))
     return str(symbol), float(stored) * multiplier
 

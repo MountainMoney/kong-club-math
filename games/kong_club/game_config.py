@@ -132,6 +132,10 @@ class GameConfig(Config):
         # tile multipliers"). Tiles still rank up and drive coin-game flips.
         # True restores the PR #7 formula: face × sum of lit tile multipliers.
         self.cluster_pay_uses_tile_multipliers = False
+        # Coin game (locked spec l.17/19): tiers only change spawn odds; a coin pays
+        # its own value and a pot pays the plain sum. True restores the old rule where
+        # a landed CB/CS/CG paid face × tile multiplier (2 / 5 / 10).
+        self.coin_pay_uses_tile_multipliers = False
         self.tile_level_multipliers = self.multiplier_table
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}

@@ -2056,7 +2056,10 @@ def test_organic_bonus_entry_resets_progress():
 
 
 def test_organic_freegame_pays_physical_coins():
-    """Organic free spins land physical coins. Face × tile multiplier is the pay."""
+    """Organic free spins land physical coins. A coin pays its own face (spec l.17/19).
+
+    The legacy switch coin_pay_uses_tile_multipliers=True restores face × tile multiplier.
+    """
     from game_coin_feature import _use_virtual_coins, resolve_coin_game
 
     gs = state()
@@ -2079,15 +2082,24 @@ def test_organic_freegame_pays_physical_coins():
     gs.board_coin_values = {(0, 0): 4.0}
     gs.seed_tile_to_level(0, 0, 2)
     gs.seed_tile_to_level(1, 0, 3)  # lit tile without a coin — still a virtual prize
+    assert gs.config.coin_pay_uses_tile_multipliers is False
     total, items, rounds = resolve_coin_game(gs)
     assert rounds == 1
     assert len(items) == 2
     coin = next(item for item in items if item["reel"] == 0 and item["row"] == 0)
-    # Silver tile is 5×, so the landed 4 pays 20.
-    assert coin["payout"] == 20.0
+    # Silver tile only changes spawn odds: the landed 4 pays 4.
+    assert coin["payout"] == 4.0
     assert total > 0
     assert all(item["displayValue"] == item["payout"] for item in items)
     assert all(float(item["displayValue"]).is_integer() for item in items)
+
+    # Legacy switch: silver tile is 5×, so the landed 4 pays 20.
+    gs.config.coin_pay_uses_tile_multipliers = True
+    gs.board_coin_values = {(0, 0): 4.0}
+    _total, items, _rounds = resolve_coin_game(gs)
+    coin = next(item for item in items if item["reel"] == 0 and item["row"] == 0)
+    assert coin["payout"] == 20.0
+    gs.config.coin_pay_uses_tile_multipliers = False
 
 def test_cascade_emits_tumble_before_board_activation():
     """Jul 2: gravity/refill (tumbleBoard) must complete before Board Activation."""
