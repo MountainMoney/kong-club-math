@@ -2,8 +2,10 @@
 
 Flip weights are per tile tier (coin / clover / pot). Clovers fire in reading
 order and multiply adjacent coins and valued pots (8-way, not other clovers).
-Pots then chain left to right: each collects every coin, and the last pot holds
-the total. Collected coins, used clovers, and spent pots flip again. The loop
+Pots then chain right to left: each collects every coin and every valued pot,
+so the LEFTMOST pot acts last and holds the total (Ryan, Nov 4 locked spec;
+reconfirmed Nov 8). Leftmost = lowest reel (column) index, ties broken by the
+lowest row (top). Collected coins, used clovers, and spent pots flip again. The loop
 stops when a round flips no new clover and no new pot. A 10-rerun cap pays the
 max win. Tiles themselves never multiply a payout.
 """
@@ -313,13 +315,26 @@ def _active_collectors(items: list[dict], counted_cells: set[tuple[int, int]] | 
     ]
 
 
-def _leftmost_collector(
+def _pot_turn_sort_key(item: dict) -> tuple[int, int]:
+    """Pots act right to left (then bottom to top) so the leftmost pot goes last.
+
+    The last pot to act vacuums every earlier valued pot, so it holds the total.
+    Reversing `_column_sort_key` makes that the leftmost (then topmost) pot.
+    To restore the old left-to-right chain (rightmost pot holds the total),
+    return `_column_sort_key(item)` here instead.
+    """
+    reel, row = _item_pos(item)
+    return (-reel, -row)
+
+
+def _next_collector(
     items: list[dict], counted_cells: set[tuple[int, int]] | None = None
 ) -> dict | None:
+    """Next pot to take its turn. Leftmost pot is last and collects the rest."""
     pots = _active_collectors(items, counted_cells)
     if not pots:
         return None
-    pots.sort(key=_column_sort_key)
+    pots.sort(key=_pot_turn_sort_key)
     return pots[0]
 
 
@@ -850,7 +865,7 @@ def _coin_game_rng(gamestate: "GameExecutables") -> random.Random:
 
 
 def resolve_coin_game(gamestate: "GameExecutables") -> tuple[float, list[dict], int]:
-    """Flip every lit tile. Clovers, then the leftmost pot, then reruns.
+    """Flip every lit tile. Clovers, then pots right to left (leftmost holds the total), then reruns.
 
     Events use the frontend kinds: coin, multiplier (clover), collector (pot).
     A rerun past the cap flags the book so it is thrown out, never shipped.
@@ -862,7 +877,7 @@ def resolve_coin_game(gamestate: "GameExecutables") -> tuple[float, list[dict], 
 def _resolve_virtual_coins(
     gamestate: "GameExecutables", rng: random.Random
 ) -> tuple[float, list[dict], int]:
-    """Roll prizes; clovers one at a time, then the leftmost pot.
+    """Roll prizes; clovers one at a time, then pots right to left (leftmost last).
 
     Collected coins, used clovers, and spent pots flip again. The loop stops
     when a rerun shows no new clover and no new pot. Pot weight on a rerun
@@ -924,7 +939,7 @@ def _resolve_virtual_coins(
         if leftover + pot_max >= COIN_FEATURE_WINCAP and pot_max > 0:
             return True
         if leftover >= COIN_FEATURE_WINCAP:
-            return _leftmost_collector(working, spent_cells) is None
+            return _next_collector(working, spent_cells) is None
         return False
 
     actions = 0
@@ -984,7 +999,7 @@ def _resolve_virtual_coins(
             actions += 1
             continue
 
-        acting = _leftmost_collector(working, spent_cells)
+        acting = _next_collector(working, spent_cells)
         if acting is None:
             break
         at_reel, at_row = _item_pos(acting)
