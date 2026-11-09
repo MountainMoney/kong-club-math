@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import contextlib
+import json
 import io
 import sys
 
@@ -179,8 +180,10 @@ def test_reel_strips_are_run_based_and_refill_rules():
         3: {"multiplier": 12, "collector": 2, "tier_shift": 0},
     }
     assert config.coin_game_power_peak_gold == {"multiplier": 0, "collector": 0, "tier_shift": 0}
-    assert config.peak_spin_cost == 1000.0
-    assert 50.0 <= config.feature_buy_cost <= 75.0
+    # Trifecta and Feature prices are solved by the rebalance (mode_prices.json).
+    prices = json.loads((Path(__file__).resolve().parents[1] / "mode_prices.json").read_text())
+    assert config.peak_spin_cost == prices["peak_spin"]
+    assert config.feature_buy_cost == prices["feature_spin"]
 
 
 def test_paytable_size_bands():
