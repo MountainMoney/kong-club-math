@@ -449,15 +449,10 @@ class GameExecutables(GameCalculations):
             self._fill_initial_board()
             return
         if bucket == "bar_pay":
-            self.use_reel_family("base", "base_small")
-            self.force_bar_fill = True
-            for _ in range(30):
-                self._fill_initial_board()
-                clusters = GameCluster.find_winning_clusters(self.board, self.config)
-                if clusters:
-                    explode = {pos for cluster in clusters for pos in cluster.positions}
-                    self._arm_followup_refill(explode)
-                    break
+            # Busy connecting strips. The bar must reach 10 through real cluster
+            # wins (+1 each); check_repeat redraws the spin until it does.
+            self.use_reel_family("base", "base_link")
+            self._fill_initial_board()
             return
         near_p = float(getattr(self.config, "base_near_miss_share", 0.05))
         small_p = float(getattr(self.config, "base_small_rate", 0.46))
@@ -1305,25 +1300,7 @@ class GameExecutables(GameCalculations):
                     if self.progress_value >= self.progress_threshold:
                         break
                     self.advance_progress(1, activate=False)
-                # Bar-pay books finish the bar on the second tumble, before the drop,
-                # so the coin game starts only once the cascade is idle.
-                if (
-                    getattr(self, "force_bar_fill", False)
-                    and step >= 2
-                    and self.progress_value < self.progress_threshold
-                ):
-                    guard = 0
-                    while self.progress_value < self.progress_threshold and guard < self.progress_threshold + 2:
-                        before = self.progress_value
-                        self.advance_progress(1, activate=False)
-                        guard += 1
-                        if self.progress_value == before:
-                            self.progress_value = self.progress_threshold
-                            progress_fill_event(self)
-                            break
                 self.gravity_and_refill(emit_event=True)
-                if getattr(self, "force_bar_fill", False) and self.progress_value >= self.progress_threshold:
-                    break
             if self.wincap_triggered or step > self.config.max_tumbles_per_spin:
                 break
             # Bar full (or Feature prefilled) — coin game only after all cluster tumbles stop.
@@ -1334,15 +1311,6 @@ class GameExecutables(GameCalculations):
             if self.detect_clusters() and not self.wincap_triggered:
                 continue
             break
-        if (
-            getattr(self, "force_bar_fill", False)
-            and not self.board_activation_fired_this_spin
-            and not self.wincap_triggered
-        ):
-            self.progress_value = self.progress_threshold
-            progress_fill_event(self)
-            self.tumbles_this_spin = max(int(getattr(self, "tumbles_this_spin", 0) or 0), 1)
-            self.execute_board_activation(refill_after=False)
 
     def award_scatter_payout(self):
         if not self.config.scatter_pays:

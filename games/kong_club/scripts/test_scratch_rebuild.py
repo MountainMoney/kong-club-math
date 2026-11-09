@@ -2174,7 +2174,35 @@ def test_activation_waits_until_cascade_idle():
     assert found_base >= 1, "need a base spin with 2+ tumbles before activation"
 
 
+def test_bar_pay_books_fill_bar_by_real_connections():
+    """Bar-pay books reach 10 one connection at a time, then run the coin game."""
+    import contextlib
+    import io
+    import warnings
+
+    for sim in (3, 11, 27):
+        gs = state()
+        gs.betmode = "base"
+        gs.criteria = "bar_pay"
+        with contextlib.redirect_stdout(io.StringIO()), warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            gs.run_spin(sim)
+        events = gs.book.events
+        assert gs.book.criteria == "bar_pay"
+        fills = [e for e in events if e["type"] == "progressFill" and e["threshold"] == 10]
+        values = [e["value"] for e in fills]
+        assert values[:10] == list(range(1, 11)), values
+        acts = [e for e in events if e["type"] == "boardActivation"]
+        assert len(acts) == 1
+        first_act = events.index(acts[0])
+        full_at = events.index(fills[9])
+        assert full_at < first_act
+        clusters = sum(len(e.get("wins", [])) for e in events[:full_at] if e["type"] == "winInfo")
+        assert clusters >= 10, clusters
+
+
 def main():
+    test_bar_pay_books_fill_bar_by_real_connections()
     test_reel_strips_are_run_based_and_refill_rules()
     test_paytable_size_bands()
     test_bfs_orthogonal_shapes_and_no_diagonals()

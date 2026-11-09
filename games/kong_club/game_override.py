@@ -57,6 +57,14 @@ class GameStateOverride(GameExecutables):
             self.repeat = True
         elif bucket == "cap" and abs(pay - float(self.config.wincap)) > 1e-6:
             self.repeat = True
+        elif getattr(self.book, "criteria", bucket) == "bar_pay" and (
+            not getattr(self, "board_activation_fired_this_spin", False)
+            or getattr(self, "triggered_freegame", False)
+        ):
+            # Bar-pay books must fill the bar through 10 real connections. Read the
+            # book's own label: an organic scatter trigger relabels self.criteria.
+            self.repeat = True
+            self.criteria = "bar_pay"
         elif getattr(self, "coin_game_cap_hit", False):
             # The 10-rerun cap is a reject. Shipped books never record it.
             self.repeat = True
