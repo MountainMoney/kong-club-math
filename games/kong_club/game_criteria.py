@@ -44,15 +44,35 @@ RISKY_DEAD_QUOTA = 0.50
 RISKY_HEAR_QUOTA = 0.40
 RISKY_SPEAK_QUOTA = 0.10
 
-# Hunt slider. The spec writes three figures per stop and calls level 5 ~25x.
-# Each stop is one Ante-style mode, so it has one spin cost. Level 5 uses the
-# explicit ~25x. Levels 2–4 use the middle figure of 3/5/10, 5/6/10, 7/10/18.
-HUNT_COSTS = {
-    "hunt_2": 5.0,
-    "hunt_3": 6.0,
-    "hunt_4": 10.0,
-    "hunt_5": 25.0,
+# Hunt slider (locked spec l.38; mode_spec 2026-11-03 "Hunt L1-4 locked"). Each stop
+# is written "Nx a/b/c": the spin costs N x bet, and the See / Hear / Speak trigger
+# odds are a / b / c times the base game's. Hunt boosts scatters only, not the coin
+# game. The four stops map 1:1 onto hunt_2..hunt_5. (L5 ~25x in the spec is a
+# separate planning-only level with no slider stop; it would need a fifth mode.)
+# L1 follows the locked spec (3/5/10); mode_spec 2026-11-03 wrote 3/3/5.
+HUNT_LEVELS = {
+    "hunt_2": {"cost": 2.0, "boost": {"see": 3.0, "hear": 5.0, "speak": 10.0}},
+    "hunt_3": {"cost": 3.0, "boost": {"see": 5.0, "hear": 6.0, "speak": 10.0}},
+    "hunt_4": {"cost": 4.0, "boost": {"see": 7.0, "hear": 10.0, "speak": 18.0}},
+    "hunt_5": {"cost": 5.0, "boost": {"see": 8.5, "hear": 15.0, "speak": 30.0}},
 }
+HUNT_COSTS = {name: level["cost"] for name, level in HUNT_LEVELS.items()}
+SCATTER_COUNT_VARIANT = {3: "see", 4: "hear", 5: "speak"}
+
+
+def hunt_scatter_triggers(base_triggers: dict[int, float], mode: str) -> dict[int, float]:
+    """Base scatter-count mix with each bonus type scaled by its Hunt boost."""
+    boost = HUNT_LEVELS[mode]["boost"]
+    return {
+        count: float(weight) * boost[SCATTER_COUNT_VARIANT.get(count, "speak")]
+        for count, weight in base_triggers.items()
+    }
+
+
+def hunt_odds_factor(base_triggers: dict[int, float], mode: str) -> float:
+    """Overall bonus-odds multiplier vs base: the boosts weighted by the base mix."""
+    total = float(sum(base_triggers.values())) or 1.0
+    return sum(hunt_scatter_triggers(base_triggers, mode).values()) / total
 
 
 def hunt_freegame_quota(cost: float) -> float:
