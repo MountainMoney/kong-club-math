@@ -874,14 +874,82 @@ def resolve_coin_game(gamestate: "GameExecutables") -> tuple[float, list[dict], 
     return _resolve_virtual_coins(gamestate, _coin_game_rng(gamestate))
 
 
+def _item_pay(item: dict) -> float:
+    """Current face of a coin or pot (float-safe: coin faces can be 0.2 / 0.5)."""
+    for key in ("payout", "displayValue", "resolvedValue", "value"):
+        raw = item.get(key)
+        if raw is not None:
+            try:
+                return float(raw)
+            except (TypeError, ValueError):
+                continue
+    return 0.0
+
+
+def _holder_collect(items: list[dict], holder_pos: tuple[int, int]) -> list[dict]:
+    """The holder pot vacuums every uncollected coin and every other pot on the board.
+
+    Pot face = its own value + everything it collects (no pot multiplier), capped at
+    25,000x. Collected coins and absorbed pots drop to payout 0 and flip again on the
+    next rerun. Empty pots are absorbed too (they add 0), so one pot holds the total.
+    """
+    absorbed = 0.0
+    own = 0.0
+    for item in items:
+        if _is_collected(item):
+            continue
+        kind = item.get("kind")
+        if _item_pos(item) == holder_pos:
+            own = _item_pay(item)
+        elif kind in ("coin", "collector"):
+            absorbed += _item_pay(item)
+    face = round(min(float(COIN_FEATURE_WINCAP), own + absorbed), 2)
+    out: list[dict] = []
+    for item in items:
+        cloned = dict(item)
+        kind = cloned.get("kind")
+        pos = _item_pos(cloned)
+        if pos == holder_pos:
+            cloned["value"] = face
+            cloned["displayValue"] = face
+            cloned["resolvedValue"] = face
+            cloned["payout"] = face
+            cloned["powerResolved"] = True
+            cloned.pop("collected", None)
+        elif kind in ("coin", "collector") and not _is_collected(cloned):
+            cloned["collected"] = True
+            cloned["powerResolved"] = True
+            cloned["payout"] = 0.0
+        out.append(cloned)
+    return out
+
+
+def _leftmost_pot(items: list[dict]) -> dict | None:
+    """Leftmost (lowest reel, then top row) uncollected pot. It holds the coin-game total."""
+    pots = [
+        item
+        for item in items
+        if item.get("kind") == "collector" and not _is_collected(item)
+    ]
+    if not pots:
+        return None
+    pots.sort(key=_column_sort_key)
+    return pots[0]
+
+
 def _resolve_virtual_coins(
     gamestate: "GameExecutables", rng: random.Random
 ) -> tuple[float, list[dict], int]:
-    """Roll prizes; clovers one at a time, then pots right to left (leftmost last).
+    """Flip every lit tile, then cycle until a rerun lands no clover and no pot.
 
-    Collected coins, used clovers, and spent pots flip again. The loop stops
-    when a rerun shows no new clover and no new pot. Pot weight on a rerun
-    follows the tile tier, so pots can come back. Ten reruns is the cap.
+    Each cycle: unresolved clovers fire one at a time in reading order (multiplying
+    touching coins and valued pots, never clovers). Then the LEFTMOST pot collects
+    every coin and every other pot on the board and keeps the total. The tiles it
+    collected from and the clovers just used flip again (rerun). Reruns may land
+    coins, clovers, or pots on any tier. If a rerun lands no clover and no pot, the
+    sitting pot collects the new coins one last time and the game ends. With no pot
+    on the board, coins pay their own values. Ten reruns is the cap; a book that
+    hits it is rejected.
     """
     positions = highlighted_positions(gamestate)
     if not positions:
@@ -890,13 +958,7 @@ def _resolve_virtual_coins(
 
     cap = int(getattr(gamestate.config, "coin_game_max_reruns", 10) or 10)
     all_items: list[dict] = []
-    counted_pots = 0.0
-    counted_cells: set[tuple[int, int]] = set()
-    spent_cells: set[tuple[int, int]] = set()
     round_index = 1
-    pot_hit_by: set[tuple[tuple[int, int], tuple[int, int]]] = set()
-    pending_count: tuple[int, int] | None = None
-    need_cycle_regen = False
     reruns = 0
 
     working, _new_multis, _collectors = _roll_prizes(
@@ -912,152 +974,79 @@ def _resolve_virtual_coins(
         return {
             "reruns": reruns,
             "capHit": cap_hit,
-            "clovers": sum(1 for item in all_items if item.get("kind") == "multiplier" and item.get("action") == "spawn"),
-            "pots": sum(1 for item in all_items if item.get("kind") == "collector" and item.get("action") == "spawn"),
+            "clovers": sum(1 for item in all_items if item.get("kind") == "multiplier" and item.get("action") in ("spawn", "regen")),
+            "pots": sum(1 for item in all_items if item.get("kind") == "collector" and item.get("action") in ("spawn", "regen")),
         }
 
-    def _rerun(working_now, round_now, replace_now):
-        nonlocal reruns
+    def _board_total(items: list[dict]) -> float:
+        return sum(_item_pay(item) for item in items if not _is_collected(item) and item.get("kind") in ("coin", "collector"))
+
+    def _fire_clovers() -> None:
+        nonlocal working, round_index
+        while True:
+            if _board_total(working) >= COIN_FEATURE_WINCAP:
+                return
+            acting_multi = _leftmost_multi(working)
+            if acting_multi is None:
+                return
+            at_reel, at_row = _item_pos(acting_multi)
+            multi = int(acting_multi.get("value") or 1)
+            round_index += 1
+            applied = _apply_multi(working, at_reel, at_row, multi, kinds=("coin", "collector"))
+            applied = _mark_acting_multi(applied, at_reel, at_row)
+            working = _stamp_round(applied, round_index, "multi")
+            all_items.extend(working)
+
+    def _collect() -> bool:
+        nonlocal working, round_index
+        holder = _leftmost_pot(working)
+        if holder is None:
+            return False
+        targets = [
+            item
+            for item in working
+            if not _is_collected(item)
+            and item.get("kind") in ("coin", "collector")
+            and _item_pos(item) != _item_pos(holder)
+        ]
+        if not targets:
+            return False
+        round_index += 1
+        working = _stamp_round(_holder_collect(working, _item_pos(holder)), round_index, "collect")
+        all_items.extend(working)
+        return True
+
+    rerun_lands_power = True
+    for _guard in range(MAX_POWER_ACTIONS):
+        _fire_clovers()
+        _collect()
+        if not rerun_lands_power:
+            # Last rerun had no clover and no pot: the sitting pot took the new coins. Done.
+            break
+        if _board_total(working) >= COIN_FEATURE_WINCAP:
+            break
+        replace_now = [
+            _item_pos(item)
+            for item in working
+            if _is_collected(item)
+            or (item.get("kind") == "multiplier" and item.get("powerResolved"))
+        ]
         if not replace_now:
-            return working_now, round_now, False
+            break
         reruns += 1
         if reruns > cap:
             gamestate.coin_game_cap_hit = True
             gamestate.coin_game_stats = _stats(True)
-            return working_now, round_now, True
-        updated, round_out = _replace_slots(
-            gamestate, rng, working_now, replace_now, round_now, all_items
-        )
-        return updated, round_out, False
+            return float(gamestate.config.wincap), all_items, reruns
+        before = len(all_items)
+        working, round_index = _replace_slots(gamestate, rng, working, replace_now, round_index, all_items)
+        fresh = [item for item in all_items[before:] if item.get("reactivate")]
+        rerun_lands_power = any(item.get("kind") in ("multiplier", "collector") for item in fresh)
 
-    def _sitting_at_wincap() -> bool:
-        leftover = _leftover_coin_sum(working)
-        pot_max = 0
-        for item in working:
-            if item.get("kind") == "collector" and not _is_collected(item):
-                pot_max = max(pot_max, _collector_face(item))
-        if leftover + pot_max >= COIN_FEATURE_WINCAP and pot_max > 0:
-            return True
-        if leftover >= COIN_FEATURE_WINCAP:
-            return _next_collector(working, spent_cells) is None
-        return False
-
-    actions = 0
-    while actions < MAX_POWER_ACTIONS:
-        if gamestate.coin_game_cap_hit:
-            break
-        if _sitting_at_wincap():
-            break
-        acting_multi = _leftmost_multi(working)
-        if acting_multi is not None:
-            at_reel, at_row = _item_pos(acting_multi)
-            multi = int(acting_multi.get("value") or 1)
-            round_index += 1
-            applied = _apply_multi(
-                working,
-                at_reel,
-                at_row,
-                multi,
-                kinds=("coin", "collector"),
-                pot_hits=pot_hit_by,
-            )
-            applied = _mark_acting_multi(applied, at_reel, at_row)
-            working = _stamp_round(applied, round_index, "multi")
-            all_items.extend(working)
-            actions += 1
-            continue
-
-        if pending_count is not None:
-            at_reel, at_row = pending_count
-            acting_now = next(
-                (
-                    item
-                    for item in working
-                    if item.get("kind") == "collector"
-                    and _item_pos(item) == pending_count
-                    and not _is_collected(item)
-                ),
-                None,
-            )
-            if acting_now is not None:
-                counted_pots += float(acting_now.get("payout") or 0)
-                counted_cells.add((at_reel, at_row))
-            pending_count = None
-            actions += 1
-            continue
-
-        if need_cycle_regen:
-            replace_now = [
-                _item_pos(item)
-                for item in working
-                if _is_collected(item) or item.get("kind") == "multiplier"
-            ]
-            working, round_index, capped = _rerun(working, round_index, replace_now)
-            if capped:
-                break
-            need_cycle_regen = False
-            actions += 1
-            continue
-
-        acting = _next_collector(working, spent_cells)
-        if acting is None:
-            break
-        at_reel, at_row = _item_pos(acting)
-        acting_pos = (at_reel, at_row)
-        round_index += 1
-        working = _stamp_round(
-            _apply_collector(working, at_reel, at_row, counted_cells),
-            round_index,
-            "collect",
-        )
-        all_items.extend(working)
-        spent_cells.add(acting_pos)
-        acting_now = next((item for item in working if _item_pos(item) == acting_pos), None)
-        if acting_now is not None and _board_at_wincap(working):
-            pending_count = acting_pos
-            actions += 1
-            continue
-        other_collector = any(
-            item.get("kind") == "collector"
-            and not _is_collected(item)
-            and _item_pos(item) != acting_pos
-            and _item_pos(item) not in spent_cells
-            for item in working
-        )
-        if other_collector:
-            need_cycle_regen = True
-            pending_count = None
-        else:
-            pending_count = acting_pos
-            replace_now = [
-                _item_pos(item)
-                for item in working
-                if (_is_collected(item) or item.get("kind") == "multiplier")
-                and _item_pos(item) != acting_pos
-            ]
-            working, round_index, capped = _rerun(working, round_index, replace_now)
-            if capped:
-                break
-        actions += 1
-
-    if gamestate.coin_game_cap_hit:
-        return float(gamestate.config.wincap), all_items, reruns
-
-    leftover = 0.0
-    for item in working:
-        if _is_collected(item):
-            continue
-        kind = item.get("kind")
-        pos = _item_pos(item)
-        if kind == "coin":
-            leftover += float(item.get("payout") or 0)
-        elif kind == "collector" and pos not in counted_cells:
-            leftover += float(item.get("payout") or 0)
-    total = min(float(COIN_FEATURE_WINCAP), counted_pots + leftover)
-    total = min(total, float(gamestate.config.wincap))
+    total = min(float(COIN_FEATURE_WINCAP), float(gamestate.config.wincap), _board_total(working))
     max_round = max((int(item.get("round") or 1) for item in all_items), default=1)
     gamestate.coin_game_stats = _stats(False)
-    return round(total, 4), all_items, max_round
+    return round(total, 2), all_items, max_round
 
 
 resolve_board_activation = resolve_coin_game

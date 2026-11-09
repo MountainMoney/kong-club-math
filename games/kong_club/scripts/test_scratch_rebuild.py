@@ -578,10 +578,11 @@ def test_multi_power_resolves_adjacent_coins():
     r_apply = [i for i in items if int(i.get("round") or 1) == apply_round]
     assert any(i.get("kind") == "multiplier" and i["reel"] == 2 and i["row"] == 1 for i in r1)
     assert any(i.get("kind") == "multiplier" and i.get("powerResolved") for i in r_apply)
-    last_pos = {(i["reel"], i["row"]): i for i in _last_round_items(items)}
-    assert last_pos[(2, 1)]["kind"] == "multiplier"
-    assert last_pos[(2, 1)].get("powerResolved") is True
-    assert not last_pos[(2, 1)].get("reactivate")
+    # Spec: the tile a clover was used on flips again (rerun).
+    assert any(
+        i["reel"] == 2 and i["row"] == 1 and i.get("action") == "regen" and i.get("reactivate")
+        for i in items
+    ), "used clover tile must rerun"
     r1_coins = {(i["reel"], i["row"]): i["displayValue"] for i in r1 if i["kind"] == "coin"}
     apply_coins = {
         (i["reel"], i["row"]): i["displayValue"] for i in r_apply if i["kind"] == "coin"
@@ -835,7 +836,10 @@ def test_multi_multiplies_valued_pot_after_collect():
 
 
 def test_leftmost_collector_recollects_then_slots_replace():
-    """Rightmost pot acts first and sucks coins only; the leftmost pot waits, then sucks it and holds the total."""
+    """Spec line 19: the LEFTMOST pot collects every coin and the other pot and holds the total.
+
+    Its collected tiles flip again; new coins that land while it sits are collected too.
+    """
     import game_coin_feature as gcf
 
     kind_seq = iter(["collector", "coin", "collector"])
@@ -847,61 +851,21 @@ def test_leftmost_collector_recollects_then_slots_replace():
     finally:
         gcf._pick_cell_kind = original_pick
 
-    collect_round = min(
-        int(i.get("round") or 1)
-        for i in items
-        if i.get("kind") == "coin" and i.get("collected")
-    )
-    collect_items = [i for i in items if int(i.get("round") or 1) == collect_round]
-    assert all(i.get("action") == "collect" for i in collect_items)
-    spawn_items = [i for i in items if int(i.get("round") or 1) == 1]
-    assert spawn_items and all(i.get("action") == "spawn" for i in spawn_items)
-    by_pos = {(i["reel"], i["row"]): i for i in collect_items}
-    acting = by_pos[(3, 1)]
-    sibling = by_pos[(1, 1)]
-    coin = by_pos[(2, 1)]
-    assert acting["kind"] == "collector"
-    assert not acting.get("collected")
-    assert float(acting.get("payout") or 0) > 0
-    assert not acting.get("reactivate")
-    assert sibling["kind"] == "collector"
-    assert sibling.get("collected") is not True
-    assert coin.get("collected") is True
-
-    same_turn_regen = [
-        i
-        for i in items
-        if i.get("reactivate") and int(i.get("round") or 1) == collect_round
-    ]
-    assert not same_turn_regen, "pot A's turn must not rewrite the board"
-    second_collect = [
-        i
-        for i in items
-        if i.get("action") == "collect"
-        and i.get("reel") == 1
-        and i.get("row") == 1
-        and not i.get("collected")
-        and float(i.get("payout") or 0) > 0
-    ]
-    assert second_collect, "waiting leftmost pot must suck the valued pot"
-    first_sucked = [
-        i
-        for i in items
-        if i.get("action") == "collect"
-        and i.get("reel") == 3
-        and i.get("row") == 1
-        and i.get("collected")
-    ]
-    assert first_sucked, "valued pot must be collected into the waiting pot"
-    last_pos = {(i["reel"], i["row"]): i for i in _last_round_items(items)}
-    assert last_pos[(1, 1)]["kind"] == "collector"
-    assert last_pos[(1, 1)].get("collected") is not True
-    assert float(last_pos[(1, 1)].get("payout") or 0) > 0
-    assert not last_pos[(1, 1)].get("reactivate")
-    leftover = _leftover_coin_payout(items)
-    counted = _sum_replaced_pot_payouts(items)
-    assert counted > 0
-    assert abs(total - counted - leftover) < 1e-6
+    collect_rounds = sorted({int(i["round"]) for i in items if i.get("action") == "collect"})
+    assert collect_rounds, "a pot must collect"
+    first = {(i["reel"], i["row"]): i for i in items if int(i["round"]) == collect_rounds[0]}
+    assert first[(1, 1)]["kind"] == "collector" and not first[(1, 1)].get("collected")
+    assert first[(2, 1)].get("collected") is True
+    assert first[(3, 1)].get("collected") is True, "right pot is absorbed by the leftmost"
+    # Rerun: collected tiles flip again, then the sitting pot takes the new coins.
+    assert any(i.get("action") == "regen" and (i["reel"], i["row"]) == (2, 1) for i in items)
+    assert len(collect_rounds) >= 2, "sitting pot must collect the rerun coins"
+    last = _last_round_items(items)
+    holder = next(i for i in last if (i["reel"], i["row"]) == (1, 1))
+    assert holder["kind"] == "collector" and not holder.get("collected")
+    assert not [i for i in last if i["kind"] == "coin" and not i.get("collected")]
+    assert abs(total - float(holder["payout"])) < 1e-6
+    assert abs(total - sum(float(i.get("payout") or 0) for i in last)) < 1e-6
 
 
 def test_regen_clover_multiplies_sitting_pot_before_next_collect():
@@ -932,8 +896,8 @@ def test_regen_clover_multiplies_sitting_pot_before_next_collect():
     assert abs(total - counted - leftover) < 1e-6
 
 
-def test_clovers_resolve_column_order_then_stay():
-    """Leftmost clover applies first and stays paused; the right clover fires after."""
+def test_clovers_resolve_column_order_then_rerun():
+    """Leftmost clover applies first, the right clover fires after; used clover tiles flip again."""
     import game_coin_feature as gcf
 
     kind_seq = iter(["multiplier", "coin", "multiplier"])
@@ -966,13 +930,8 @@ def test_clovers_resolve_column_order_then_stay():
     assert second_apply_rounds, "right clover must still apply after the left one"
     assert first_apply < min(second_apply_rounds)
 
-    last_pos = {(i["reel"], i["row"]): i for i in _last_round_items(items)}
-    assert last_pos[(1, 1)]["kind"] == "multiplier"
-    assert last_pos[(1, 1)].get("powerResolved") is True
-    assert not last_pos[(1, 1)].get("reactivate")
-    assert last_pos[(3, 1)]["kind"] == "multiplier"
-    assert last_pos[(3, 1)].get("powerResolved") is True
-    assert not last_pos[(3, 1)].get("reactivate")
+    regen_cells = {(i["reel"], i["row"]) for i in items if i.get("action") == "regen" and i.get("reactivate")}
+    assert {(1, 1), (3, 1)} <= regen_cells, "both used clover tiles must flip again"
     leftover = _leftover_coin_payout(items)
     assert abs(total - leftover) < 1e-6
 
@@ -2234,7 +2193,7 @@ def main():
     test_multi_multiplies_valued_pot_after_collect()
     test_leftmost_collector_recollects_then_slots_replace()
     test_regen_clover_multiplies_sitting_pot_before_next_collect()
-    test_clovers_resolve_column_order_then_stay()
+    test_clovers_resolve_column_order_then_rerun()
     test_clovers_regen_after_collector_vacuum()
     test_replacement_collector_gets_a_turn()
     test_regen_never_spawns_a_collector()
