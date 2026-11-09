@@ -191,11 +191,9 @@ class GameState(GameStateOverride):
             self.progress_threshold = self.config.progress_thresholds.get("bonus_see", 5)
         else:
             self.progress_threshold = self.config.progress_thresholds.get("bonus_hear", 5)
-        # See and Hear start empty. Speak No Evil starts full and refills after each coin game.
-        if self.bonus_variant in ("speak", "madness"):
-            self.progress_value = self.progress_threshold
-        else:
-            self.progress_value = 0
+        # Every bonus bar opens empty. Speak No Evil refills it full at the start of
+        # each of its spins (rainbow fade), so each Speak spin runs one coin game.
+        self.progress_value = 0
         self._hear_upgrade_on_fs = None
         if self.bonus_variant == "hear" and random.random() < float(self.config.hear_to_speak_rate):
             self._hear_upgrade_on_fs = random.randint(1, max(int(self.tot_fs), 1))
@@ -220,9 +218,19 @@ class GameState(GameStateOverride):
                 5 if self.is_hear_bonus() and self.fs == getattr(self, "_hear_upgrade_on_fs", None) else 0
             )
             self.draw_prepared_board()
+            # Only a spin that starts as Speak refills the bar. A Hear spin that
+            # upgrades on 5 scatters stays a Hear spin; Speak starts on the next one.
+            speak_spin = self.is_speak_bonus()
+            if speak_spin:
+                self.refill_speak_bar()
             self.resolve_cascade_loop()
             self._apply_bonus_scatter_followup()
-            if self.is_speak_bonus() and getattr(self, "board_activations_this_spin", 0) == 0:
+            if (
+                speak_spin
+                and getattr(self, "board_activations_this_spin", 0) == 0
+                and not self.wincap_triggered
+                and self.progress_value >= self.progress_threshold
+            ):
                 self.execute_board_activation(refill_after=True)
             self.set_end_tumble_event()
             self.log_spin_end("bonus")

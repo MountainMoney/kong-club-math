@@ -1154,6 +1154,14 @@ class GameExecutables(GameCalculations):
         """One coin game per spin in every mode. The old Hear 3-cap is gone."""
         return False
 
+    def refill_speak_bar(self) -> None:
+        """Speak No Evil: the bar refills full once per spin, after the reveal."""
+        if self.progress_value >= self.progress_threshold:
+            return
+        self.progress_value = self.progress_threshold
+        spin_trace(f"Progress: Speak refill {self.progress_value}/{self.progress_threshold}")
+        progress_fill_event(self)
+
     def advance_progress(self, tumble_steps: int = 1, *, activate: bool = True):
         if tumble_steps <= 0:
             return
@@ -1219,11 +1227,9 @@ class GameExecutables(GameCalculations):
         if self.is_see_bonus():
             self.reset_grid_mults()
             update_tile_event(self)
+        # The bar empties after every coin game. Speak refills it at its next spin.
         self.progress_value = 0
         progress_fill_event(self)
-        if self.is_speak_bonus():
-            self.progress_value = self.progress_threshold
-            progress_fill_event(self)
         if refill_after and removed:
             self.gravity_and_refill(emit_event=True)
         elif removed:

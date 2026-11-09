@@ -1612,27 +1612,75 @@ def test_gamble_madness_emits_freespins():
         for event in gs.book.events
     )
     fills = [event for event in gs.book.events if event.get("type") == "progressFill"]
-    assert fills, "Madness must emit progressFill"
-    assert fills[0].get("value") == fills[0].get("threshold") == 5
-    assert gs.progress_value == gs.progress_threshold
+    assert fills, "Speak must emit progressFill"
+    assert_speak_spins_refill_then_one_coin_game(gs.book.events)
 
 
-def test_madness_progress_stays_full():
+def assert_speak_spins_refill_then_one_coin_game(events):
+    """Each Speak spin: reveal, bar refilled 5/5, exactly one coin game, bar back to 0."""
+    reveals = [i for i, e in enumerate(events) if e["type"] == "reveal" and e.get("gameType") == "freegame"]
+    assert reveals
+    capped = any(e["type"] == "wincap" for e in events)
+    for n, start in enumerate(reveals):
+        end = reveals[n + 1] if n + 1 < len(reveals) else len(events)
+        spin = events[start:end]
+        fills = [e for e in spin if e["type"] == "progressFill"]
+        acts = [i for i, e in enumerate(spin) if e["type"] == "boardActivation"]
+        if capped and n == len(reveals) - 1 and not acts:
+            continue
+        assert fills and fills[0]["value"] == fills[0]["threshold"] == 5, fills[:2]
+        assert len(acts) == 1, f"spin {n}: {len(acts)} coin games"
+        before = [e for e in spin[: acts[0]] if e["type"] == "progressFill"]
+        assert before[-1]["value"] == before[-1]["threshold"], "coin game on a bar that is not full"
+        after = [e for e in spin[acts[0]:] if e["type"] == "progressFill"]
+        assert after and after[0]["value"] == 0, "bar must empty after the coin game"
+        values = [e["value"] for e in fills]
+        assert values.count(5) == 1, values
+
+
+def test_speak_bar_refills_once_per_spin():
     gs = state()
     gs.bonus_variant = "speak"
     gs.gametype = gs.config.freegame_type
-    gs.reset_progress()
+    gs.betmode = "bonus_mystery"
+    gs.progress_threshold = 5
+    gs.progress_value = 0
+    gs.refill_speak_bar()
     assert gs.progress_value == gs.progress_threshold == 5
-
     gs.board_activation_fired_this_spin = False
     gs.board_activations_this_spin = 0
     gs.execute_board_activation(refill_after=False)
-    assert gs.progress_value == gs.progress_threshold
     assert gs.board_activation_fired_this_spin is True
+    assert gs.progress_value == 0, "bar empties after each coin game"
     activations = gs.board_activations_this_spin
     gs.execute_board_activation(refill_after=False)
     assert gs.board_activations_this_spin == activations
-    assert gs.progress_value == gs.progress_threshold
+    gs.refill_speak_bar()
+    assert gs.progress_value == 5
+
+
+def test_speak_books_refill_every_spin():
+    """Direct Speak (Mystery, Risky) and Hear->Speak upgrades: refill, one coin game, empty."""
+    import warnings
+
+    cases = [("bonus_mystery", "pick_speak", s) for s in (2, 5)] + [("bonus_risky", "risky_speak", 7)]
+    for betmode, criteria, seed in cases:
+        gs = state()
+        gs.betmode = betmode
+        gs.criteria = criteria
+        with contextlib.redirect_stdout(io.StringIO()), warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            gs.run_spin(seed)
+        events = gs.book.events
+        speak_from = next(
+            i for i, e in enumerate(events)
+            if e["type"] == "kongClubMode" and e.get("state") in ("start_bonus_speak", "upgrade_bonus_speak")
+        )
+        first_reveal = next(
+            i for i, e in enumerate(events)
+            if i > speak_from and e["type"] == "reveal" and e.get("gameType") == "freegame"
+        )
+        assert_speak_spins_refill_then_one_coin_game(events[first_reveal:])
 
 
 def test_madness_skips_bronze_coins():
@@ -2303,7 +2351,8 @@ def main():
     test_gamble_dead_bait_two_st_tease()
     test_gamble_hear_emits_freespins()
     test_gamble_madness_emits_freespins()
-    test_madness_progress_stays_full()
+    test_speak_bar_refills_once_per_spin()
+    test_speak_books_refill_every_spin()
     test_madness_skips_bronze_coins()
     test_madness_tiles_skip_bronze()
     test_hear_bonus_persists_tiles_after_board_activation()
