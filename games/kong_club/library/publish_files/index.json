@@ -14,61 +14,61 @@
         },
         {
             "name": "hunt_2",
-            "cost": 5.0,
+            "cost": 2.0,
             "events": "books_hunt_2.jsonl.zst",
             "weights": "lookUpTable_hunt_2_0.csv"
         },
         {
             "name": "hunt_3",
-            "cost": 6.0,
+            "cost": 3.0,
             "events": "books_hunt_3.jsonl.zst",
             "weights": "lookUpTable_hunt_3_0.csv"
         },
         {
             "name": "hunt_4",
-            "cost": 10.0,
+            "cost": 4.0,
             "events": "books_hunt_4.jsonl.zst",
             "weights": "lookUpTable_hunt_4_0.csv"
         },
         {
             "name": "hunt_5",
-            "cost": 25.0,
+            "cost": 5.0,
             "events": "books_hunt_5.jsonl.zst",
             "weights": "lookUpTable_hunt_5_0.csv"
         },
         {
             "name": "feature_spin",
-            "cost": 75.0,
+            "cost": 40.5,
             "events": "books_feature_spin.jsonl.zst",
             "weights": "lookUpTable_feature_spin_0.csv"
         },
         {
             "name": "peak_spin",
-            "cost": 1000.0,
+            "cost": 1083.0,
             "events": "books_peak_spin.jsonl.zst",
             "weights": "lookUpTable_peak_spin_0.csv"
         },
         {
             "name": "bonus_see",
-            "cost": 100.0,
+            "cost": 120.0,
             "events": "books_bonus_see.jsonl.zst",
             "weights": "lookUpTable_bonus_see_0.csv"
         },
         {
             "name": "bonus_hear",
-            "cost": 300.0,
+            "cost": 328.0,
             "events": "books_bonus_hear.jsonl.zst",
             "weights": "lookUpTable_bonus_hear_0.csv"
         },
         {
-            "name": "bonus_pick",
-            "cost": 330.0,
-            "events": "books_bonus_pick.jsonl.zst",
-            "weights": "lookUpTable_bonus_pick_0.csv"
+            "name": "bonus_mystery",
+            "cost": 395.0,
+            "events": "books_bonus_mystery.jsonl.zst",
+            "weights": "lookUpTable_bonus_mystery_0.csv"
         },
         {
             "name": "bonus_risky",
-            "cost": 500.0,
+            "cost": 506.0,
             "events": "books_bonus_risky.jsonl.zst",
             "weights": "lookUpTable_bonus_risky_0.csv"
         }
