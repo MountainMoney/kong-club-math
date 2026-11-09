@@ -70,19 +70,16 @@ CLUSTER_PAY_BANDS = {
     "GR": (0.5, 0.7, 1.0, 1.5, 5.0, 15.0, 50.0),
     "BA": (1.0, 1.5, 2.0, 3.0, 10.0, 30.0, 100.0),
 }
-# Silver-lean keeps gold faces on the 25. Gold-lean lets 100–500 show up.
+# Coin-face spawn weights, aligned with GameConfig.coin_values. "nov3" is the exact
+# table from kong-club-math 3639716 (Nov 3 2026, "Pay the new coin faces in every mode
+# with no base shrink", branch cursor/natural-base-tumbles-7d73), the commit that set
+# the rich 0.2-1000 faces the frontend still ships (web coinFacePools.ts, 9d2cc25).
+# The old "silver"/"gold" spreads were sized for the 4/5/5-face set and are gone.
 COIN_SPREADS = {
-    # Silver-lean: mass sits on silver faces; gold almost always pays 25.
-    "silver": {
-        "CB": [78, 14, 5, 3],
-        "CS": [18, 22, 28, 20, 12],
-        "CG": [960, 28, 8, 2, 2],
-    },
-    # Gold-lean: the rich faces (100 / 250 / 500) show up, still below a full-board cap.
-    "gold": {
-        "CB": [52, 26, 14, 8],
-        "CS": [22, 24, 24, 18, 12],
-        "CG": [46, 24, 16, 9, 5],
+    "nov3": {
+        "CB": [58, 22, 10, 6, 3, 1],
+        "CS": [70, 18, 8, 4],
+        "CG": [410, 60, 20, 6, 3, 1],
     },
 }
 
@@ -139,16 +136,17 @@ class GameConfig(Config):
         self.tile_level_multipliers = self.multiplier_table
         self.max_tile_level = 3
         self.coin_seed_levels = {"CB": 1, "CS": 2, "CG": 3}
-        # Frontend hard faces. Books may only reveal these values.
-        # Weights lean low so a gold board does not print the 250 / 500 faces.
+        # Locked spec l.17: the current rich coin set, 0.2-1000 (frontend hard faces,
+        # web coinFacePools.ts COIN_FACE_VALUES). Source: kong-club-math 3639716.
+        # Books may only reveal these values. Clover values are unchanged.
         self.coin_values = {
-            "CB": [1, 2, 3, 4],
-            "CS": [5, 7, 10, 15, 20],
-            "CG": [25, 50, 100, 250, 500],
+            "CB": [0.2, 0.5, 1, 2, 3, 4],
+            "CS": [5, 10, 15, 20],
+            "CG": [25, 50, 100, 250, 500, 1000],
         }
-        spread_name = os.environ.get("MM_COIN_SPREAD", "silver")
+        spread_name = os.environ.get("MM_COIN_SPREAD", "nov3")
         if spread_name not in COIN_SPREADS:
-            spread_name = "silver"
+            spread_name = "nov3"
         self.coin_spread_name = spread_name
         self.coin_value_weights = {key: list(values) for key, values in COIN_SPREADS[spread_name].items()}
         # Face pools keyed by tile level (1→CB, 2→CS, 3→CG).
@@ -205,7 +203,8 @@ class GameConfig(Config):
         # rolled from this table. Its reruns roll the gold rerun row below like every
         # other mode (spec l.20: pots can appear in reruns).
         self.coin_game_power_peak_gold = {"multiplier": 0, "collector": 0, "tier_shift": 0}
-        self.peak_coin_value_weights = [1, 0, 0, 0, 0]
+        # Trifecta coins stay on the 25 face (index 0 of the gold set).
+        self.peak_coin_value_weights = [1, 0, 0, 0, 0, 0]
         # Locked spec l.20: pots CAN appear in reruns, so every tier (bronze too) has a
         # rerun pot rate. Bronze 0.5 = half of silver, kept below silver/gold so better
         # tiers stay likelier; it is a placeholder the rebalance may retune.
@@ -258,21 +257,12 @@ class GameConfig(Config):
         self.risky_speak_power_scale = 1.12
         self.mystery_speak_cluster_scale = 0.98
         self.risky_speak_cluster_scale = 1.02
-        self.buy_coin_value_weights = {
-            "CB": [84, 10, 4, 2],
-            "CS": [28, 26, 24, 14, 8],
-            "CG": [975, 16, 5, 3, 1],
-        }
-        self.mystery_speak_coin_weights = {
-            "CB": [78, 14, 5, 3],
-            "CS": [22, 26, 26, 16, 10],
-            "CG": [955, 28, 10, 5, 2],
-        }
-        self.risky_speak_coin_weights = {
-            "CB": [74, 16, 6, 4],
-            "CS": [18, 24, 28, 18, 12],
-            "CG": [945, 32, 14, 6, 3],
-        }
+        # Per-buy coin-face tables were sized for the old 4/5/5-face set. Empty = every
+        # mode spawns from the shared coin_value_weights above until the rebalance
+        # sets new per-mode tables (spawn tiers are a tunable lever; faces are locked).
+        self.buy_coin_value_weights = {}
+        self.mystery_speak_coin_weights = {}
+        self.risky_speak_coin_weights = {}
         # Share of base-game hits that stop at 8/10 on the bar (4 of 5 full).
         # Fraction of ordinary basegame spins that walk the bar to about 8/10.
         self.base_near_miss_share = 0.05

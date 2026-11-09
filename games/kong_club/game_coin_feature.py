@@ -68,9 +68,15 @@ def _coin_metal_for_face(face: int, current_level: int = 1) -> tuple[str, int]:
     return _virtual_coin_symbol(level), level
 
 
+def _face(value: float) -> float | int:
+    """Two-decimal coin/pot face. Whole faces stay ints (1, 25); 0.2 and 0.5 stay exact."""
+    rounded = round(float(value or 0), 2)
+    return int(rounded) if float(rounded).is_integer() else rounded
+
+
 def _pick_weighted_coin_value(
     gamestate: "GameExecutables", tile_level: int, rng: random.Random
-) -> int:
+) -> float:
     pools = getattr(gamestate.config, "activation_coin_value_pools", {}) or {}
     weights_by_level = getattr(gamestate.config, "activation_coin_value_weights", {}) or {}
     if getattr(gamestate, "betmode", None) == "peak_spin":
@@ -78,16 +84,16 @@ def _pick_weighted_coin_value(
         weights = list(getattr(gamestate.config, "peak_coin_value_weights", None) or [])
         if len(weights) != len(pool):
             weights = [1] * len(pool)
-        return int(rng.choices(pool, weights=weights, k=1)[0])
+        return _face(rng.choices(pool, weights=weights, k=1)[0])
     buy_weights = _buy_coin_weights(gamestate, tile_level)
     if buy_weights is not None:
         pool, weights = buy_weights
-        return int(rng.choices(pool, weights=weights, k=1)[0])
+        return _face(rng.choices(pool, weights=weights, k=1)[0])
     pool = pools.get(tile_level) or pools.get(1) or [1]
     weights = weights_by_level.get(tile_level)
     if not weights or len(weights) != len(pool):
         weights = [1] * len(pool)
-    return int(rng.choices(pool, weights=weights, k=1)[0])
+    return _face(rng.choices(pool, weights=weights, k=1)[0])
 
 
 def _direct_buy(gamestate: "GameExecutables") -> bool:
@@ -227,8 +233,8 @@ def _build_coin_reveal(
     round_index: int = 1,
     power_resolved: bool = False,
 ) -> dict:
-    # Hard face integers only — label == pay (no soft scale).
-    display_value = int(round(float(value)))
+    # Hard faces — label == pay (no soft scale). 0.2 / 0.5 keep their decimals.
+    display_value = _face(value)
     paid = float(display_value)
     item = {
         "reel": reel,
@@ -416,7 +422,7 @@ def _apply_collector(
         if item.get("kind") != "coin" or _is_collected(item):
             continue
         if _item_pos(item) in locked:
-            leftover += int(round(float(item.get("payout") or item.get("displayValue") or 0)))
+            leftover += float(item.get("payout") or item.get("displayValue") or 0)
     face = _cap_pot_to_board(acting_face + absorbed, leftover)
     out: list[dict] = []
     for item in items:
@@ -523,7 +529,7 @@ def _ensure_small_game_clover(
     coins = [item for item in working if item.get("kind") == "coin"]
     if len(coins) < 2:
         return working
-    opening = sum(int(item.get("value") or 0) for item in coins)
+    opening = sum(float(item.get("value") or 0) for item in coins)
     if opening >= 60:
         return working
 
@@ -535,7 +541,7 @@ def _ensure_small_game_clover(
             if other is not item and _is_adjacent_8(reel, row, *_item_pos(other))
         )
 
-    coins.sort(key=lambda item: (-neighbors(item), int(item.get("value") or 0), _item_pos(item)))
+    coins.sort(key=lambda item: (-neighbors(item), float(item.get("value") or 0), _item_pos(item)))
     victim = coins[0]
     multi = 2 if rng.random() < 0.68 else 3
     replacement = _build_multi_reveal(
@@ -597,51 +603,40 @@ def _roll_prizes(
     return round_items, multis, collectors
 
 
-def _collector_face(item: dict) -> int:
-    return int(
-        round(
-            float(
-                item.get("displayValue")
-                or item.get("payout")
-                or item.get("resolvedValue")
-                or item.get("value")
-                or 0
-            )
+def _collector_face(item: dict) -> float:
+    return float(
+        _face(
+            item.get("displayValue")
+            or item.get("payout")
+            or item.get("resolvedValue")
+            or item.get("value")
+            or 0
         )
     )
 
 
-def _leftover_coin_sum(items: list[dict]) -> int:
+def _leftover_coin_sum(items: list[dict]) -> float:
     """Uncollected coin faces still on the board (not pots)."""
-    total = 0
+    total = 0.0
     for item in items:
         if item.get("kind") != "coin" or _is_collected(item):
             continue
-        total += int(
-            round(
-                float(
-                    item.get("payout")
-                    or item.get("displayValue")
-                    or item.get("value")
-                    or 0
-                )
-            )
-        )
-    return total
+        total += float(item.get("payout") or item.get("displayValue") or item.get("value") or 0)
+    return round(total, 2)
 
 
-def _cap_pot_to_board(raw_pot: float, leftover: float) -> int:
+def _cap_pot_to_board(raw_pot: float, leftover: float) -> float:
     """Pot face so pot + leftover coins never exceed 25,000×.
 
     If leftover already covers the cap, pot is 0 (caller gathers coins, then count-up).
     """
-    leftover_n = max(0, int(round(float(leftover))))
-    raw_n = max(0, int(round(float(raw_pot))))
+    leftover_n = max(0.0, round(float(leftover), 2))
+    raw_n = max(0.0, round(float(raw_pot), 2))
     if leftover_n >= COIN_FEATURE_WINCAP:
         return 0
     if raw_n + leftover_n > COIN_FEATURE_WINCAP:
-        return COIN_FEATURE_WINCAP - leftover_n
-    return raw_n
+        return _face(COIN_FEATURE_WINCAP - leftover_n)
+    return _face(raw_n)
 
 
 def _board_at_wincap(items: list[dict]) -> bool:
@@ -678,9 +673,11 @@ def _apply_multi(
             and "coin" in kinds
             and not cloned.get("collected")
         ):
-            face = min(
-                COIN_FEATURE_WINCAP,
-                int(round(float(cloned.get("displayValue", cloned.get("value", 0))))) * factor,
+            face = _face(
+                min(
+                    COIN_FEATURE_WINCAP,
+                    float(cloned.get("displayValue", cloned.get("value", 0)) or 0) * factor,
+                )
             )
             cloned["value"] = face
             cloned["displayValue"] = face
@@ -912,7 +909,7 @@ def _holder_collect(items: list[dict], holder_pos: tuple[int, int]) -> list[dict
             own = _item_pay(item)
         elif kind in ("coin", "collector"):
             absorbed += _item_pay(item)
-    face = round(min(float(COIN_FEATURE_WINCAP), own + absorbed), 2)
+    face = _face(min(float(COIN_FEATURE_WINCAP), own + absorbed))
     out: list[dict] = []
     for item in items:
         cloned = dict(item)
@@ -921,8 +918,8 @@ def _holder_collect(items: list[dict], holder_pos: tuple[int, int]) -> list[dict
         if pos == holder_pos:
             cloned["value"] = face
             cloned["displayValue"] = face
-            cloned["resolvedValue"] = face
-            cloned["payout"] = face
+            cloned["resolvedValue"] = float(face)
+            cloned["payout"] = float(face)
             cloned["powerResolved"] = True
             cloned.pop("collected", None)
         elif kind in ("coin", "collector") and not _is_collected(cloned):

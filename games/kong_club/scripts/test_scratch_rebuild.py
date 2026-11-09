@@ -111,13 +111,17 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert config.multiplier_table == [2, 5, 10]
     assert config.max_tile_level == 3
     assert config.coin_seed_levels == {"CB": 1, "CS": 2, "CG": 3}
+    # Locked spec l.17: the rich 0.2-1000 set (kong-club-math 3639716 / web coinFacePools.ts).
     assert config.coin_values == {
-        "CB": [1, 2, 3, 4],
-        "CS": [5, 7, 10, 15, 20],
-        "CG": [25, 50, 100, 250, 500],
+        "CB": [0.2, 0.5, 1, 2, 3, 4],
+        "CS": [5, 10, 15, 20],
+        "CG": [25, 50, 100, 250, 500, 1000],
     }
+    assert {k: len(v) for k, v in config.coin_value_weights.items()} == {"CB": 6, "CS": 4, "CG": 6}
     assert config.coin_value_weights["CB"][0] > config.coin_value_weights["CB"][-1]
-    assert all(isinstance(v, int) for pool in config.coin_values.values() for v in pool)
+    assert config.coin_value_weights["CG"][-1] < min(config.coin_value_weights["CG"][:-1])
+    # Clover values do not change.
+    assert config.coin_game_multi_values == [2, 3, 4, 5, 10, 20]
     assert config.progress_thresholds["bonus_hear"] == 5
     assert config.progress_thresholds["bonus_see"] == 5
     assert config.bonus_cluster_pay_scale == 1.0
@@ -591,7 +595,8 @@ def test_multi_power_resolves_adjacent_coins():
         if pos not in apply_coins:
             continue
         assert apply_coins[pos] >= face1
-        assert apply_coins[pos] % face1 == 0
+        ratio = apply_coins[pos] / face1  # faces can be 0.2 / 0.5, so no float modulo
+        assert abs(ratio - round(ratio)) < 1e-6, (face1, apply_coins[pos])
     leftover = _leftover_coin_payout(items)
     assert abs(total - leftover) < 1e-6
     assert total > 0
