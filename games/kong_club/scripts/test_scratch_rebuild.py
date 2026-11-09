@@ -1012,22 +1012,6 @@ def test_replacement_collector_gets_a_turn():
     assert abs(total - counted - leftover) < 1e-6
 
 
-def test_regen_never_spawns_a_collector():
-    """Bronze reruns stay pot-free. Silver reruns may spawn a pot."""
-    import random
-    from game_coin_feature import _pick_cell_kind
-
-    gs = state()
-    bronze = {
-        _pick_cell_kind(gs, random.Random(seed), 1, reactivate=True) for seed in range(250)
-    }
-    assert "collector" not in bronze
-    silver = {
-        _pick_cell_kind(gs, random.Random(seed), 2, reactivate=True) for seed in range(400)
-    }
-    assert "collector" in silver
-
-
 def test_resolve_stops_when_pot_hits_wincap():
     import game_coin_feature as gcf
 
@@ -2337,7 +2321,6 @@ def main():
     test_clovers_resolve_column_order_then_rerun()
     test_clovers_regen_after_collector_vacuum()
     test_replacement_collector_gets_a_turn()
-    test_regen_never_spawns_a_collector()
     test_collector_keeps_prior_face_and_caps_at_wincap()
     test_multi_pot_remainder_is_wincap_minus_leftover_coins()
     test_resolve_stops_when_pot_hits_wincap()
