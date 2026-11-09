@@ -25,7 +25,7 @@ MODES = [
     ("peak_spin", 1400.0),
     ("bonus_see", 115.0),
     ("bonus_hear", 250.0),
-    ("bonus_mystery", 380.0),
+    ("bonus_mystery", 330.0),
 ]
 
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import shutil
 import subprocess
@@ -10,31 +11,44 @@ import sys
 import zipfile
 from pathlib import Path
 
+import zstandard
+
 
 GAME_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = GAME_DIR.parents[2]
 SOURCE_PUBLISH = GAME_DIR / "library" / "publish_files"
 OUT_ROOT = WORKSPACE_ROOT / "stake_uploads"
-VERSION = "v0_4_0_250k"
+VERSION = "v0_5_0"
 PACKAGE_NAME = f"kong_club_math_{VERSION}"
 PACKAGE_DIR = OUT_ROOT / PACKAGE_NAME
 ZIP_PATH = OUT_ROOT / f"{PACKAGE_NAME}.zip"
 
+# The 12 published modes, in index.json order.
 REQUIRED_MODES = [
     "base",
     "base_ante",
+    "hunt_2",
+    "hunt_3",
+    "hunt_4",
+    "hunt_5",
     "feature_spin",
     "peak_spin",
     "bonus_see",
     "bonus_hear",
     "bonus_mystery",
+    "bonus_risky",
 ]
-MIN_ROWS = 250_000
 STAKE_SLUG = "kong-club"
 
 
 def count_lut_rows(path: Path) -> int:
     return sum(1 for _ in path.open("r", encoding="utf-8"))
+
+
+def count_books(path: Path) -> int:
+    with path.open("rb") as handle:
+        reader = zstandard.ZstdDecompressor().stream_reader(handle)
+        return sum(1 for line in io.TextIOWrapper(reader, encoding="utf-8") if line.strip())
 
 
 def apply_stake_slug(package_dir: Path) -> None:
@@ -65,9 +79,11 @@ def build_package() -> None:
         books = SOURCE_PUBLISH / f"books_{mode}.jsonl.zst"
         if not lut.exists() or not books.exists():
             raise RuntimeError(f"Missing publish artifact for {mode}")
+        # Any book count is fine; the LUT must list each book exactly once.
         rows = count_lut_rows(lut)
-        if rows < MIN_ROWS:
-            raise RuntimeError(f"{mode} has {rows} rows; expected at least {MIN_ROWS}")
+        book_count = count_books(books)
+        if rows == 0 or rows != book_count:
+            raise RuntimeError(f"{mode}: LUT has {rows} rows but {book_count} books")
 
     subprocess.check_call([sys.executable, str(GAME_DIR / "stake_diversity_check.py")], cwd=str(GAME_DIR))
 
