@@ -12,7 +12,20 @@ from game_override import GameStateOverride
 class GameState(GameStateOverride):
     """Route SDK simulations into the scratch state machine."""
 
+    # Base-like modes share one book sampling plan, so give each its own seed range;
+    # otherwise base, Ante and every Hunt stop would draw the same 500 books.
+    MODE_SEED_OFFSET = {
+        "base_ante": 1_000_000,
+        "hunt_2": 2_000_000,
+        "hunt_3": 3_000_000,
+        "hunt_4": 4_000_000,
+        "hunt_5": 5_000_000,
+    }
+
     def run_spin(self, sim, simulation_seed=None):
+        offset = self.MODE_SEED_OFFSET.get(getattr(self, "betmode", ""), 0)
+        if offset:
+            simulation_seed = (sim if simulation_seed is None else simulation_seed) + offset
         self.reset_seed(sim, simulation_seed)
         # Coin-game Random() reads this — do not leave it unset (Random(0) never rolls powers
         # on typical boards; first 17 draws of that stream are all coins).

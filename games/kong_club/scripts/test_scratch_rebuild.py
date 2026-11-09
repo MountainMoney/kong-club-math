@@ -391,7 +391,8 @@ def test_bonus_hit_rate_and_ante_cost():
     ante_dists = {d.get_criteria(): d.get_quota() for d in ante_mode.get_distributions()}
     assert base_dists["freegame"] == config.bonus_hit_rate_base
     assert ante_dists["freegame"] == config.bonus_hit_rate_ante
-    assert ante_dists["freegame"] == 2 * base_dists["freegame"]
+    # Same book sampling; Ante's higher bonus odds live in the lookup weights.
+    assert ante_dists == base_dists
     assert "cap" not in base_dists and "cap" not in ante_dists
     assert config.scatter_triggers_ante == config.scatter_triggers
     assert ante_mode.get_cost() == 1.4
@@ -2421,6 +2422,8 @@ def test_capped_cluster_wins_are_whole_cents():
 
 def test_hunt_stops_follow_locked_price_grid():
     """Locked spec l.38: stop Nx costs N x bet; See/Hear/Speak odds x a/b/c of base."""
+    from game_criteria import HUNT_LEVELS
+
     config = GameConfig()
     grid = {
         "hunt_2": (2.0, (3.0, 5.0, 10.0)),
@@ -2429,16 +2432,9 @@ def test_hunt_stops_follow_locked_price_grid():
         "hunt_5": (5.0, (8.5, 15.0, 30.0)),
     }
     modes = {mode.get_name(): mode for mode in config.bet_modes}
-    base_triggers = config.scatter_triggers
     for name, (cost, (see, hear, speak)) in grid.items():
-        mode = modes[name]
-        assert mode.get_cost() == cost, (name, mode.get_cost())
-        fg = [d for d in mode.get_distributions() if d._criteria == "freegame"][0]
-        triggers = fg._conditions["scatter_triggers"]
-        assert triggers[3] == base_triggers[3] * see, (name, triggers)
-        assert triggers[4] == base_triggers[4] * hear, (name, triggers)
-        assert triggers[5] == base_triggers[5] * speak, (name, triggers)
-
+        assert modes[name].get_cost() == cost, (name, modes[name].get_cost())
+        assert HUNT_LEVELS[name]["boost"] == {"see": see, "hear": hear, "speak": speak}, name
 
 def test_max_win_counts_in_whole_cents():
     """A float total a hair under 25,000x is the max win; the bonus must stop."""

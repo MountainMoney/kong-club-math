@@ -28,23 +28,23 @@ from game_criteria import (
     RISKY_HEAR_QUOTA,
     RISKY_SPEAK_QUOTA,
     SPEAK_DIRECT_MIN_WIN,
-    hunt_odds_factor,
-    hunt_scatter_triggers,
 )
 
 
 STAKE_SLUG = "kong-club"
 
 # Organic bonus entry. 3 ST = See, 4 = Hear, 5+ = Speak No Evil.
-# Ante is exactly twice the base trigger rate. Scatter faces are not a lever.
-SCATTER_TRIGGERS = {3: 989, 4: 10, 5: 1}
-SCATTER_TRIGGERS_ANTE = {3: 989, 4: 10, 5: 1}
-# Certified rates are much rarer; the book file oversamples so 500 books
-# still contain bonuses and bar fills. Lookup weights put the rate back.
-BASE_FREEGAME_QUOTA = 24 / 500
-ANTE_FREEGAME_QUOTA = 48 / 500
-BASE_PAY_BOOK_QUOTA = 8 / 500
-ANTE_PAY_BOOK_QUOTA = 8 / 500
+# BOOK SAMPLING ONLY (rebalance 2026-11-08). Base-like modes (base, Ante, Hunt) keep
+# 150 plain spins, 100 bar fills and 250 bonuses per
+# 500 books (scatter-count draw 60/40/50; Speak books that miss the 1,000x floor
+# redraw, so fewer land) so every class has enough books for a stable mean. The real odds of
+# each class are set by the lookup weights (scripts/fit_rebalance.py).
+SCATTER_TRIGGERS = {3: 60, 4: 40, 5: 50}
+SCATTER_TRIGGERS_ANTE = {3: 60, 4: 40, 5: 50}
+BASE_FREEGAME_QUOTA = 250 / 500
+ANTE_FREEGAME_QUOTA = 250 / 500
+BASE_PAY_BOOK_QUOTA = 100 / 500
+ANTE_PAY_BOOK_QUOTA = 100 / 500
 
 # Buy costs are placeholders until books re-solve them onto 96.3%.
 # mode_prices.json overrides these after the solve step.
@@ -808,14 +808,10 @@ class GameConfig(Config):
             ]),
         ]
         for hunt_name, cost in HUNT_COSTS.items():
-            # Book sampling only (the LUT sets the odds): bonus books in proportion to
-            # the boosted odds, with the scatter-count mix scaled per bonus type.
-            quota = min(0.6, bonus_base * hunt_odds_factor(self.scatter_triggers, hunt_name))
-            pay_q = min(BASE_PAY_BOOK_QUOTA, max(0.0, 0.9 - quota))
-            freegame_hunt = {
-                "scatter_triggers": hunt_scatter_triggers(self.scatter_triggers, hunt_name),
-                "force_freegame": True,
-            }
+            # Same book sampling as base; the lookup weights apply the Hunt boosts.
+            quota = bonus_base
+            pay_q = BASE_PAY_BOOK_QUOTA
+            freegame_hunt = dict(freegame_base)
             modes.append(
                 BetMode(hunt_name, cost, self.rtp, self.wincap, False, True, False, [
                     self._distribution("basegame", 1.0 - quota - pay_q),
