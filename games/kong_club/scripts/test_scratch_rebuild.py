@@ -2347,7 +2347,35 @@ def test_better_tiers_spawn_clovers_and_pots_no_less_often():
     assert sum(first[level]["multiplier"] for level in (1, 2, 3)) == 30
 
 
+def test_capped_coin_game_items_match_the_capped_payout():
+    """At the max win, the holding pot is clipped to the headroom left under 25,000x."""
+    import game_coin_feature as gcf
+
+    kind_seq = iter(["coin", "coin", "collector"])
+    original_pick = gcf._pick_cell_kind
+    original_value = gcf._pick_weighted_coin_value
+    gcf._pick_cell_kind = lambda gs, rng, tile_level=1, **_kwargs: next(kind_seq, "coin")
+    gcf._pick_weighted_coin_value = lambda gs, tile_level, rng: 15000
+    try:
+        gs = _lit_board(state(), ((1, 1), (2, 1), (3, 1)))
+        gs.win_manager.running_bet_win = 2.6  # cluster wins already paid this book
+        total, items, _rounds = resolve_coin_game(gs)
+    finally:
+        gcf._pick_cell_kind = original_pick
+        gcf._pick_weighted_coin_value = original_value
+    headroom = gcf.COIN_FEATURE_WINCAP - 2.6
+    assert abs(total - headroom) < 1e-9, total
+    last = _last_round_items(items)
+    final_sum = sum(
+        float(i.get("payout") or 0) for i in last if not i.get("collected") and i["kind"] in ("coin", "collector")
+    )
+    assert abs(final_sum - total) < 1e-9, (final_sum, total)
+    pot = next(i for i in last if i["kind"] == "collector")
+    assert abs(float(pot["payout"]) - headroom) < 1e-9
+
+
 def main():
+    test_capped_coin_game_items_match_the_capped_payout()
     test_better_tiers_spawn_clovers_and_pots_no_less_often()
     test_reaching_tenth_rerun_is_a_cap_hit()
     test_pots_can_appear_on_every_rerun_tier()

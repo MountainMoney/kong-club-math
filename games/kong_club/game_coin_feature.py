@@ -930,6 +930,45 @@ def _holder_collect(items: list[dict], holder_pos: tuple[int, int]) -> list[dict
     return out
 
 
+def _clip_board_to_headroom(items: list[dict], headroom: float) -> list[dict]:
+    """Max win reached: trim the final board so it pays exactly the headroom left.
+
+    The holding pot (leftmost uncollected pot) absorbs the whole trim. With no pot,
+    the largest coins are trimmed first. Faces keep 2 decimals.
+    """
+    live = [
+        item for item in items
+        if not _is_collected(item) and item.get("kind") in ("coin", "collector")
+    ]
+    excess = round(sum(_item_pay(item) for item in live) - float(headroom), 2)
+    if excess <= 0:
+        return items
+    pots = sorted((i for i in live if i.get("kind") == "collector"), key=_column_sort_key)
+    order = pots + sorted(
+        (i for i in live if i.get("kind") == "coin"), key=lambda i: -_item_pay(i)
+    )
+    trims: dict[tuple[int, int], float] = {}
+    for item in order:
+        if excess <= 0:
+            break
+        face = _item_pay(item)
+        cut = min(face, excess)
+        trims[_item_pos(item)] = round(face - cut, 2)
+        excess = round(excess - cut, 2)
+    out: list[dict] = []
+    for item in items:
+        cloned = dict(item)
+        pos = _item_pos(cloned)
+        if pos in trims and not _is_collected(cloned) and cloned.get("kind") in ("coin", "collector"):
+            face = _face(trims[pos])
+            cloned["value"] = face
+            cloned["displayValue"] = face
+            cloned["resolvedValue"] = float(face)
+            cloned["payout"] = float(face)
+        out.append(cloned)
+    return out
+
+
 def _leftmost_pot(items: list[dict]) -> dict | None:
     """Leftmost (lowest reel, then top row) uncollected pot. It holds the coin-game total."""
     pots = [
@@ -963,6 +1002,9 @@ def _resolve_virtual_coins(
         return 0.0, [], 0
 
     cap = int(getattr(gamestate.config, "coin_game_max_reruns", 10) or 10)
+    # Headroom under the 25,000x max win after what this book already paid.
+    paid_so_far = float(getattr(getattr(gamestate, "win_manager", None), "running_bet_win", 0.0) or 0.0)
+    headroom = max(0.0, min(float(COIN_FEATURE_WINCAP), float(gamestate.config.wincap) - paid_so_far))
     all_items: list[dict] = []
     round_index = 1
     reruns = 0
@@ -990,7 +1032,7 @@ def _resolve_virtual_coins(
     def _fire_clovers() -> None:
         nonlocal working, round_index
         while True:
-            if _board_total(working) >= COIN_FEATURE_WINCAP:
+            if _board_total(working) >= headroom:
                 return
             acting_multi = _leftmost_multi(working)
             if acting_multi is None:
@@ -1029,7 +1071,7 @@ def _resolve_virtual_coins(
         if not rerun_lands_power:
             # Last rerun had no clover and no pot: the sitting pot took the new coins. Done.
             break
-        if _board_total(working) >= COIN_FEATURE_WINCAP:
+        if _board_total(working) >= headroom:
             break
         replace_now = [
             _item_pos(item)
@@ -1050,8 +1092,17 @@ def _resolve_virtual_coins(
         fresh = [item for item in all_items[before:] if item.get("reactivate")]
         rerun_lands_power = any(item.get("kind") in ("multiplier", "collector") for item in fresh)
 
-    total = min(float(COIN_FEATURE_WINCAP), float(gamestate.config.wincap), _board_total(working))
     max_round = max((int(item.get("round") or 1) for item in all_items), default=1)
+    if _board_total(working) > headroom:
+        working = _clip_board_to_headroom(working, headroom)
+        clipped = {_item_pos(item): item for item in working}
+        for item in all_items:
+            if int(item.get("round") or 1) == max_round and _item_pos(item) in clipped:
+                src = clipped[_item_pos(item)]
+                for key in ("value", "displayValue", "resolvedValue", "payout", "symbol", "tileLevel"):
+                    if key in src:
+                        item[key] = src[key]
+    total = min(headroom, _board_total(working))
     gamestate.coin_game_stats = _stats(False)
     return round(total, 2), all_items, max_round
 
