@@ -28,8 +28,7 @@ from game_criteria import (
     RISKY_HEAR_QUOTA,
     RISKY_SPEAK_QUOTA,
     SPEAK_DIRECT_MIN_WIN,
-    hunt_odds_factor,
-    hunt_scatter_triggers,
+    hunt_freegame_quota,
 )
 
 
@@ -797,19 +796,13 @@ class GameConfig(Config):
             ]),
         ]
         for hunt_name, cost in HUNT_COSTS.items():
-            # Book sampling only (the LUT sets the odds): bonus books in proportion to
-            # the boosted odds, with the scatter-count mix scaled per bonus type.
-            quota = min(0.6, bonus_base * hunt_odds_factor(self.scatter_triggers, hunt_name))
+            quota = hunt_freegame_quota(cost)
             pay_q = min(BASE_PAY_BOOK_QUOTA, max(0.0, 0.9 - quota))
-            freegame_hunt = {
-                "scatter_triggers": hunt_scatter_triggers(self.scatter_triggers, hunt_name),
-                "force_freegame": True,
-            }
             modes.append(
                 BetMode(hunt_name, cost, self.rtp, self.wincap, False, True, False, [
                     self._distribution("basegame", 1.0 - quota - pay_q),
                     self._distribution("bar_pay", pay_q),
-                    self._distribution("freegame", quota, **freegame_hunt),
+                    self._distribution("freegame", quota, **freegame_base),
                 ])
             )
         modes.extend([

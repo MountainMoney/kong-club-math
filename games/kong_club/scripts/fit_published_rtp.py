@@ -2,8 +2,7 @@
 
 Base and Ante keep bonus rates of 1/500 and 1/250. Their coin-bar rate is
 solved inside 1/300–1/600. Hunt prices and scatter rates stay put unless the
-sample cannot reach 96.3% at those odds. Hunt odds come from the locked grid
-(See/Hear/Speak = base odds x the stop's boosts); their RTP is reported, not fitted. Buys and Trifecta keep their prices
+sample cannot reach 96.3% at those odds. Buys and Trifecta keep their prices
 (Trifecta 1,000x, 50% dead, live half averaging 1,926x). Feature Spin price is
 re-solved into 50–75x from the book mean.
 """
@@ -15,17 +14,14 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-import sys
-
 import zstandard
 
 GAME = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(GAME))
-from game_criteria import HUNT_COSTS, HUNT_LEVELS, SCATTER_COUNT_VARIANT  # noqa: E402
 PUBLISH = GAME / "library" / "publish_files"
 TOTAL = 10_000_000_000
 TARGET = 0.963
 LIVE_TARGET = 1926.0  # 0.5 * 1926 / 1000 = 0.963
+HUNT_COSTS = {"hunt_2": 5.0, "hunt_3": 6.0, "hunt_4": 10.0, "hunt_5": 25.0}
 FIXED = {"base": 1.0, "base_ante": 1.4, **HUNT_COSTS, "peak_spin": 1000.0}
 FEATURE_PRICE_MIN = 50.0
 FEATURE_PRICE_MAX = 75.0
@@ -410,60 +406,84 @@ def fit_buy(mode: str, books: list[dict], cost: float) -> tuple[list[tuple[int, 
     return rows, probs
 
 
-# Base bonus odds (1 in 500), split by the base scatter-count mix.
-BASE_FREEGAME_PROB = 1 / 500
-BASE_SCATTER_MIX = {3: 989, 4: 10, 5: 1}
+# Certified scatter rates. Hunt 5 is a clear step above Hunt 4. The freegame
+# books are reweighted so each price still returns 96.3%.
+HUNT_SCATTER_RATE = {
+    "hunt_2": 0.09,
+    "hunt_3": 0.13,
+    "hunt_4": 0.18,
+    "hunt_5": 0.45,
+}
 
 
-def bonus_variant(book: dict) -> str:
-    for event in book.get("events", []):
-        if event.get("type") == "kongClubMode":
-            state = str(event.get("state") or "")
-            for variant in ("see", "hear", "speak"):
-                if state.endswith(variant):
-                    return variant
-    return "see"
-
-
-def hunt_variant_probs(mode: str) -> dict[str, float]:
-    """Locked grid: each bonus type's odds are the base odds times the boost."""
-    total = sum(BASE_SCATTER_MIX.values())
-    boost = HUNT_LEVELS[mode]["boost"]
-    probs: dict[str, float] = defaultdict(float)
-    for count, weight in BASE_SCATTER_MIX.items():
-        variant = SCATTER_COUNT_VARIANT[count]
-        probs[variant] += BASE_FREEGAME_PROB * weight / total * boost[variant]
-    return dict(probs)
-
-
-def fit_hunt(books, groups, mode: str, bar_prob: float):
-    """Bonus odds fixed by the grid; base and bar books share the rest."""
+def fit_hunt(groups, cost: float, rate: float, bar_prob: float):
+    """Hold a scatter rate and reshape the bonus books to the locked price."""
     base_rows = groups.get("basegame", [])
     bar_rows = groups.get("bar_pay", [])
-    by_variant: dict[str, list[tuple[int, int]]] = defaultdict(list)
-    for book in books:
-        if str(book.get("criteria")) == "freegame":
-            by_variant[bonus_variant(book)].append((int(book["id"]), int(book["payoutMultiplier"])))
-    variant_probs = hunt_variant_probs(mode)
-    missing = [v for v, p in variant_probs.items() if p > 0 and not by_variant.get(v)]
-    if missing:
-        # No sampled book for a bonus type: its odds fold into the sampled ones.
-        print(f"{mode}: no {'/'.join(missing)} bonus books; odds folded into sampled types")
-        moved = sum(variant_probs.pop(v) for v in missing)
-        kept = sum(variant_probs.values()) or 1.0
-        variant_probs = {v: p + moved * p / kept for v, p in variant_probs.items()}
+    fg_rows = groups.get("freegame", [])
+    eb = mean([payout / 100.0 for _sid, payout in base_rows]) if base_rows else 0.0
+    ep = mean([payout / 100.0 for _sid, payout in bar_rows]) if bar_rows else eb
+    fg_pays = [payout / 100.0 for _sid, payout in fg_rows]
+    target = TARGET * cost
     pb = bar_prob if bar_rows else 0.0
-    p_fg = sum(variant_probs.values())
-    p_base = max(0.0, 1.0 - p_fg - pb)
-    rows = []
-    for variant, prob in variant_probs.items():
-        members = by_variant[variant]
-        rows += attach(members, [1.0] * len(members), int(round(prob * TOTAL)))
+    # Shrink the rate if the bonus sample cannot reach the conditional mean.
+    chosen = rate
+    for _ in range(12):
+        gap = max(chosen, 1e-6)
+        ef = (target - (1.0 - chosen - pb) * eb - pb * ep) / gap
+        if fg_pays and min(fg_pays) < ef < max(fg_pays):
+            break
+        chosen = max(0.02, chosen * 0.85)
+    else:
+        ef = mean(fg_pays) if fg_pays else 0.0
+    p_base = max(0.0, 1.0 - chosen - pb)
+    rows = fit_group_mean(fg_rows, ef, int(round(chosen * TOTAL)))
     rows += attach(bar_rows, [1.0] * len(bar_rows), int(round(pb * TOTAL)))
     rows += attach(base_rows, [1.0] * len(base_rows), int(round(p_base * TOTAL)))
     rows = renormalize(rows)
-    probs = {f"freegame_{v}": p for v, p in variant_probs.items()}
-    probs.update({"bar_pay": pb, "basegame": p_base})
+    rows = nudge_toward(rows, cost, pool={sid for sid, _p in fg_rows})
+    probs = {"freegame": chosen, "bar_pay": pb, "basegame": p_base}
+    return rows, probs
+
+
+def fit_hunt5(groups, cost: float, hunt4_rate: float, base_bar: float):
+    """Scatter rate clearly above Hunt 4. Bar weight and the bonus tail pay for it."""
+    base_rows = groups.get("basegame", [])
+    bar_rows = groups.get("bar_pay", [])
+    fg_rows = groups.get("freegame", [])
+    eb = mean([payout / 100.0 for _sid, payout in base_rows])
+    ep = mean([payout / 100.0 for _sid, payout in bar_rows]) if bar_rows else eb
+    fg_pays = [payout / 100.0 for _sid, payout in fg_rows]
+    fg_pays_sorted = sorted(fg_pays)
+    floor = fg_pays_sorted[max(0, len(fg_pays_sorted) // 8)] if fg_pays_sorted else 0.0
+    ceiling = fg_pays_sorted[min(len(fg_pays_sorted) - 1, (len(fg_pays_sorted) * 7) // 8)] if fg_pays_sorted else 0.0
+    target = TARGET * cost
+    desired = max(2.75 * hunt4_rate, hunt4_rate + 0.08, 0.16)
+    pb = base_bar if bar_rows else 0.0
+
+    def needed(pf: float, bar: float) -> float:
+        gap = max(pf, 1e-9)
+        return (target - (1.0 - pf - bar) * eb - bar * ep) / gap
+
+    ef = needed(desired, pb)
+    if ef < floor:
+        pb = 0.0
+        ef = needed(desired, pb)
+    if ef < floor or ef > ceiling:
+        # Highest scatter rate whose conditional mean still sits in the sample.
+        pb = 0.0
+        ef = min(max(mean(fg_pays), floor), ceiling)
+        desired = (target - eb) / max(ef - eb, 1e-6)
+        desired = min(0.45, max(hunt4_rate, desired))
+        ef = needed(desired, pb)
+        ef = min(max(ef, floor), ceiling)
+    p_base = max(0.0, 1.0 - desired - pb)
+    rows = fit_group_mean(fg_rows, ef, int(round(desired * TOTAL)))
+    rows += attach(bar_rows, [1.0] * len(bar_rows), int(round(pb * TOTAL)))
+    rows += attach(base_rows, [1.0] * len(base_rows), int(round(p_base * TOTAL)))
+    rows = renormalize(rows)
+    rows = nudge_toward(rows, cost, pool={sid for sid, _p in fg_rows})
+    probs = {"freegame": desired, "bar_pay": pb, "basegame": p_base}
     return rows, probs
 
 
@@ -491,13 +511,14 @@ def solve_feature_price(pays: list[float]) -> float:
 def main() -> None:
     prices = json.loads((GAME / "mode_prices.json").read_text(encoding="utf-8"))
     modes = list(prices)
-    # Base bar rate is solved first. Ante solves its own. Hunt stops hold the base
-    # bar rate and take their bonus odds from the locked grid.
+    # Base bar rate is solved first. Ante solves its own. Hunt 2–4 hold the base
+    # bar rate. Hunt 5's scatter rate is set above Hunt 4, and its bar rate gives.
     base_books = read_books("base")
     base_groups = group_rows(base_books)
     base_probs = solve_bar(base_groups, 1.0, 1 / 500)
     base_bar = base_probs["bar_pay"]
     summary = {}
+    hunt4_rate = 0.0
     for mode in modes:
         books = read_books(mode)
         groups = group_rows(books)
@@ -513,7 +534,9 @@ def main() -> None:
             cost = 1.4
         elif mode in HUNT_COSTS:
             cost = HUNT_COSTS[mode]
-            rows, probs = fit_hunt(books, groups, mode, base_bar)
+            rows, probs = fit_hunt(groups, cost, HUNT_SCATTER_RATE[mode], base_bar)
+            if mode == "hunt_4":
+                hunt4_rate = probs["freegame"]
         elif mode == "peak_spin":
             cost = 1000.0
             dead = groups.get("dead_juicy", [])
