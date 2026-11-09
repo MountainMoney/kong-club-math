@@ -1038,12 +1038,21 @@ class GameExecutables(GameCalculations):
         if amount <= 0:
             return
         # Locked spec: clusters pay the plain paytable in every mode (no bonus scale).
-        remaining = max(0.0, self.config.wincap - self.win_manager.running_bet_win)
+        remaining = round(max(0.0, self.config.wincap - self.win_manager.running_bet_win), 2)
         paid = min(amount, remaining)
         if paid < amount:
-            scale = paid / amount if amount else 0
-            for win in self.win_data["wins"]:
-                win["win"] *= scale
+            # Max win reached mid-cascade: share the paid cents across the wins so
+            # every win is whole cents and they add up to totalWin exactly.
+            wins = self.win_data["wins"]
+            paid_cents = int(round(paid * 100))
+            raw = [float(win["win"]) * 100 * (paid / amount) if amount else 0.0 for win in wins]
+            cents = [int(value) for value in raw]
+            order = sorted(range(len(wins)), key=lambda i: raw[i] - cents[i], reverse=True)
+            for i in order[: max(0, paid_cents - sum(cents))]:
+                cents[i] += 1
+            for win, value in zip(wins, cents):
+                win["win"] = value / 100
+            paid = paid_cents / 100
             self.win_data["totalWin"] = paid
         self.win_manager.update_spinwin(paid)
         self.win_manager.tumble_win = paid

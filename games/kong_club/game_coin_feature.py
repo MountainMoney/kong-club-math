@@ -1004,7 +1004,7 @@ def _resolve_virtual_coins(
     cap = int(getattr(gamestate.config, "coin_game_max_reruns", 10) or 10)
     # Headroom under the 25,000x max win after what this book already paid.
     paid_so_far = float(getattr(getattr(gamestate, "win_manager", None), "running_bet_win", 0.0) or 0.0)
-    headroom = max(0.0, min(float(COIN_FEATURE_WINCAP), float(gamestate.config.wincap) - paid_so_far))
+    headroom = round(max(0.0, min(float(COIN_FEATURE_WINCAP), float(gamestate.config.wincap) - paid_so_far)), 2)
     all_items: list[dict] = []
     round_index = 1
     reruns = 0

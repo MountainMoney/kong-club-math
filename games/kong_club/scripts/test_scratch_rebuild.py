@@ -2374,7 +2374,53 @@ def test_capped_coin_game_items_match_the_capped_payout():
     assert abs(float(pot["payout"]) - headroom) < 1e-9
 
 
+def test_pot_multiplied_after_collect_counts_in_total():
+    """Old bonus_pick#163 ev37: a clover doubled a pot after it had collected, but the
+    total kept the pre-clover pot value (348 paid vs 464 shown). Total = final board."""
+    import game_coin_feature as gcf
+
+    first = iter(["coin", "collector"])
+    rerun = iter(["multiplier", "coin"])
+    original = (gcf._pick_cell_kind, gcf._pick_weighted_coin_value, gcf._pick_multi_value)
+    gcf._pick_cell_kind = lambda gs, rng, tile_level=1, reactivate=False: next(rerun if reactivate else first, "coin")
+    gcf._pick_weighted_coin_value = lambda gs, tile_level, rng: 5
+    gcf._pick_multi_value = lambda gs, rng: 2
+    try:
+        gs = _lit_board(state(), ((1, 1), (2, 1)))
+        total, items, _rounds = resolve_coin_game(gs)
+    finally:
+        gcf._pick_cell_kind, gcf._pick_weighted_coin_value, gcf._pick_multi_value = original
+    last = _last_round_items(items)
+    final_sum = sum(float(i.get("payout") or 0) for i in last if not i.get("collected") and i["kind"] in ("coin", "collector"))
+    # Pot takes the 5, the rerun clover doubles it to 10, the next rerun coin (5) is collected.
+    assert total == final_sum == 15.0, (total, final_sum)
+
+
+def test_capped_cluster_wins_are_whole_cents():
+    """A cluster win clipped at the max win splits into whole cents that add up exactly."""
+    gs = state()
+    gs.board = board_from_rows(
+        gs,
+        [
+            ["BA", "BA", "BA", "BA", "BA", "T"],
+            ["T", "J", "Q", "K", "A", "LE"],
+            ["CO", "CO", "CO", "CO", "CO", "J"],
+            ["Q", "K", "A", "LE", "OR", "OR"],
+            ["GR", "GR", "GR", "GR", "GR", "K"],
+        ],
+    )
+    clusters = GameCluster.find_winning_clusters(gs.board, gs.config)
+    assert len(clusters) >= 2
+    gs.win_manager.running_bet_win = gs.config.wincap - 1.234567
+    gs.award_clusters(clusters)
+    wins = [round(w["win"] * 100, 6) for w in gs.win_data["wins"]]
+    assert all(float(c).is_integer() for c in wins), wins
+    assert sum(wins) == round(gs.win_data["totalWin"] * 100, 6) == 123.0
+
+
 def main():
+    test_pot_multiplied_after_collect_counts_in_total()
+    test_capped_cluster_wins_are_whole_cents()
     test_capped_coin_game_items_match_the_capped_payout()
     test_better_tiers_spawn_clovers_and_pots_no_less_often()
     test_reaching_tenth_rerun_is_a_cap_hit()
