@@ -50,23 +50,6 @@ class GameExecutables(GameCalculations):
             for reel in self.tile_levels
         ]
 
-    def ease_upgrade_ranks(self) -> None:
-        """Hear → Speak keeps the tiles, one rank lower.
-
-        Gold becomes silver and silver becomes bronze. The upgrade still carries
-        a lit board, without the gold-every-spin payout that used to dwarf a
-        direct Speak.
-        """
-        for reel in range(self.config.num_reels):
-            for row in range(self.config.num_rows[reel]):
-                level = int(self.tile_levels[reel][row])
-                if level >= 3:
-                    self.tile_levels[reel][row] = 2
-                elif level == 2:
-                    self.tile_levels[reel][row] = 1
-        self.sync_position_multipliers()
-        update_tile_event(self)
-
     def level_to_multiplier(self, level: int) -> int:
         if level <= 0:
             return 0

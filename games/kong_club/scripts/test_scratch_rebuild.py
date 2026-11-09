@@ -2201,7 +2201,35 @@ def test_bar_pay_books_fill_bar_by_real_connections():
         assert clusters >= 10, clusters
 
 
+def test_hear_to_speak_upgrade_keeps_tile_ranks():
+    """Hear -> Speak on 5 scatters carries every tile at its rank. No demotion."""
+    import contextlib
+    import io
+
+    gs = state()
+    gs.betmode = "bonus_hear"
+    gs.criteria = "bonus_hear"
+    gs.reset_book()
+    gs.gametype = gs.config.freegame_type
+    gs.bonus_variant = "hear"
+    gs.tot_fs = 10
+    assert gs.is_hear_bonus()
+    levels = [[0] * gs.config.num_rows[reel] for reel in range(gs.config.num_reels)]
+    levels[0][0], levels[1][1], levels[2][2], levels[3][3] = 3, 2, 1, 3
+    gs.tile_levels = [list(col) for col in levels]
+    gs.sync_position_multipliers()
+    gs.board = _filler_board(gs)
+    gs.force_initial_scatters(5)
+    gs.get_special_symbols_on_board()
+    assert gs.count_special_symbols("scatter") >= 5
+    with contextlib.redirect_stdout(io.StringIO()):
+        gs._apply_bonus_scatter_followup()
+    assert gs.bonus_variant == "speak" and gs.upgraded_to_speak
+    assert gs.tile_levels == levels, gs.tile_levels
+
+
 def main():
+    test_hear_to_speak_upgrade_keeps_tile_ranks()
     test_bar_pay_books_fill_bar_by_real_connections()
     test_reel_strips_are_run_based_and_refill_rules()
     test_paytable_size_bands()
