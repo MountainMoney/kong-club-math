@@ -202,14 +202,24 @@ class GameConfig(Config):
             3: {"multiplier": 8, "collector": 2, "tier_shift": 0},
         }
         # Trifecta live boards are composed (several clovers and one pot) rather than
-        # rolled from this table. Reruns are plain 25-coins so the live half stays ~1,926x.
+        # rolled from this table. Its reruns roll the gold rerun row below like every
+        # other mode (spec l.20: pots can appear in reruns).
         self.coin_game_power_peak_gold = {"multiplier": 0, "collector": 0, "tier_shift": 0}
         self.peak_coin_value_weights = [1, 0, 0, 0, 0]
+        # Locked spec l.20: pots CAN appear in reruns, so every tier (bronze too) has a
+        # rerun pot rate. Bronze 0.5 = half of silver, kept below silver/gold so better
+        # tiers stay likelier; it is a placeholder the rebalance may retune.
         self.coin_game_rerun_power_by_tile_level = {
-            1: {"coin": 100, "multiplier": 12, "collector": 0, "tier_shift": 0},
+            1: {"coin": 100, "multiplier": 12, "collector": 0.5, "tier_shift": 0},
             2: {"coin": 100, "multiplier": 10, "collector": 1, "tier_shift": 0},
             3: {"coin": 100, "multiplier": 8, "collector": 2, "tier_shift": 0},
         }
+        # Trifecta reruns flip most of an all-gold board at once, so the gold row above
+        # would spawn a pot on nearly every rerun and run every live spin to the cap
+        # (measured: 168/500 books at 25,000x). Its own row keeps pots possible on
+        # every rerun at a low per-tile rate (~7% chance per 30-tile rerun). Placeholder
+        # for the rebalance; clovers stay off as before.
+        self.coin_game_rerun_power_peak = {"coin": 100, "multiplier": 0, "collector": 0.25, "tier_shift": 0}
         # Mode fallback matches bronze so Extra Chance / unknown modes do not invent pots.
         self.coin_game_power_weights = {
             "base": {"multiplier": 12, "collector": 0, "tier_shift": 0},

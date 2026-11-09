@@ -180,26 +180,33 @@ def _pick_cell_kind(
     *,
     reactivate: bool = False,
 ) -> str:
-    """Roll coin vs clover vs pot. Reruns may spawn pots (silver and gold)."""
-    # Trifecta reruns are plain coins. The opening board is composed, not rolled.
-    if getattr(gamestate, "betmode", None) == "peak_spin":
+    """Roll coin vs clover vs pot. Every rerun may spawn a pot, bronze tiles included.
+
+    Weights stay fractional (no int rounding) so a small rate such as the bronze
+    rerun pot survives the priced-buy power scales.
+    """
+    if getattr(gamestate, "betmode", None) == "peak_spin" and not reactivate:
+        # Trifecta's opening board is composed in _peak_show_roll; reruns roll below.
         return "coin"
     if reactivate:
         table = getattr(gamestate.config, "coin_game_rerun_power_by_tile_level", None) or {}
         level = max(1, min(3, int(tile_level or 1)))
         power = dict(table.get(level) or {"coin": 100, "multiplier": 3, "collector": 0})
-        coin_w = int(power.get("coin", 100) or 100)
+        peak_row = getattr(gamestate.config, "coin_game_rerun_power_peak", None)
+        if getattr(gamestate, "betmode", None) == "peak_spin" and peak_row:
+            power = dict(peak_row)
+        coin_w = float(power.get("coin", 100) or 100)
     else:
         power = _tile_power_weights(gamestate, tile_level)
-        coin_w = int(getattr(gamestate.config, "coin_game_coin_weight", 100) or 100)
+        coin_w = float(getattr(gamestate.config, "coin_game_coin_weight", 100) or 100)
     labels = ["coin"]
-    weights = [max(coin_w, 0)]
+    weights = [max(coin_w, 0.0)]
     scale = _buy_power_scale(gamestate)
-    multi_w = int(round(int(power.get("multiplier", 0) or 0) * scale))
+    multi_w = float(power.get("multiplier", 0) or 0) * scale
     if multi_w > 0:
         labels.append("multiplier")
         weights.append(multi_w)
-    collector_w = int(round(int(power.get("collector", 0) or 0) * scale))
+    collector_w = float(power.get("collector", 0) or 0) * scale
     if collector_w > 0:
         labels.append("collector")
         weights.append(collector_w)

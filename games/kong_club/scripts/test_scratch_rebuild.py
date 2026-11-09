@@ -2288,7 +2288,27 @@ def test_hear_to_speak_upgrade_keeps_tile_ranks():
     assert gs.tile_levels == levels, gs.tile_levels
 
 
+def test_pots_can_appear_on_every_rerun_tier():
+    """Spec l.20: pots can appear in reruns - bronze, silver, gold, and Trifecta reruns."""
+    import random as _random
+    from game_coin_feature import _pick_cell_kind
+
+    table = state().config.coin_game_rerun_power_by_tile_level
+    assert 0 < table[1]["collector"] < table[2]["collector"] <= table[3]["collector"]
+    for betmode, variant in (("base", None), ("bonus_hear", "hear"), ("peak_spin", None)):
+        gs = state()
+        gs.betmode = betmode
+        gs.bonus_variant = variant
+        if variant:
+            gs.gametype = gs.config.freegame_type
+        rng = _random.Random(5)
+        for level in (1, 2, 3):
+            kinds = {_pick_cell_kind(gs, rng, level, reactivate=True) for _ in range(4000)}
+            assert "collector" in kinds, (betmode, level, kinds)
+
+
 def main():
+    test_pots_can_appear_on_every_rerun_tier()
     test_hear_to_speak_upgrade_keeps_tile_ranks()
     test_bar_pay_books_fill_bar_by_real_connections()
     test_reel_strips_are_run_based_and_refill_rules()
