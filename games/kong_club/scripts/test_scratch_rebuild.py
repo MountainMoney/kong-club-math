@@ -2418,6 +2418,27 @@ def test_capped_cluster_wins_are_whole_cents():
     assert sum(wins) == round(gs.win_data["totalWin"] * 100, 6) == 123.0
 
 
+
+def test_hunt_stops_follow_locked_price_grid():
+    """Locked spec l.38: stop Nx costs N x bet; See/Hear/Speak odds x a/b/c of base."""
+    config = GameConfig()
+    grid = {
+        "hunt_2": (2.0, (3.0, 5.0, 10.0)),
+        "hunt_3": (3.0, (5.0, 6.0, 10.0)),
+        "hunt_4": (4.0, (7.0, 10.0, 18.0)),
+        "hunt_5": (5.0, (8.5, 15.0, 30.0)),
+    }
+    modes = {mode.get_name(): mode for mode in config.bet_modes}
+    base_triggers = config.scatter_triggers
+    for name, (cost, (see, hear, speak)) in grid.items():
+        mode = modes[name]
+        assert mode.get_cost() == cost, (name, mode.get_cost())
+        fg = [d for d in mode.get_distributions() if d._criteria == "freegame"][0]
+        triggers = fg._conditions["scatter_triggers"]
+        assert triggers[3] == base_triggers[3] * see, (name, triggers)
+        assert triggers[4] == base_triggers[4] * hear, (name, triggers)
+        assert triggers[5] == base_triggers[5] * speak, (name, triggers)
+
 def main():
     test_pot_multiplied_after_collect_counts_in_total()
     test_capped_cluster_wins_are_whole_cents()
@@ -2494,6 +2515,7 @@ def main():
     test_hear_bonus_allows_chained_activations_in_one_spin()
     test_hear_bonus_caps_chained_activations_at_three()
     test_bonus_entry_starts_with_empty_tiles()
+    test_hunt_stops_follow_locked_price_grid()
     print("test_scratch_rebuild: all passed")
 
 
