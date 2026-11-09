@@ -2439,6 +2439,15 @@ def test_hunt_stops_follow_locked_price_grid():
         assert triggers[4] == base_triggers[4] * hear, (name, triggers)
         assert triggers[5] == base_triggers[5] * speak, (name, triggers)
 
+
+def test_max_win_counts_in_whole_cents():
+    """A float total a hair under 25,000x is the max win; the bonus must stop."""
+    gs = state()
+    gs.win_manager.running_bet_win = float(gs.config.wincap) - 4e-12
+    assert gs.reached_wincap()
+    gs.win_manager.running_bet_win = float(gs.config.wincap) - 0.01
+    assert not gs.reached_wincap()
+
 def main():
     test_pot_multiplied_after_collect_counts_in_total()
     test_capped_cluster_wins_are_whole_cents()
@@ -2516,6 +2525,7 @@ def main():
     test_hear_bonus_caps_chained_activations_at_three()
     test_bonus_entry_starts_with_empty_tiles()
     test_hunt_stops_follow_locked_price_grid()
+    test_max_win_counts_in_whole_cents()
     print("test_scratch_rebuild: all passed")
 
 

@@ -777,6 +777,11 @@ class GameExecutables(GameCalculations):
         self._force_feature_spin_connection()
         self._finalize_initial_board()
 
+    def reached_wincap(self) -> bool:
+        """Max win in whole cents. Float sums can land a hair under 25,000x
+        (24999.999999999996), which used to keep a capped bonus running."""
+        return round(float(self.win_manager.running_bet_win), 2) >= float(self.config.wincap)
+
     def apply_cap_topup(self):
         """Cap books: after a real toy reveal, land exactly on wincap."""
         if self.outcome_bucket() != "cap":
@@ -1056,7 +1061,7 @@ class GameExecutables(GameCalculations):
             self.win_data["totalWin"] = paid
         self.win_manager.update_spinwin(paid)
         self.win_manager.tumble_win = paid
-        if self.win_manager.running_bet_win >= self.config.wincap:
+        if self.reached_wincap():
             self.wincap_triggered = True
             wincap_event(self)
 
@@ -1222,7 +1227,7 @@ class GameExecutables(GameCalculations):
             for reel, row in removed:
                 if 0 <= reel < self.config.num_reels and 0 <= row < self.config.num_rows[reel]:
                     self.board[reel][row].explode = True
-        if self.win_manager.running_bet_win >= self.config.wincap:
+        if self.reached_wincap():
             self.wincap_triggered = True
             wincap_event(self)
 
