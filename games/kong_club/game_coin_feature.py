@@ -94,7 +94,7 @@ def _direct_buy(gamestate: "GameExecutables") -> bool:
     return getattr(gamestate, "betmode", None) in {
         "bonus_see",
         "bonus_hear",
-        "bonus_pick",
+        "bonus_mystery",
         "bonus_risky",
     }
 
@@ -105,7 +105,7 @@ def _buy_power_scale(gamestate: "GameExecutables") -> float:
         return 1.0
     variant = getattr(gamestate, "bonus_variant", None)
     mode = getattr(gamestate, "betmode", None)
-    if variant == "speak" and mode == "bonus_pick":
+    if variant == "speak" and mode == "bonus_mystery":
         return float(getattr(gamestate.config, "mystery_speak_power_scale", 1.0) or 1.0)
     if variant == "speak" and mode == "bonus_risky":
         return float(getattr(gamestate.config, "risky_speak_power_scale", 1.0) or 1.0)
@@ -123,7 +123,7 @@ def _buy_coin_weights(gamestate: "GameExecutables", tile_level: int):
     symbol = "CB" if tile_level <= 1 else "CS" if tile_level == 2 else "CG"
     variant = getattr(gamestate, "bonus_variant", None)
     mode = getattr(gamestate, "betmode", None)
-    if variant == "speak" and mode == "bonus_pick":
+    if variant == "speak" and mode == "bonus_mystery":
         table = getattr(gamestate.config, "mystery_speak_coin_weights", None) or table
     elif variant == "speak" and mode == "bonus_risky":
         table = getattr(gamestate.config, "risky_speak_coin_weights", None) or table

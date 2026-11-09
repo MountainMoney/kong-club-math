@@ -227,9 +227,9 @@ def rtp(rows: list[tuple[int, int, int]], cost: float) -> float:
     return sum(weight * payout for _sid, weight, payout in rows) / total_w / 100.0 / cost
 
 
-BUY_COSTS = {"bonus_see": 100.0, "bonus_hear": 300.0, "bonus_pick": 330.0, "bonus_risky": 500.0}
+BUY_COSTS = {"bonus_see": 100.0, "bonus_hear": 300.0, "bonus_mystery": 330.0, "bonus_risky": 500.0}
 BUY_MIX = {
-    "bonus_pick": {"pick_see": 0.50, "pick_hear": 0.45, "pick_speak": 0.05},
+    "bonus_mystery": {"pick_see": 0.50, "pick_hear": 0.45, "pick_speak": 0.05},
     "bonus_risky": {"risky_dead": 0.50, "risky_hear": 0.40, "risky_speak": 0.10},
 }
 

@@ -1065,7 +1065,7 @@ class GameExecutables(GameCalculations):
             if getattr(self, "betmode", None) in {
                 "bonus_see",
                 "bonus_hear",
-                "bonus_pick",
+                "bonus_mystery",
                 "bonus_risky",
             }:
                 variant = getattr(self, "bonus_variant", None)
@@ -1075,7 +1075,7 @@ class GameExecutables(GameCalculations):
                     bonus_scale *= float(getattr(self.config, "see_cluster_pay_scale", None) or getattr(self.config, "buy_cluster_pay_scale", 1.0) or 1.0)
                 else:
                     bonus_scale *= float(getattr(self.config, "buy_cluster_pay_scale", 1.0) or 1.0)
-                if variant == "speak" and self.betmode == "bonus_pick":
+                if variant == "speak" and self.betmode == "bonus_mystery":
                     bonus_scale *= float(getattr(self.config, "mystery_speak_cluster_scale", 1.0) or 1.0)
                 elif variant == "speak" and self.betmode == "bonus_risky":
                     bonus_scale *= float(getattr(self.config, "risky_speak_cluster_scale", 1.0) or 1.0)

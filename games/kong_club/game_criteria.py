@@ -2,7 +2,7 @@
 
 Ante is base_ante at 1.4x. Hunt stops are ante-style modes (hunt_2..hunt_5).
 Feature Spin is feature_spin. Trifecta is peak_spin. Direct buys are
-bonus_see / bonus_hear. Mystery is bonus_pick (50/45/5 See/Hear/Speak).
+bonus_see / bonus_hear. Mystery is bonus_mystery (50/45/5 See/Hear/Speak).
 Risky Mystery is bonus_risky (50% dead / 40% Hear / 10% Speak).
 Speak No Evil is the variant name `speak` (formerly Madness).
 """

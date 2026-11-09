@@ -27,7 +27,7 @@ REQUIRED_MODES = [
     "peak_spin",
     "bonus_see",
     "bonus_hear",
-    "bonus_pick",
+    "bonus_mystery",
 ]
 MIN_ROWS = 250_000
 STAKE_SLUG = "kong-club"

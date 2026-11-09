@@ -43,7 +43,7 @@ MODE_SPINS = {
     "peak_spin": 80,
     "bonus_see": 50,
     "bonus_hear": 50,
-    "bonus_pick": 80,
+    "bonus_mystery": 80,
     "bonus_risky": 80,
 }
 
@@ -58,7 +58,7 @@ MODE_CRITERIA = {
     "peak_spin": "live",
     "bonus_see": "bonus_see",
     "bonus_hear": "bonus_hear",
-    "bonus_pick": "pick_see",
+    "bonus_mystery": "pick_see",
     "bonus_risky": "risky_dead",
 }
 
@@ -149,7 +149,7 @@ def generate_mode(mode: str, n: int) -> tuple[list[dict], list[dict]]:
         rng.shuffle(criteria_list)
         n_fg = 0
         n_bg = n
-    elif mode == "bonus_pick":
+    elif mode == "bonus_mystery":
         n_see = int(round(n * 0.50))
         n_hear = int(round(n * 0.45))
         n_speak = max(0, n - n_see - n_hear)

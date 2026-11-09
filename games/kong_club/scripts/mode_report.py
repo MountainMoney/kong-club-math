@@ -68,7 +68,7 @@ def main() -> None:
             started_speak = any(state.endswith("_speak") and "upgrade" not in state for state in states)
             if started_hear or name == "bonus_hear":
                 hear_books += 1
-            if started_speak or (name == "bonus_pick" and book.get("criteria") == "pick_speak") or (
+            if started_speak or (name == "bonus_mystery" and book.get("criteria") == "pick_speak") or (
                 name == "bonus_risky" and book.get("criteria") == "risky_speak"
             ):
                 speak_direct.append(book["payoutMultiplier"] / 100.0)

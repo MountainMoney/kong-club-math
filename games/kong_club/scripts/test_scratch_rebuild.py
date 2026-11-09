@@ -129,9 +129,9 @@ def test_reel_strips_are_run_based_and_refill_rules():
     assert config.bonus_variant_map[5] == "speak"
     assert config.progress_thresholds["base"] == 10
     assert abs(config.rtp - 0.963) < 1e-9
-    assert "bonus_pick" in {mode.get_name() for mode in config.bet_modes}
+    assert "bonus_mystery" in {mode.get_name() for mode in config.bet_modes}
     assert "bonus_risky" in {mode.get_name() for mode in config.bet_modes}
-    mystery = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_pick")
+    mystery = next(mode for mode in config.bet_modes if mode.get_name() == "bonus_mystery")
     quotas = {dist.get_criteria(): dist.get_quota() for dist in mystery.get_distributions()}
     assert abs(quotas["pick_see"] - 0.50) < 1e-9
     assert abs(quotas["pick_hear"] - 0.45) < 1e-9
@@ -1465,7 +1465,7 @@ def test_gamble_forced_scatters_never_see():
     gs.betmode = "bonus_risky"
     assert gs.resolve_bonus_variant_from_scatters(4) == "hear"
     assert gs.resolve_bonus_variant_from_scatters(5) == "speak"
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     assert gs.resolve_bonus_variant_from_scatters(3) == "see"
 
 
@@ -1541,7 +1541,7 @@ def test_gamble_dead_baits_two_every_seed():
 def test_tease_through_last_reel_when_fewer_than_five_st():
     """Hear / late 3-ST: tease after the 2nd tablet through reel 5."""
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.gametype = gs.config.basegame_type
     rows = [["A"] * 6 for _ in range(5)]
     rows[0][3] = "ST"
@@ -1554,7 +1554,7 @@ def test_tease_through_last_reel_when_fewer_than_five_st():
 
 def test_hear_four_st_teases_through_last_reel():
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.gametype = gs.config.basegame_type
     rows = [["A"] * 6 for _ in range(5)]
     rows[0][0] = "ST"
@@ -1570,7 +1570,7 @@ def test_hear_four_st_teases_through_last_reel():
 def test_fifth_st_on_reel_four_slams_last_reel():
     """5th tablet on reel 4 → tease through that reel, reel 5 slams."""
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.gametype = gs.config.basegame_type
     rows = [["A"] * 6 for _ in range(5)]
     for reel in range(5):
@@ -1606,7 +1606,7 @@ def test_gamble_dead_bait_two_st_tease():
 
 def test_gamble_hear_emits_freespins():
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.criteria = "pick_hear"
     gs.reset_book()
     sink = io.StringIO()
@@ -1627,7 +1627,7 @@ def test_gamble_hear_emits_freespins():
 
 def test_gamble_madness_emits_freespins():
     gs = state()
-    gs.betmode = "bonus_pick"
+    gs.betmode = "bonus_mystery"
     gs.criteria = "pick_speak"
     gs.reset_book()
     sink = io.StringIO()

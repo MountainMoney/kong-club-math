@@ -157,7 +157,7 @@ class GameConfig(Config):
             "bonus_see": 5,
             "bonus_hear": 5,
             "bonus_speak": 5,
-            "bonus_pick": 5,
+            "bonus_mystery": 5,
             "bonus_risky": 5,
         }
         for hunt_name in HUNT_COSTS:
@@ -211,7 +211,7 @@ class GameConfig(Config):
             "bonus_see": {"multiplier": 12, "collector": 0, "tier_shift": 0},
             "bonus_hear": {"multiplier": 12, "collector": 0, "tier_shift": 0},
             "bonus_speak": {"multiplier": 12, "collector": 0, "tier_shift": 0},
-            "bonus_pick": {"multiplier": 12, "collector": 0, "tier_shift": 0},
+            "bonus_mystery": {"multiplier": 12, "collector": 0, "tier_shift": 0},
             "bonus_risky": {"multiplier": 12, "collector": 0, "tier_shift": 0},
         }
         for hunt_name in HUNT_COSTS:
@@ -269,7 +269,7 @@ class GameConfig(Config):
             "bonus_see": 1.0,
             "bonus_hear": 1.0,
             "bonus_speak": 1.0,
-            "bonus_pick": 1.0,
+            "bonus_mystery": 1.0,
             "bonus_risky": 1.0,
         }
         for hunt_name in HUNT_COSTS:
@@ -283,7 +283,7 @@ class GameConfig(Config):
             "bonus_see": None,
             "bonus_hear": None,
             "bonus_speak": None,
-            "bonus_pick": None,
+            "bonus_mystery": None,
             "bonus_risky": None,
         }
         for hunt_name in HUNT_COSTS:
@@ -297,7 +297,10 @@ class GameConfig(Config):
         self.feature_buy_cost = float(prices.get("feature_spin", FEATURE_BUY_COST))
         self.see_buy_cost = float(prices.get("bonus_see", SEE_BUY_COST))
         self.hear_buy_cost = float(prices.get("bonus_hear", HEAR_BUY_COST))
-        self.mystery_buy_cost = float(prices.get("bonus_pick", MYSTERY_BUY_COST))
+        # Mystery was published as `bonus_pick` through pr7-963; read either key.
+        self.mystery_buy_cost = float(
+            prices.get("bonus_mystery", prices.get("bonus_pick", MYSTERY_BUY_COST))
+        )
         self.risky_buy_cost = float(prices.get("bonus_risky", RISKY_BUY_COST))
         self.gamble_buy_cost = self.mystery_buy_cost
         self.gamble_dead_bait_rate = GAMBLE_DEAD_BAIT_RATE
@@ -750,7 +753,7 @@ class GameConfig(Config):
             "speak",
         ):
             return "INITIAL_BONUS"
-        if betmode in ("bonus_pick", "bonus_risky"):
+        if betmode in ("bonus_mystery", "bonus_risky"):
             if gametype == self.freegame_type or bonus_variant in ("see", "hear", "speak"):
                 return "INITIAL_BONUS"
             return "INITIAL_BASE"
@@ -817,7 +820,7 @@ class GameConfig(Config):
             BetMode("bonus_hear", self.hear_buy_cost, self.rtp, self.wincap, False, True, True, [
                 self._distribution("bonus_hear", 1.0, bonus_variant="hear"),
             ]),
-            BetMode("bonus_pick", self.mystery_buy_cost, self.rtp, self.wincap, False, True, True, [
+            BetMode("bonus_mystery", self.mystery_buy_cost, self.rtp, self.wincap, False, True, True, [
                 self._distribution("pick_see", MYSTERY_SEE_QUOTA, bonus_variant="see"),
                 self._distribution("pick_hear", MYSTERY_HEAR_QUOTA, bonus_variant="hear"),
                 self._distribution("pick_speak", MYSTERY_SPEAK_QUOTA, bonus_variant="speak"),

@@ -41,8 +41,20 @@ Trifecta stays 1,000x, 50% dead / 50% live, no cluster pay, no bonus. Hunt price
 | peak_spin | 1000 | 96.300% | 500 |
 | bonus_see | 100 | 96.300% | 500 |
 | bonus_hear | 300 | 96.300% | 500 |
-| bonus_pick | 330 | 96.300% | 500 |
+| bonus_pick (renamed `bonus_mystery`, see below) | 330 | 96.300% | 500 |
 | bonus_risky | 500 | 96.300% | 500 |
+
+### Mode rename: `bonus_pick` -> `bonus_mystery` (Nov 8, 2026)
+
+Ryan asked for the Mystery Bonus key to be `bonus_mystery` in math and web. The
+code, `mode_prices.json`, and scripts now use `bonus_mystery` (`GameConfig` still
+reads a legacy `bonus_pick` price if present). The table above and the files in
+`library/publish_files/` and `reports/` describe the pr7-963 run and still say
+`bonus_pick`; they were **not** regenerated. The next authorized math run emits
+`index.json` mode `bonus_mystery`, `books_bonus_mystery.jsonl.zst`, and
+`lookUpTable_bonus_mystery.csv` / `lookUpTable_bonus_mystery_0.csv`. The RGS/Stake
+mode name is whatever `index.json` says, so the uploaded name changes too. Book
+criteria names (`pick_see` / `pick_hear` / `pick_speak`) are unchanged.
 
 `reports/locked_spec_963.json` and `reports/lock_rtp.json` are the machine-readable copies. `mode_prices.json` is what `GameConfig` loads.
 

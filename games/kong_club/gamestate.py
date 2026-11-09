@@ -28,7 +28,7 @@ class GameState(GameStateOverride):
                 self.run_bonus_buy("see")
             elif self.betmode == "bonus_hear":
                 self.run_bonus_buy("hear")
-            elif self.betmode == "bonus_pick":
+            elif self.betmode == "bonus_mystery":
                 self.run_mystery_spin()
             elif self.betmode == "bonus_risky":
                 self.run_risky_spin()
@@ -61,13 +61,13 @@ class GameState(GameStateOverride):
         if bonus_hit:
             self.triggered_freegame = True
             self.bonus_variant = self.resolve_bonus_variant_from_scatters(scatter_count)
-            if self.betmode != "bonus_pick":
+            if self.betmode != "bonus_mystery":
                 self.criteria = "freegame"
             # Mode before setWin so the frontend starts See/Hear/Speak on the landed scatters.
             self.speak_direct = self.bonus_variant == "speak"
             mode_name = (
                 f"start_bonus_{self.bonus_variant}"
-                if self.betmode == "bonus_pick"
+                if self.betmode == "bonus_mystery"
                 else f"organic_bonus_{self.bonus_variant}"
             )
             mode_state_event(self, mode_name)
@@ -79,7 +79,7 @@ class GameState(GameStateOverride):
         self.win_manager.update_gametype_wins(self.gametype)
 
         if bonus_hit:
-            if self.betmode != "bonus_pick":
+            if self.betmode != "bonus_mystery":
                 fs_trigger_event(self, basegame_trigger=True, freegame_trigger=False)
             self.run_freespin()
 

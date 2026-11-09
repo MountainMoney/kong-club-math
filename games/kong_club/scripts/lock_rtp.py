@@ -29,7 +29,7 @@ SOLVED = {
     "peak_spin",
     "bonus_see",
     "bonus_hear",
-    "bonus_pick",
+    "bonus_mystery",
     "bonus_risky",
 }
 

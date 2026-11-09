@@ -181,7 +181,7 @@ def smoke_bonus_modes() -> None:
             assert_no_leftover_clusters(gs, book, label)
 
 
-def smoke_bonus_pick() -> None:
+def smoke_bonus_mystery() -> None:
     """Mystery is a guaranteed bonus: 50% See / 45% Hear / 5% Speak. No dead spin."""
     saw = set()
     for criteria, seeds in (
@@ -189,9 +189,9 @@ def smoke_bonus_pick() -> None:
         ("pick_hear", range(1, 3)),
     ):
         for seed in seeds:
-            gs, book = run_book("bonus_pick", criteria, seed)
+            gs, book = run_book("bonus_mystery", criteria, seed)
             types = _types(book)
-            label = f"bonus_pick {criteria} seed={seed}"
+            label = f"bonus_mystery {criteria} seed={seed}"
             assert "setTotalWin" in types, f"{label}: missing setTotalWin"
             assert "freeSpinTrigger" in types or any(
                 event.get("type") == "kongClubMode"
@@ -208,7 +208,7 @@ def main() -> None:
     smoke_base_modes()
     smoke_peak_spin()
     smoke_bonus_modes()
-    smoke_bonus_pick()
+    smoke_bonus_mystery()
     print("test_game_loop_smoke: all passed")
 
 

@@ -51,7 +51,7 @@ def get_smoke_distribution(config, mode):
         "peak_spin": "live",
         "bonus_see": "bonus_see",
         "bonus_hear": "bonus_hear",
-        "bonus_pick": "pick_see",
+        "bonus_mystery": "pick_see",
         "bonus_risky": "risky_dead",
         "hunt_2": "basegame",
     }[mode]
@@ -167,7 +167,7 @@ def main():
         "peak_spin",
         "bonus_see",
         "bonus_hear",
-        "bonus_pick",
+        "bonus_mystery",
         "bonus_risky",
     ]
     sims_by_mode = {mode: 4 for mode in modes}
