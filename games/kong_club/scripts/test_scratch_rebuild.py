@@ -2296,7 +2296,44 @@ def test_pots_can_appear_on_every_rerun_tier():
             assert "collector" in kinds, (betmode, level, kinds)
 
 
+def test_reaching_tenth_rerun_is_a_cap_hit():
+    """Spec l.20: the cap of 10 reruns must never be hit; reaching the 10th counts."""
+    import game_coin_feature as gcf
+
+    original_pick = gcf._pick_cell_kind
+    # Every flip (first and rerun) lands a clover next to a coin, so the loop never ends.
+    gcf._pick_cell_kind = lambda gs, rng, tile_level=1, reactivate=False: (
+        "multiplier" if reactivate else "coin"
+    )
+    try:
+        gs = _lit_board(state(), ((1, 1), (2, 1), (3, 1)))
+        total, items, _rounds = resolve_coin_game(gs)
+    finally:
+        gcf._pick_cell_kind = original_pick
+    assert gs.coin_game_cap_hit is True
+    regen_rounds = {int(i["round"]) for i in items if i.get("action") == "regen"}
+    assert len(regen_rounds) == gs.config.coin_game_max_reruns - 1 == 9, sorted(regen_rounds)
+
+    # A game that stops after 9 reruns is fine.
+    calls = {"n": 0}
+
+    def nine_then_stop(gs_, rng, tile_level=1, reactivate=False):
+        if not reactivate:
+            return "coin"
+        calls["n"] += 1
+        return "multiplier" if calls["n"] <= 9 else "coin"
+
+    gcf._pick_cell_kind = nine_then_stop
+    try:
+        gs = _lit_board(state(), ((1, 1),))
+        resolve_coin_game(gs)
+    finally:
+        gcf._pick_cell_kind = original_pick
+    assert gs.coin_game_cap_hit is False
+
+
 def main():
+    test_reaching_tenth_rerun_is_a_cap_hit()
     test_pots_can_appear_on_every_rerun_tier()
     test_hear_to_speak_upgrade_keeps_tile_ranks()
     test_bar_pay_books_fill_bar_by_real_connections()

@@ -955,7 +955,7 @@ def _resolve_virtual_coins(
     coins, clovers, or pots on any tier. If a rerun lands no clover and no pot, the
     sitting pot collects the new coins one last time and the game ends. With no pot
     on the board, coins pay their own values. Ten reruns is the cap; a book that
-    hits it is rejected.
+    reaches the 10th rerun is rejected.
     """
     positions = highlighted_positions(gamestate)
     if not positions:
@@ -1040,7 +1040,8 @@ def _resolve_virtual_coins(
         if not replace_now:
             break
         reruns += 1
-        if reruns > cap:
+        # Spec l.20: reaching the 10th rerun already counts as hitting the cap.
+        if reruns >= cap:
             gamestate.coin_game_cap_hit = True
             gamestate.coin_game_stats = _stats(True)
             return float(gamestate.config.wincap), all_items, reruns
