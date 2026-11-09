@@ -237,12 +237,12 @@ class GameExecutables(GameCalculations):
             return None
         span = max(int(self.config.bonus_spins), 1)
         third = min(2, (int(self.fs) - 1) * 3 // span)
+        mix = self.config.bonus_arc_mix[variant]
         if third == window:
             hot = f"{variant}_burst"
             mid = f"{variant}_steady"
-            hot_p = 0.12 if variant == "hear" else 0.03
-            return hot if random.random() < hot_p else mid
-        return f"{variant}_slow" if random.random() < 0.88 else f"{variant}_steady"
+            return hot if random.random() < mix["hot"] else mid
+        return f"{variant}_slow" if random.random() < mix["slow"] else f"{variant}_steady"
 
     def _uses_base_mix(self) -> bool:
         mode = getattr(self, "betmode", "")

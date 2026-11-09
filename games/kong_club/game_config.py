@@ -210,10 +210,13 @@ class GameConfig(Config):
         # rerun pot rate. Bronze 0.5 = half of silver, kept below silver/gold so better
         # tiers stay likelier; it is a placeholder the rebalance may retune.
         # Clovers 8/10/12: same PLACEHOLDER mirror as the first flip (spec l.17).
+        # Rebalance 2026-11-08 (PLACEHOLDER rates, still rising by tier): rerun clovers
+        # and pots cut so rerun chains stop compounding (was m8/10/12, c0.5/1/2). Most
+        # of the old bonus RTP came from a few 5,000x+ chains.
         self.coin_game_rerun_power_by_tile_level = {
-            1: {"coin": 100, "multiplier": 8, "collector": 0.5, "tier_shift": 0},
-            2: {"coin": 100, "multiplier": 10, "collector": 1, "tier_shift": 0},
-            3: {"coin": 100, "multiplier": 12, "collector": 2, "tier_shift": 0},
+            1: {"coin": 100, "multiplier": 3, "collector": 0.25, "tier_shift": 0},
+            2: {"coin": 100, "multiplier": 4, "collector": 0.5, "tier_shift": 0},
+            3: {"coin": 100, "multiplier": 5, "collector": 1, "tier_shift": 0},
         }
         # Trifecta reruns flip most of an all-gold board at once, so the gold row above
         # would spawn a pot on nearly every rerun and run every live spin to the cap
@@ -706,6 +709,14 @@ class GameConfig(Config):
             "feature": {"feature_mild": 78, "feature_rich": 22},
             "peak": {"peak_a": 55, "peak_b": 45},
             "gamble_dead": {"base_quiet": 1},
+        }
+        # Bonus reel arc (bonus economy lever): outside the hot third a spin uses the
+        # slow strips with p=slow, else steady; inside it burst with p=hot, else steady.
+        # Rebalance 2026-11-08: more steady/burst spins so See and Hear reach their coin
+        # game more often (was see 0.88/0.03, hear 0.88/0.12).
+        self.bonus_arc_mix = {
+            "see": {"slow": 0.2, "hot": 0.3},
+            "hear": {"slow": 0.4, "hot": 0.3},
         }
         self.reel_set_weights_flat = set(specs)
         for name, (weights, runs, seed, refill_runs) in specs.items():
