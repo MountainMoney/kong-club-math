@@ -12,7 +12,9 @@ Design (levers, in order of preference already applied in game_config):
     boosts 3/5/10, 5/6/10, 7/10/18, 8.5/15/30) lands as close to 96.3% as it can.
   * Base bar-fill rate: solved so base returns 96.3% (plain cluster pay is locked).
   * Ante (1.4x): one odds multiplier on all bonus types, solved to 96.3%.
-  * Hunt: base odds x boosts, bar rate as base. RTP is reported, never forced.
+  * Hunt: base odds x boosts, bar rate as base. Option (a), Ryan 2026-11-09: L4 See 9.0
+    and Hear/Speak boosts tuned per level (game_criteria.HUNT_LEVELS) so each stop lands
+    on 96.3%; `hunt_hear_speak_for_96_3` in the report gives the boosts that would.
   * Buys / Feature / Trifecta: price = class EV / 0.963 (rounded), then calibrated.
 Usage: fit_rebalance.py [--write]   (without --write: report only)
 """
@@ -45,6 +47,13 @@ SPEAK_ONE_IN = (200_000, 2_000_000)
 # the 2*cost-1 = 9 the first three stops follow). The base odds are fitted to 2x-4x;
 # 5x is reported with its gap.
 DESIGN_LEVELS = ("hunt_2", "hunt_3", "hunt_4")
+# Base odds stay fitted to the boost grid as proposed (2026-11-03), not to the tuned
+# boosts below, so retuning Hunt never moves base, Ante or any other mode.
+DESIGN_GRID = {
+    "hunt_2": {"cost": 2.0, "boost": {"see": 3.0, "hear": 5.0, "speak": 10.0}},
+    "hunt_3": {"cost": 3.0, "boost": {"see": 5.0, "hear": 6.0, "speak": 10.0}},
+    "hunt_4": {"cost": 4.0, "boost": {"see": 7.0, "hear": 10.0, "speak": 18.0}},
+}
 
 
 def read_books(mode: str) -> list[dict]:
@@ -168,7 +177,7 @@ def solve_design(E):
                 cs = 0.2 + i * 0.0002
                 worst = 0.0
                 for name in DESIGN_LEVELS:
-                    lvl = HUNT_LEVELS[name]
+                    lvl = DESIGN_GRID[name]
                     b, c = lvl["boost"], lvl["cost"]
                     rtp = (TARGET + (b["see"] - 1) * cs + (b["hear"] - 1) * ch + (b["speak"] - 1) * ck) / c
                     worst = max(worst, abs(rtp - TARGET))
@@ -205,6 +214,7 @@ def main(write: bool) -> None:
     prices = json.loads((GAME / "mode_prices.json").read_text())
     old_prices = dict(prices)
     out = {}
+    hunt_solved = {}
     for m in modes:
         cls = classes[m]
         if m in BASE_LIKE:
@@ -250,6 +260,17 @@ def main(write: bool) -> None:
             rows, notes, clean = build_rows(cls, probs, targets)
             design["bar_one_in"] = 1 / p_bar
             design["ante_odds_multiplier"] = ante_m
+        if m in HUNT_LEVELS:
+            # Hear/Speak boosts that put this stop on 96.3% with its See boost and price
+            # kept: smallest relative change (min sum of (db/b)^2), using the achieved
+            # class means of this LUT. Information for game_criteria.HUNT_LEVELS.
+            A = {k: v["achieved"] for k, v in notes.items()}
+            b0 = HUNT_LEVELS[m]["boost"]
+            ev = stats(rows, cost)["rtp"] * cost
+            delta = TARGET * cost - ev
+            a = {v: q[v] * (A[v] - A["plain"]) for v in ("hear", "speak")}
+            lam = delta / sum(a[v] ** 2 * b0[v] ** 2 for v in a)
+            hunt_solved[m] = {v: b0[v] + lam * a[v] * b0[v] ** 2 for v in a}
         st = stats(rows, cost)
         # Clean = exactly on target with every class inside the tilt limit. A class that
         # could not reach its pooled mean is listed in "classes" (ok=False).
@@ -288,6 +309,7 @@ def main(write: bool) -> None:
             entry["lut_cost_for_96_3"] = out[name]["rtp"] * lvl["cost"] / TARGET
         hunt[name] = entry
     design["hunt"] = hunt
+    design["hunt_hear_speak_for_96_3"] = hunt_solved
     report = {"design": design, "modes": out}
     (GAME / "reports").mkdir(exist_ok=True)
     print(json.dumps(design, indent=1))

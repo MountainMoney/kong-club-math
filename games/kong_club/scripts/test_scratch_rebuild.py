@@ -2424,15 +2424,17 @@ def test_capped_cluster_wins_are_whole_cents():
 
 
 def test_hunt_stops_follow_locked_price_grid():
-    """Locked spec l.38: stop Nx costs N x bet; See/Hear/Speak odds x a/b/c of base."""
+    """Locked spec l.38: stop Nx costs N x bet; See/Hear/Speak odds x a/b/c of base.
+    Option (a), Ryan 2026-11-09: See boosts 3/5/7/9 (L4 8.5 -> 9.0), Hear/Speak tuned so
+    each stop lands on 96.3% (scripts/fit_rebalance.py)."""
     from game_criteria import HUNT_LEVELS
 
     config = GameConfig()
     grid = {
-        "hunt_2": (2.0, (3.0, 5.0, 10.0)),
-        "hunt_3": (3.0, (5.0, 6.0, 10.0)),
-        "hunt_4": (4.0, (7.0, 10.0, 18.0)),
-        "hunt_5": (5.0, (8.5, 15.0, 30.0)),
+        "hunt_2": (2.0, (3.0, 3.65, 6.95)),
+        "hunt_3": (3.0, (5.0, 9.77, 13.08)),
+        "hunt_4": (4.0, (7.0, 10.09, 18.11)),
+        "hunt_5": (5.0, (9.0, 15.18, 30.41)),
     }
     modes = {mode.get_name(): mode for mode in config.bet_modes}
     for name, (cost, (see, hear, speak)) in grid.items():
