@@ -1037,31 +1037,7 @@ class GameExecutables(GameCalculations):
         amount = self.win_data["totalWin"]
         if amount <= 0:
             return
-        # Sticky FS boards light most cells — downscale cluster pays in bonus only.
-        if self.is_bonus_mode():
-            bonus_scale = float(getattr(self.config, "bonus_cluster_pay_scale", 1.0))
-            if getattr(self, "betmode", None) in {
-                "bonus_see",
-                "bonus_hear",
-                "bonus_mystery",
-                "bonus_risky",
-            }:
-                variant = getattr(self, "bonus_variant", None)
-                if variant == "hear" or self.betmode == "bonus_hear":
-                    bonus_scale *= float(getattr(self.config, "hear_cluster_pay_scale", None) or getattr(self.config, "buy_cluster_pay_scale", 1.0) or 1.0)
-                elif variant == "see" or self.betmode == "bonus_see":
-                    bonus_scale *= float(getattr(self.config, "see_cluster_pay_scale", None) or getattr(self.config, "buy_cluster_pay_scale", 1.0) or 1.0)
-                else:
-                    bonus_scale *= float(getattr(self.config, "buy_cluster_pay_scale", 1.0) or 1.0)
-                if variant == "speak" and self.betmode == "bonus_mystery":
-                    bonus_scale *= float(getattr(self.config, "mystery_speak_cluster_scale", 1.0) or 1.0)
-                elif variant == "speak" and self.betmode == "bonus_risky":
-                    bonus_scale *= float(getattr(self.config, "risky_speak_cluster_scale", 1.0) or 1.0)
-            if bonus_scale != 1.0:
-                amount = round(amount * bonus_scale, 6)
-                for win in self.win_data["wins"]:
-                    win["win"] = round(float(win["win"]) * bonus_scale, 6)
-                self.win_data["totalWin"] = amount
+        # Locked spec: clusters pay the plain paytable in every mode (no bonus scale).
         remaining = max(0.0, self.config.wincap - self.win_manager.running_bet_win)
         paid = min(amount, remaining)
         if paid < amount:

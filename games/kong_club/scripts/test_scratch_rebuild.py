@@ -1209,7 +1209,8 @@ def test_force_scatter_skipped_when_already_in_bonus():
         assert gs.count_special_symbols("scatter") == 0
 
 
-def test_bonus_clusters_apply_pay_scale():
+def test_bonus_clusters_pay_plain_paytable():
+    """Clusters pay the plain paytable in every bonus (no See/Hear/Speak pay scale)."""
     gs = state()
     gs.betmode = "bonus_hear"
     gs.bonus_variant = "hear"
@@ -1229,8 +1230,10 @@ def test_bonus_clusters_apply_pay_scale():
     gs.mark_level_up_tiles(clusters)
     raw_total = gs.evaluate_clusters(clusters)["totalWin"]
     gs.award_clusters(clusters)
-    scale = float(gs.config.bonus_cluster_pay_scale) * float(gs.config.hear_cluster_pay_scale)
-    expected = round(raw_total * scale, 6)
+    for attr in ("see_cluster_pay_scale", "hear_cluster_pay_scale", "buy_cluster_pay_scale",
+                 "mystery_speak_cluster_scale", "risky_speak_cluster_scale"):
+        assert not hasattr(gs.config, attr), attr
+    expected = raw_total
     assert gs.win_data["totalWin"] == expected
     assert all(win["win"] > 0.0 for win in gs.win_data["wins"])
     assert gs.win_manager.spin_win == expected
@@ -2381,7 +2384,7 @@ def main():
     test_activation_waits_until_cascade_idle()
     test_bonus_freespin_reveals_have_no_scatters()
     test_force_scatter_skipped_when_already_in_bonus()
-    test_bonus_clusters_apply_pay_scale()
+    test_bonus_clusters_pay_plain_paytable()
     test_base_clusters_still_pay()
     test_cluster_payout_ignores_tile_levels()
     test_scatter_bonus_and_hard_cap_smoke()

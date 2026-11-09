@@ -237,26 +237,16 @@ class GameConfig(Config):
                 "collector": 0,
                 "tier_shift": 0,
             }
-        # Exact Le Bandit cluster pays in base AND bonus (do not dilute the table).
-        # RTP levers: shorter strip runs (fewer tumbles), trigger rarity — not pay scales.
+        # Locked spec: clusters pay the plain paytable in base AND every bonus. There is
+        # no cluster-pay scale; this stays 1.0 for the old audit scripts that assert it.
         self.bonus_cluster_pay_scale = 1.0
-        # Priced buys only. Base, Ante, Hunt, Feature, and Trifecta keep their spreads.
-        # These levers pull See toward 100x, Hear toward 300x, and the two Speaks
-        # toward the Mystery (330x) and Risky (500x) mixes.
-        self.buy_cluster_pay_scale = 1.0
+        # Priced buys only: clover/pot rate levers (not pay scales). Base, Ante, Hunt,
+        # Feature, and Trifecta keep their spreads.
         self.buy_power_scale = 1.0
-        # See only needs a light trim (about 100x). Hear needs the clover/pot tail cut (about 300x).
         self.see_power_scale = 0.85
-        self.see_cluster_pay_scale = 0.96
         self.hear_power_scale = 0.62
-        self.hear_cluster_pay_scale = 0.90
-        # Direct Speak (Mystery / Risky) is lifted so it averages with a Hear→Speak
-        # upgrade. Upgrades drop carried gold and silver to bronze, which takes the
-        # other side of that gap. Prices stay put via the lookup weights.
         self.mystery_speak_power_scale = 0.72
         self.risky_speak_power_scale = 1.12
-        self.mystery_speak_cluster_scale = 0.98
-        self.risky_speak_cluster_scale = 1.02
         # Per-buy coin-face tables were sized for the old 4/5/5-face set. Empty = every
         # mode spawns from the shared coin_value_weights above until the rebalance
         # sets new per-mode tables (spawn tiers are a tunable lever; faces are locked).
